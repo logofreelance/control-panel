@@ -1,0 +1,15 @@
+{
+    "name":  "@modular/typescript-config",
+    "version":  "1.0.0",
+    "exports":  {
+                    "./base.json":  "./base.json",
+                    "./react.json":  "./react.json",
+                    "./nextjs.json":  "./nextjs.json"
+                },
+    "scripts":  {
+                    "publish-pkg":  "npm publish --access restricted"
+                },
+    "publishConfig":  {
+                          "registry":  "https://npm.pkg.github.com"
+                      }
+}

@@ -1,0 +1,44 @@
+# ============================================
+# Backend-Orange Cloudflare Worker Configuration
+# ============================================
+name = "backend-orange"
+main = "src/worker.ts"
+compatibility_date = "2024-09-23"
+
+# Node.js compatibility for crypto, process.env, etc.
+compatibility_flags = ["nodejs_compat"]
+
+# ============================================
+# Environment Variables (Secrets)
+# Set these in Cloudflare Dashboard or via CLI:
+#   wrangler secret put DATABASE_URL
+#   wrangler secret put JWT_SECRET
+#   wrangler secret put GREEN_API_KEY
+# ============================================
+[vars]
+NODE_ENV = "production"
+
+# ============================================
+# Custom Domain (Optional)
+# Uncomment and configure after first deploy
+# ============================================
+# [routes]
+# pattern = "api.yourdomain.com/orange/*"
+# zone_name = "yourdomain.com"
+
+# ============================================
+# D1 Database (Alternative to MySQL)
+# Uncomment if migrating to Cloudflare D1
+# ============================================
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "backend-orange-db"
+# database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# ============================================
+# Hyperdrive (MySQL/Postgres Connection Pooling)
+# Uncomment if using Hyperdrive for external DB
+# ============================================
+# [[hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"

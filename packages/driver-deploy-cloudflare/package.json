@@ -1,0 +1,26 @@
+{
+    "name": "@cp/driver-deploy-cf",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Cloudflare Deployment Driver",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "check-types": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@modular/contracts": "*",
+        "@modular/core-env": "*",
+        "@modular/driver-env-node": "*",
+        "toml": "^3.0.0",
+        "execa": "^8.0.0"
+    },
+    "devDependencies": {
+        "@modular/typescript-config": "*",
+        "@types/node": "^22.10.1"
+    }
+}

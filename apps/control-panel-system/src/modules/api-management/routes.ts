@@ -77,6 +77,6 @@ apiManagementRouter.put('/endpoints/:id/toggle', (c) => ends(c).toggle(c));
 // Logs
 apiManagementRouter.get('/logs', (c) => logs(c).list(c));
 
-// Proxy to Backend-Green (Server-to-Server)
-apiManagementRouter.get('/green-routes', proxyHandler.getGreenRoutes);
+// Proxy to Backend System (Server-to-Server)
+apiManagementRouter.get('/api-routes', proxyHandler.getApiRoutes);
 

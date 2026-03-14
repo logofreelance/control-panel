@@ -86,7 +86,7 @@ export const useAuthRoutes = (): UseAuthRoutesReturn => {
     const fetchRoutes = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await fetch(`${env.API_BASE}/api-management/green-routes`);
+            const res = await fetch(`${env.API_BASE}/api-management/api-routes`);
             const json = await res.json();
 
             if (json.status === 'success' && json.data && json.data.routes) {

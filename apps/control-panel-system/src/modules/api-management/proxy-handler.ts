@@ -3,7 +3,7 @@ import { Context } from 'hono';
 import { getEnv, serverError, unauthorized } from '@cp/config';
 import { APP_LABELS } from '../../config/labels';
 
-export const getGreenRoutes = async (c: Context) => {
+export const getApiRoutes = async (c: Context) => {
     const env = getEnv(c);
 
     // 1. Verify Backend System API Key exists

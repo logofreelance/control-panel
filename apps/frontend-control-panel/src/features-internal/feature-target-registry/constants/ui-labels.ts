@@ -1,0 +1,62 @@
+export const TARGET_UI_LABELS = {
+    header: {
+        dashboard: 'Dashboard',
+        pageBadge: 'Target Registry',
+    },
+    hero: {
+        title: 'System Registry',
+        subtitle: 'Manage and monitor your backend systems from a single control point.',
+        addButton: 'Add Target',
+        searchPlaceholder: 'Search system registry...',
+    },
+    status: {
+        onlineCount: (online: number, total: number) => `${online} / ${total} Online`,
+    },
+    emptyState: {
+        noResults: 'No Results Found',
+        emptyRegistry: 'Your Registry is Empty',
+        noResultsDesc: (query: string) => `Could not find any systems matching "${query}".`,
+        emptyDesc: 'There are no target systems registered yet. Add your first one.',
+        startNow: 'Start Now',
+    },
+    card: {
+        checkedAgo: (time: string) => `Checked ${time}`,
+        noDescription: 'No description provided.',
+        ping: 'Ping',
+        setup: 'Setup',
+    },
+    modal: {
+        updateTitle: 'Update System',
+        createTitle: 'Register System',
+        configBadge: 'Target Configuration',
+        nameLabel: 'System Name',
+        namePlaceholder: 'e.g. Asia-Pacific API',
+        descLabel: 'Description',
+        descPlaceholder: 'Primary database for production workloads',
+        dbUrlLabel: 'Database Connection String',
+        dbUrlPlaceholder: 'mysql://user:pass@host:3306/db',
+        testLatency: 'Test Latency',
+        reachable: (ms: number) => `REACHABLE (+${ms}ms)`,
+        connectionFailed: 'CONNECTION FAILED',
+        discard: 'Discard',
+        updateTarget: 'Update Target',
+        confirmRegistry: 'Confirm Registry',
+    },
+    confirm: {
+        deleteTitle: 'Remove Target System',
+        deleteMessage: 'Are you sure you want to remove this target system? This action cannot be undone.',
+        deleteConfirm: 'Delete',
+    },
+    errors: {
+        loadFailed: '[TargetRegistry] Failed to load targets',
+        connectionTestFailed: 'Connection test failed',
+        requestFailed: 'Request failed',
+    },
+    time: {
+        never: 'Never',
+        justNow: 'Just now',
+        minutesAgo: (m: number) => `${m}m ago`,
+        hoursAgo: (h: number) => `${h}h ago`,
+        daysAgo: (d: number) => `${d}d ago`,
+    },
+} as const;

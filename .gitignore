@@ -1,9 +1,29 @@
-node_modules
-.turbo
-dist
-build
+# Dependency directories
+node_modules/
+apps/frontend-control-panel-batal/
+
+# Turbo artifacts
+.turbo/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Environment files
 .env
+.env.*
+!.env.example
+
+# OS-specific files
 .DS_Store
+Thumbs.db
+Desktop.ini
+
+# Log files
 *.log
-coverage
-.agent
+npm-debug.log*
+
+# Agent artifacts
+.agent/
+.system_generated/

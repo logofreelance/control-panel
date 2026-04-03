@@ -1,0 +1,62 @@
+export const TARGET_ID = {
+    header: {
+        dashboard: 'Dasbor',
+        pageBadge: 'Registri Target',
+    },
+    hero: {
+        title: 'Registri Sistem',
+        subtitle: 'Kelola dan pantau sistem backend Anda dari satu titik kendali.',
+        addButton: 'Tambah Target',
+        searchPlaceholder: 'Cari registri sistem...',
+    },
+    status: {
+        onlineCount: (online: number, total: number) => `${online} / ${total} Daring`,
+    },
+    emptyState: {
+        noResults: 'Tidak Ada Hasil',
+        emptyRegistry: 'Registri Anda Kosong',
+        noResultsDesc: (query: string) => `Tidak ditemukan sistem yang cocok dengan "${query}".`,
+        emptyDesc: 'Belum ada sistem target terdaftar. Tambahkan yang pertama.',
+        startNow: 'Mulai Sekarang',
+    },
+    card: {
+        checkedAgo: (time: string) => `Diperiksa ${time}`,
+        noDescription: 'Tidak ada deskripsi.',
+        ping: 'Ping',
+        setup: 'Atur',
+    },
+    modal: {
+        updateTitle: 'Perbarui Sistem',
+        createTitle: 'Daftarkan Sistem',
+        configBadge: 'Konfigurasi Target',
+        nameLabel: 'Nama Sistem',
+        namePlaceholder: 'cth. API Asia-Pasifik',
+        descLabel: 'Deskripsi',
+        descPlaceholder: 'Database utama untuk beban kerja produksi',
+        dbUrlLabel: 'String Koneksi Database',
+        dbUrlPlaceholder: 'mysql://user:pass@host:3306/db',
+        testLatency: 'Uji Latensi',
+        reachable: (ms: number) => `TERJANGKAU (+${ms}ms)`,
+        connectionFailed: 'KONEKSI GAGAL',
+        discard: 'Buang',
+        updateTarget: 'Perbarui Target',
+        confirmRegistry: 'Konfirmasi Registri',
+    },
+    confirm: {
+        deleteTitle: 'Hapus Sistem Target',
+        deleteMessage: 'Apakah Anda yakin ingin menghapus sistem target ini? Tindakan ini tidak dapat dibatalkan.',
+        deleteConfirm: 'Hapus',
+    },
+    errors: {
+        loadFailed: '[TargetRegistry] Gagal memuat target',
+        connectionTestFailed: 'Tes koneksi gagal',
+        requestFailed: 'Permintaan gagal',
+    },
+    time: {
+        never: 'Tidak Pernah',
+        justNow: 'Baru saja',
+        minutesAgo: (m: number) => `${m}m lalu`,
+        hoursAgo: (h: number) => `${h}j lalu`,
+        daysAgo: (d: number) => `${d}h lalu`,
+    },
+} as const;

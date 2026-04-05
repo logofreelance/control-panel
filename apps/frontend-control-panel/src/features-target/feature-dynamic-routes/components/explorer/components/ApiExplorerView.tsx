@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Input, Card, CardContent, Heading, Text, Stack, Badge } from '@/components/ui';
+import { Button, Input, Card, CardContent, Badge } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { Icons } from '../../../config/icons';
 import { DYNAMIC_ROUTES_LABELS } from '../../../constants/ui-labels';
 import { cn } from '@/lib/utils';
@@ -44,140 +45,152 @@ export const ApiExplorerView = ({ targetId }: ApiExplorerViewProps) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'swagger.json';
+        a.download = 'openapi-lineage.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        addToast(L.messages.swaggerExported || 'Swagger exported successfully', 'success');
+        addToast(L.messages.swaggerExported || 'OpenAPI schema exported', 'success');
     };
 
     return (
-        <div className="space-y-6 animate-page-enter">
+        <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <Stack direction="row" justify="between" align="start" className="flex-col sm:flex-row sm:items-center gap-4">
-                <Stack direction="row" gap={3} align="center">
-                    <div className="size-10 rounded-xl bg-foreground flex items-center justify-center text-background">
-                        <Icons.code className="size-5" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="flex flex-row items-center gap-4">
+                    <div className="size-12 rounded-2xl bg-foreground flex items-center justify-center text-background shadow-none border-none">
+                        <Icons.code className="size-6" />
                     </div>
                     <div>
-                        <Heading level={3}>{L.explorer?.title}</Heading>
-                        <Text variant="muted">{L.explorer?.subtitle}</Text>
+                        <TextHeading size="h3" weight="semibold" className="text-2xl sm:text-3xl lowercase tracking-tight">
+                            {L.explorer?.title || "api explorer"}
+                        </TextHeading>
+                        <p className="text-sm text-muted-foreground/60 lowercase leading-relaxed">
+                            {L.explorer?.subtitle || "browse and inspect all dynamic lineage routes."}
+                        </p>
                     </div>
-                </Stack>
-                <Button variant="outline" size="sm" onClick={handleDownloadSwagger}>
-                    <Icons.download className="size-4 mr-2" />
+                </div>
+                <Button variant="outline" size="sm" onClick={handleDownloadSwagger} className="rounded-xl lowercase h-10 px-5 text-xs font-semibold gap-2 border-2 hover:bg-muted/10">
+                    <Icons.download className="size-4" />
                     OpenAPI
                 </Button>
-            </Stack>
+            </div>
 
-            {/* Search Bar */}
-            <Card  className="sticky top-4 z-20">
-                <div className="p-4 flex flex-col sm:flex-row gap-4 items-center">
+            {/* Sticky Search Bar */}
+            <Card className="sticky top-4 z-20 rounded-3xl border-2 border-foreground/5 bg-muted/20 shadow-none backdrop-blur-md">
+                <div className="p-3 sm:p-4 flex flex-col md:flex-row gap-4 items-center">
                     <div className="flex-1 w-full relative">
-                        <Icons.search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <Icons.search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
                         <Input
-                            placeholder={L.placeholders.searchEndpoints || "Search..."}
-                            className="pl-9 bg-muted border-none text-sm"
+                            placeholder="search endpoints..."
+                            className="pl-9 h-10 bg-background border-border/20 rounded-xl text-sm"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <Stack direction="row" gap={2} wrap className="w-full sm:w-auto">
+                    <div className="flex flex-row flex-wrap items-center gap-2 w-full md:w-auto">
                         {categories.map(cat => (
                             <button
                                 key={cat.id}
                                 onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
                                 className={cn(
-                                    "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap",
+                                    "px-4 py-2 rounded-xl text-[10px] font-bold transition-all lowercase tracking-wide border-2",
                                     selectedCategory === cat.id
-                                        ? 'bg-foreground text-background'
-                                        : 'bg-muted text-muted-foreground hover:text-foreground'
+                                        ? 'bg-foreground text-background border-foreground shadow-none'
+                                        : 'bg-background text-muted-foreground/40 border-border/5 hover:border-foreground/10 hover:text-foreground'
                                 )}
                             >
                                 {cat.name}
                             </button>
                         ))}
-                    </Stack>
+                    </div>
                 </div>
             </Card>
 
-            {/* Endpoints List */}
+            {/* Layout Grid */}
             <div className="relative min-h-[400px]">
                 {loading && (
-                    <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-3xl">
+                    <div className="absolute inset-0 bg-background/50 z-30 flex items-center justify-center rounded-3xl backdrop-blur-[1px]">
                         <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Navigation List */}
-                    <div className="lg:col-span-1 space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-slim pr-2">
-                        {filteredEndpoints.map(ep => (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    {/* Navigation Sidebar */}
+                    <div className="lg:col-span-1 space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-none pr-1">
+                        {filteredEndpoints.map((ep, idx) => (
                             <div
                                 key={ep.id}
                                 onClick={() => setActiveEndpointId(ep.id)}
                                 className={cn(
-                                    "p-3 rounded-xl transition-colors cursor-pointer border",
+                                    "p-4 rounded-2xl transition-all cursor-pointer border-2 group animate-in slide-in-from-left-2 duration-500 fill-mode-both",
                                     activeEndpointId === ep.id
-                                        ? 'bg-muted border-border'
-                                        : 'bg-card border-transparent hover:bg-muted/50 hover:border-border/50'
+                                        ? 'bg-muted/80 border-foreground/5 shadow-none'
+                                        : 'bg-card border-transparent hover:bg-muted/30 hover:border-foreground/5'
                                 )}
+                                style={{ animationDelay: `${idx * 30}ms` }}
                             >
-                                <Stack direction="row" gap={3} align="center">
-                                    <Badge className={cn("rounded-md text-[10px] w-12 text-center", METHOD_COLORS[ep.method] || METHOD_COLORS.GET)}>
+                                <div className="flex flex-row gap-4 items-center">
+                                    <Badge className={cn("rounded-lg text-[9px] w-14 text-center font-bold tracking-wider", METHOD_COLORS[ep.method] || METHOD_COLORS.GET)}>
                                         {ep.method}
                                     </Badge>
-                                    <div className="min-w-0">
-                                        <Text className={cn("font-mono text-xs truncate", activeEndpointId === ep.id ? 'font-semibold' : 'font-medium')}>
+                                    <div className="min-w-0 flex-1">
+                                        <p className={cn("font-mono text-xs truncate transition-all tracking-tight", activeEndpointId === ep.id ? 'font-bold text-foreground' : 'font-medium text-muted-foreground/80 group-hover:text-foreground/80')}>
                                             {ep.path}
-                                        </Text>
-                                        <Text variant="muted" className="text-[10px] truncate">{ep.description || L.messages?.noDescription}</Text>
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground/30 truncate lowercase mt-0.5">
+                                            {ep.description || "no description provided"}
+                                        </p>
                                     </div>
-                                </Stack>
+                                </div>
                             </div>
                         ))}
+                        {filteredEndpoints.length === 0 && !loading && (
+                            <div className="p-8 text-center border-2 border-dashed border-border/10 rounded-2xl">
+                                <p className="text-xs text-muted-foreground/30 lowercase">no routes matched your query.</p>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Detail Panel */}
+                    {/* Inspection Panel */}
                     <div className="lg:col-span-2">
                         {activeEndpointId ? (
-                            <Card  className="sticky top-24">
+                            <Card className="sticky top-32 rounded-3xl border-2 border-foreground/5 shadow-none overflow-hidden bg-card transition-all">
                                 {(() => {
                                     const ep = endpoints.find(e => e.id === activeEndpointId);
                                     if (!ep) return null;
 
                                     return (
-                                        <>
-                                            <div className="p-5 border-b border-border bg-muted/30">
-                                                <Stack direction="row" gap={3} align="center" className="mb-3">
-                                                    <Badge className={cn("rounded-md text-xs", METHOD_COLORS[ep.method] || METHOD_COLORS.GET)}>
+                                        <div className="animate-in fade-in zoom-in-95 duration-500">
+                                            <div className="p-6 sm:p-8 border-b border-border/10 bg-muted/20">
+                                                <div className="flex flex-row items-center gap-3 mb-4">
+                                                    <Badge className={cn("rounded-lg px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest", METHOD_COLORS[ep.method] || METHOD_COLORS.GET)}>
                                                         {ep.method}
                                                     </Badge>
-                                                    <Heading level={4} className="font-mono">{ep.path}</Heading>
-                                                </Stack>
-                                                <Text variant="muted" className="leading-relaxed mb-4">
-                                                    {ep.description || L.messages?.noDescriptionProvided}
-                                                </Text>
-                                                <Stack direction="row" gap={4}>
-                                                    <Stack direction="row" gap={1} align="center" className="text-xs text-muted-foreground">
+                                                    <TextHeading size="h6" className="font-mono text-sm sm:text-base font-bold tracking-tight">{ep.path}</TextHeading>
+                                                </div>
+                                                <p className="text-sm text-muted-foreground/60 leading-relaxed mb-6 lowercase">
+                                                    {ep.description || "this endpoint provides direct lineage rpc access to the target microservices."}
+                                                </p>
+                                                <div className="flex flex-row flex-wrap gap-6 items-center">
+                                                    <div className="flex flex-row items-center gap-2 text-[10px] uppercase font-bold tracking-widest text-muted-foreground/30">
                                                         <Icons.lock className="size-3.5" />
-                                                        Role <Badge variant="secondary" className="font-mono">{ep.minRoleLevel || 0}</Badge>
-                                                    </Stack>
-                                                    <Stack direction="row" gap={1} align="center" className="text-xs text-muted-foreground">
+                                                        security <span className="bg-background px-2 py-0.5 rounded-lg border border-border/5 text-foreground/60">{ep.minRoleLevel || 0}</span>
+                                                    </div>
+                                                    <div className="flex flex-row items-center gap-2 text-[10px] uppercase font-bold tracking-widest text-muted-foreground/30">
                                                         <Icons.folder className="size-3.5" />
-                                                        {categories.find(c => c.id === ep.categoryId)?.name || 'Uncategorized'}
-                                                    </Stack>
-                                                </Stack>
+                                                        group <span className="bg-background px-2 py-0.5 rounded-lg border border-border/5 text-foreground/60">{categories.find(c => c.id === ep.categoryId)?.name || 'uncategorized'}</span>
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <CardContent className="space-y-6">
+                                            <CardContent className="p-6 sm:p-8 space-y-8">
                                                 <div>
-                                                    <Text variant="detail" className="mb-2 flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground/40">
                                                         <Icons.code className="size-3.5" />
-                                                        Response Schema
-                                                    </Text>
-                                                    <div className="bg-foreground rounded-xl p-4 overflow-x-auto relative group">
-                                                        <pre className="text-xs font-mono text-emerald-400 leading-relaxed">
+                                                        response data schema
+                                                    </div>
+                                                    <div className="bg-background p-6 rounded-2xl border-2 border-border/10 overflow-hidden relative group">
+                                                        <pre className="text-[11px] font-mono text-foreground/70 leading-relaxed overflow-x-auto scrollbar-none">
                                                             {(() => {
                                                                 try {
                                                                     return JSON.stringify(JSON.parse(ep.responseData || '{}'), null, 2);
@@ -189,36 +202,41 @@ export const ApiExplorerView = ({ targetId }: ApiExplorerViewProps) => {
                                                         <button
                                                             onClick={() => {
                                                                 navigator.clipboard.writeText(ep.responseData || '{}');
-                                                                addToast('Copied', 'success');
+                                                                addToast('schema copied', 'success');
                                                             }}
-                                                            className="absolute top-2 right-2 p-1.5 bg-background/10 rounded-md text-background opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center bg-muted/80 hover:bg-foreground hover:text-background rounded-xl opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100"
                                                         >
-                                                            <Icons.copy className="size-3.5" />
+                                                            <Icons.copy className="size-4" />
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                                                    <Button variant="ghost" size="sm" onClick={() => {
-                                                        navigator.clipboard.writeText(ep.responseData || '{}');
-                                                        addToast('Copied to clipboard', 'success');
-                                                    }}>
-                                                        <Icons.copy className="size-3.5 mr-1" />
-                                                        Copy Schema
+                                                <div className="flex flex-row justify-end gap-3 pt-6 border-t border-border/10">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(ep.responseData || '{}');
+                                                            addToast('schema copied to clipboard', 'success');
+                                                        }}
+                                                        className="rounded-xl h-10 px-5 text-sm lowercase transition-all hover:bg-muted/30"
+                                                    >
+                                                        <Icons.copy className="size-4 mr-2" />
+                                                        copy schema
                                                     </Button>
                                                 </div>
                                             </CardContent>
-                                        </>
+                                        </div>
                                     );
                                 })()}
                             </Card>
                         ) : (
-                            <Card  className="h-80 flex flex-col items-center justify-center">
-                                <div className="size-12 bg-muted rounded-xl flex items-center justify-center mb-4 text-border">
-                                    <Icons.rocket className="size-6" />
+                            <Card className="h-96 flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-foreground/5 shadow-none bg-muted/5 transition-all">
+                                <div className="size-16 bg-background rounded-[2rem] flex items-center justify-center mb-6 shadow-none border-2 border-border/10">
+                                    <Icons.rocket className="size-8 text-muted-foreground/20" />
                                 </div>
-                                <Text>{L.explorer?.noEndpointSelected}</Text>
-                                <Text variant="muted" className="text-xs">{L.explorer?.selectEndpointHint}</Text>
+                                <p className="text-sm font-semibold text-muted-foreground/60 lowercase mb-1">no endpoint selected</p>
+                                <p className="text-xs text-muted-foreground/20 lowercase">select a route from the sidebar to inspect its architecture.</p>
                             </Card>
                         )}
                     </div>

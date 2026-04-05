@@ -275,7 +275,6 @@ export const MonitorAnalyticsView = () => {
                     </DropdownMenu>
                   </div>
                 </div>
-
               </div>
             </div>
 

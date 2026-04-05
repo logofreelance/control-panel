@@ -101,73 +101,77 @@ export const EndpointDetailView = ({
   const autoPopulateFields = parseJsonObject(endpoint.autoPopulateFields);
 
   return (
-    <div className="space-y-8 pb-20 animate-in fade-in duration-500">
-      {/* Header */}
+    <div className="space-y-6 pb-20 animate-page-enter">
+      {/* Header - Flat Luxury */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-3 mb-2">
+          <div className="flex flex-col gap-2 mb-2">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge className={cn("rounded-lg px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", methodStyles[endpoint.method] || "bg-muted")}>
-                {endpoint.method}
+              <Badge variant="outline" className={cn("rounded-lg px-2.5 py-0.5 text-xs font-medium lowercase", methodStyles[endpoint.method] || "bg-muted")}>
+                {endpoint.method.toLowerCase()}
               </Badge>
               {endpoint.isActive ? (
-                <Badge className="bg-emerald-500/10 text-emerald-600 rounded-lg text-[10px] lowercase font-medium">
+                <Badge variant="secondary" className="bg-chart-2/10 text-chart-2 rounded-lg text-xs lowercase font-medium border-none">
                   {L.labels?.active || "active"}
                 </Badge>
               ) : (
-                <Badge className="bg-muted text-muted-foreground/40 rounded-lg text-[10px] lowercase font-medium">
+                <Badge variant="secondary" className="bg-muted text-muted-foreground rounded-lg text-xs lowercase font-medium border-none">
                   {L.labels?.inactive || "inactive"}
                 </Badge>
               )}
             </div>
-            <code className="text-xl sm:text-2xl text-foreground font-bold tracking-tight bg-muted/40 px-3 py-1 rounded-xl w-fit">
+            <div className="text-2xl sm:text-3xl text-foreground font-bold bg-muted px-3 py-1 rounded-xl w-fit">
               {endpoint.path}
-            </code>
+            </div>
           </div>
           {endpoint.description && (
-            <p className="text-sm text-muted-foreground/60 max-w-2xl leading-relaxed lowercase">
+            <p className="text-base text-muted-foreground max-w-2xl leading-relaxed lowercase">
               {endpoint.description}
             </p>
           )}
         </div>
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row items-center gap-3">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => onBack?.()}
-            className="text-xs rounded-xl lowercase h-10 px-4">
-            <Icons.arrowLeft className="w-3.5 h-3.5 mr-2" /> {L.buttons?.back || "back"}
+            className="rounded-xl lowercase font-medium"
+          >
+            <Icons.arrowLeft className="size-4" />
+            {L.buttons?.back || "back"}
           </Button>
           <Button
-            size="sm"
+            variant="default"
             onClick={() => onNavigate?.("editor", endpointId)}
-            className="text-xs rounded-xl lowercase h-10 px-4">
-            <Icons.edit className="w-3.5 h-3.5 mr-2" /> {L.buttons?.edit || "edit"}
+            className="rounded-xl lowercase font-medium"
+          >
+            <Icons.edit className="size-4" />
+            {L.buttons?.edit || "edit"}
           </Button>
         </div>
       </div>
 
-      {/* Quick Copy URL */}
-      <Card className="rounded-3xl border-2 border-dashed border-border/20 shadow-none bg-muted/10">
-        <CardContent className="p-5">
+      {/* Quick Copy URL - Premium Flat */}
+      <Card className="rounded-2xl border-none shadow-none bg-muted">
+        <CardContent className="py-4 px-6">
           <div className="flex flex-row items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-muted-foreground/40 mb-1 uppercase tracking-widest">
+              <p className="text-sm font-normal text-muted-foreground mb-0.5 lowercase">
                 {L.detail?.fullUrl || "full access url"}
               </p>
-              <code className="text-xs sm:text-sm text-foreground/80 break-all font-mono">
+              <div className="text-base text-foreground break-all">
                 {fullUrl}
-              </code>
+              </div>
             </div>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => copyToClipboard(fullUrl, "url")}
-              className="shrink-0 w-10 h-10 rounded-xl hover:bg-background text-muted-foreground/40 hover:text-foreground transition-all">
+              className="rounded-xl hover:bg-background text-muted-foreground hover:text-foreground transition-all"
+            >
               {copiedField === "url" ? (
-                <Icons.check className="w-4 h-4 text-emerald-500" />
+                <Icons.check className="size-4 text-chart-2" />
               ) : (
-                <Icons.copy className="w-4 h-4" />
+                <Icons.copy className="size-4" />
               )}
             </Button>
           </div>
@@ -175,53 +179,53 @@ export const EndpointDetailView = ({
       </Card>
 
       {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Request Info */}
-          <Card className="rounded-3xl border-2 border-foreground/5 shadow-none overflow-hidden">
-            <CardContent className="p-6">
+          <Card className="rounded-2xl border-none shadow-none bg-card overflow-hidden">
+            <CardContent className="py-5 px-6">
               <div className="flex flex-row items-center gap-3 mb-6">
-                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Icons.send className="w-4 h-4 text-primary" />
+                <div className="size-10 rounded-xl bg-chart-1/10 flex items-center justify-center">
+                  <Icons.send className="size-5 text-chart-1" />
                 </div>
-                <TextHeading size="h6" weight="semibold" className="text-sm lowercase">
+                <TextHeading size="h4" className="lowercase text-foreground">
                   {L.detail?.requestInfo || "request information"}
                 </TextHeading>
               </div>
               <div className="space-y-4">
                 <div className="flex flex-row justify-between items-center">
-                  <p className="text-xs text-muted-foreground/40 font-medium lowercase">
+                  <p className="text-sm text-muted-foreground font-normal lowercase">
                     {L.detail?.method || "method"}
                   </p>
-                  <Badge className={cn("rounded-lg px-2 py-0.5 text-[10px] font-bold", methodStyles[endpoint.method] || "bg-muted")}>
-                    {endpoint.method}
+                  <Badge variant="outline" className={cn("rounded-lg px-3 py-1 text-xs font-semibold lowercase", methodStyles[endpoint.method] || "bg-muted")}>
+                    {endpoint.method.toLowerCase()}
                   </Badge>
                 </div>
                 <div className="flex flex-row justify-between items-center">
-                  <p className="text-xs text-muted-foreground/40 font-medium lowercase">
+                  <p className="text-sm text-muted-foreground font-normal lowercase">
                     {L.detail?.contentType || "content type"}
                   </p>
-                  <span className="font-mono text-[10px] text-foreground bg-muted/50 px-2 py-0.5 rounded-lg">
+                  <span className="text-base text-foreground bg-muted px-2 py-1 rounded-lg">
                     {JSON_CONTENT_TYPE}
                   </span>
                 </div>
                 {dataSource && (
                   <div className="flex flex-row justify-between items-center">
-                    <p className="text-xs text-muted-foreground/40 font-medium lowercase">
+                    <p className="text-sm text-muted-foreground font-normal lowercase">
                       {L.labels?.dataSource || "data source"}
                     </p>
-                    <p className="text-sm font-semibold text-foreground/80 lowercase">
+                    <p className="text-base font-normal text-foreground lowercase">
                       {dataSource.name}
                     </p>
                   </div>
                 )}
                 {resource && (
                   <div className="flex flex-row justify-between items-center">
-                    <p className="text-xs text-muted-foreground/40 font-medium lowercase">
+                    <p className="text-sm text-muted-foreground font-normal lowercase">
                       {L.labels?.resource || "logic resource"}
                     </p>
-                    <p className="text-sm font-semibold text-foreground/80 lowercase">
+                    <p className="text-base font-normal text-foreground lowercase">
                       {resource.name}
                     </p>
                   </div>
@@ -231,35 +235,37 @@ export const EndpointDetailView = ({
           </Card>
 
           {/* Security */}
-          <Card className="rounded-3xl border-2 border-foreground/5 shadow-none overflow-hidden">
-            <CardContent className="p-6">
+          <Card className="rounded-2xl border-none shadow-none bg-card overflow-hidden">
+            <CardContent className="py-5 px-6">
               <div className="flex flex-row items-center gap-3 mb-6">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                  <Icons.lock className="w-4 h-4 text-orange-500" />
+                <div className="size-10 rounded-xl bg-chart-4/10 flex items-center justify-center">
+                  <Icons.lock className="size-5 text-chart-4" />
                 </div>
-                <TextHeading size="h6" weight="semibold" className="text-sm lowercase">
+                <TextHeading size="h4" className="lowercase text-foreground">
                   {L.detail?.security || "security & permissions"}
                 </TextHeading>
               </div>
               <div className="space-y-6">
                 <div className="flex flex-row justify-between items-center">
-                  <p className="text-xs text-muted-foreground/40 font-medium lowercase">
+                  <p className="text-sm text-muted-foreground font-normal lowercase">
                     {L.misc?.accessLevel || "access level"}
                   </p>
-                  <p className="text-sm font-semibold text-foreground/80 lowercase decoration-dotted underline decoration-border/40 underline-offset-4">
+                  <p className="text-base font-normal text-foreground lowercase">
                     {getRoleLevelLabel(endpoint.minRoleLevel ?? 0)}
                   </p>
                 </div>
                 {endpoint.roles && (
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground/40 mb-3 uppercase tracking-widest">
+                  <div className="space-y-3">
+                    <p className="text-sm font-normal text-muted-foreground lowercase">
                       {L.labels?.roles || "authorized roles"}
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {endpoint.roles.split(",").map((role: string) => (
                         <Badge
                           key={role}
-                          className="bg-blue-500/5 text-blue-600 border-2 border-blue-500/10 rounded-xl px-3 py-1 text-[10px] font-medium lowercase">
+                          variant="secondary"
+                          className="bg-chart-3/10 text-chart-3 border-none rounded-xl px-3 py-1.5 text-xs font-medium lowercase"
+                        >
                           {role.trim()}
                         </Badge>
                       ))}
@@ -267,15 +273,17 @@ export const EndpointDetailView = ({
                   </div>
                 )}
                 {endpoint.permissions && (
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground/40 mb-3 uppercase tracking-widest">
+                  <div className="space-y-3">
+                    <p className="text-sm font-normal text-muted-foreground lowercase">
                       {L.labels?.permissions || "required permissions"}
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {endpoint.permissions.split(",").map((perm: string) => (
                         <Badge
                           key={perm}
-                          className="bg-amber-500/5 text-amber-600 border-2 border-amber-500/10 rounded-xl px-3 py-1 text-[10px] font-medium lowercase">
+                          variant="secondary"
+                          className="bg-chart-5/10 text-chart-5 border-none rounded-xl px-3 py-1.5 text-xs font-medium lowercase"
+                        >
                           {perm.trim()}
                         </Badge>
                       ))}
@@ -288,56 +296,58 @@ export const EndpointDetailView = ({
         </div>
 
         {/* Right Column */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Code Examples */}
-          <Card className="rounded-3xl border-2 border-foreground/5 shadow-none overflow-hidden">
-            <CardContent className="p-6">
+          <Card className="rounded-2xl border-none shadow-none bg-card overflow-hidden">
+            <CardContent className="py-5 px-6">
               <div className="flex flex-row items-center gap-3 mb-6">
-                <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                  <Icons.code className="w-4 h-4 text-violet-500" />
+                <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center">
+                  <Icons.code className="size-5 text-chart-3" />
                 </div>
-                <TextHeading size="h6" weight="semibold" className="text-sm lowercase">
+                <TextHeading size="h4" className="lowercase text-foreground">
                   {L.detail?.codeExamples || "implementation examples"}
                 </TextHeading>
               </div>
 
               {/* Tab Buttons */}
-              <div className="flex flex-row gap-1.5 mb-5 bg-muted/40 p-1 rounded-2xl">
+              <div className="flex flex-row gap-1 bg-muted p-1 rounded-2xl mb-5">
                 {(["curl", "javascript", "python"] as const).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveCodeTab(tab)}
                     className={cn(
-                      "flex-1 px-3 py-2 rounded-xl text-[10px] font-bold transition-all lowercase tracking-wide",
+                      "flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all lowercase",
                       activeCodeTab === tab
                         ? "bg-background text-foreground shadow-none"
-                        : "text-muted-foreground/40 hover:text-foreground hover:bg-muted/30"
-                    )}>
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
                     {tab === "curl"
-                      ? "cURL"
+                      ? "curl"
                       : tab === "javascript"
-                        ? "JavaScript"
-                        : "Python"}
+                        ? "javascript"
+                        : "python"}
                   </button>
                 ))}
               </div>
 
               {/* Code Block */}
               <div className="relative group">
-                <div className="bg-background rounded-2xl border-2 border-border/10 p-5 overflow-hidden">
-                  <pre className="text-[11px] text-foreground/70 overflow-x-auto font-mono scrollbar-none leading-relaxed">
+                <div className="bg-muted rounded-2xl p-5 overflow-hidden">
+                  <div className="text-sm text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
                     {codeExamples[activeCodeTab]}
-                  </pre>
+                  </div>
                 </div>
                 <button
                   onClick={() =>
                     copyToClipboard(codeExamples[activeCodeTab], activeCodeTab)
                   }
-                  className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center bg-muted/50 hover:bg-foreground hover:text-background rounded-xl transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100">
+                  className="absolute top-4 right-4 size-10 flex items-center justify-center bg-background hover:bg-foreground hover:text-background rounded-xl transition-all opacity-0 group-hover:opacity-100 shadow-none border-none"
+                >
                   {copiedField === activeCodeTab ? (
-                    <Icons.check className="w-3.5 h-3.5 text-emerald-500" />
+                    <Icons.check className="size-4 text-chart-2" />
                   ) : (
-                    <Icons.copy className="w-3.5 h-3.5" />
+                    <Icons.copy className="size-4" />
                   )}
                 </button>
               </div>
@@ -346,24 +356,29 @@ export const EndpointDetailView = ({
 
           {/* Response Template */}
           {endpoint.responseData && (
-            <Card className="rounded-3xl border-2 border-foreground/5 shadow-none overflow-hidden">
-              <CardContent className="p-6">
+            <Card className="rounded-2xl border-none shadow-none bg-card overflow-hidden">
+              <CardContent className="py-5 px-6">
                 <div className="flex flex-row items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <Icons.file className="w-4 h-4 text-emerald-500" />
+                  <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center">
+                    <Icons.file className="size-5 text-chart-2" />
                   </div>
-                  <TextHeading size="h6" weight="semibold" className="text-sm lowercase">
+                  <TextHeading size="h4" className="lowercase text-foreground">
                     {L.detail?.responseTemplate || "json response schema"}
                   </TextHeading>
                 </div>
-                <div className="bg-muted/30 border-2 border-border/5 p-5 rounded-2xl relative group">
-                  <pre className="text-[11px] text-foreground/60 overflow-x-auto font-mono scrollbar-none leading-relaxed">
+                <div className="bg-muted p-5 rounded-2xl relative group">
+                  <div className="text-sm text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
                     {endpoint.responseData}
-                  </pre>
+                  </div>
                   <button
                     onClick={() => copyToClipboard(endpoint.responseData || "", "schema")}
-                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-background/50 hover:bg-foreground hover:text-background rounded-xl transition-all opacity-0 group-hover:opacity-100">
-                    <Icons.copy className="w-3.5 h-3.5" />
+                    className="absolute top-4 right-4 size-10 flex items-center justify-center bg-background hover:bg-foreground hover:text-background rounded-xl transition-all opacity-0 group-hover:opacity-100 shadow-none border-none"
+                  >
+                    {copiedField === "schema" ? (
+                      <Icons.check className="size-4 text-chart-2" />
+                    ) : (
+                      <Icons.copy className="size-4" />
+                    )}
                   </button>
                 </div>
               </CardContent>

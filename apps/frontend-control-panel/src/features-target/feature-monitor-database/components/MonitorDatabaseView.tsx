@@ -46,7 +46,7 @@ export const MonitorDatabaseView = () => {
               <TextHeading as="h1" size="h3">
                 {MODULE_LABELS.monitorDatabase?.title}
               </TextHeading>
-              <span className="text-sm md:text-lg text-muted-foreground/40 font-normal lowercase tracking-normal">
+              <span className="text-sm md:text-lg text-muted-foreground font-normal lowercase">
                 {MODULE_LABELS.monitorDatabase?.subtitle?.toLowerCase()}
               </span>
             </div>
@@ -54,29 +54,25 @@ export const MonitorDatabaseView = () => {
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
+                size="icon"
                 onClick={() => {
                   refresh();
                   addToast('database refreshed', 'success');
                 }}
                 disabled={loading}
-                className="group rounded-full size-10 p-0 flex items-center justify-center gap-0 transition-all duration-500 ease-in-out active:scale-95 md:hover:w-36 md:hover:px-1 md:hover:gap-3 overflow-hidden border-border/40"
+                className="rounded-xl border-border transition-all active:scale-95"
               >
-                <Icons.refresh className={cn('size-4', loading && 'animate-spin')} />
-                <span className="max-w-0 opacity-0 overflow-hidden transition-all duration-500 whitespace-nowrap lowercase md:group-hover:max-w-xs group-hover:max-w-0 md:group-hover:opacity-100">
-                  refresh
-                </span>
+                <Icons.refresh className={cn('size-4 text-muted-foreground', loading && 'animate-spin')} />
               </Button>
 
               <Button
-                variant="default"
+                variant="destructive"
+                size="icon"
                 onClick={handleCleanup}
                 disabled={loading || isCleaning}
-                className="group rounded-full size-10 p-0 flex items-center justify-center gap-0 transition-all duration-500 ease-in-out active:scale-95 md:hover:w-36 md:hover:px-1 md:hover:gap-3 overflow-hidden"
+                className="rounded-xl transition-all active:scale-95"
               >
                 <Icons.sparkles className={cn('size-4', isCleaning && 'animate-pulse')} />
-                <span className="max-w-0 opacity-0 overflow-hidden transition-all duration-500 whitespace-nowrap lowercase md:group-hover:max-w-xs group-hover:max-w-0 md:group-hover:opacity-100">
-                  {BTN.cleanup?.toLowerCase() || 'cleanup'}
-                </span>
               </Button>
             </div>
           </header>

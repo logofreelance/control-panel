@@ -8,9 +8,10 @@
 
 import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Button } from '@/components/ui';
+import { Button, Badge } from '@/components/ui';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import type { TableStat } from '../types';
+import { cn } from '@/lib/utils';
 
 const L = MODULE_LABELS.monitorDatabase?.labels || {};
 const MSG = MODULE_LABELS.monitorDatabase?.messages || {};
@@ -60,47 +61,52 @@ const TableCard = ({ table, onDelete, dropping, isSystem }: { table: TableStat; 
     const Icon = getTableIcon(table.name);
 
     return (
-        <div className="bg-white rounded-xl shadow-sm shadow-slate-200/50 p-4 relative overflow-hidden">
+        <div className="bg-card rounded-xl border border-border p-4 relative overflow-hidden transition-all hover:bg-muted/5">
             <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isSystem ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-500'}`}>
-                        <Icon className="w-4 h-4" />
+                    <div className={cn(
+                        "size-9 rounded-xl flex items-center justify-center",
+                        isSystem ? "bg-amber-100/10 text-amber-600" : "bg-muted text-muted-foreground"
+                    )}>
+                        <Icon className="size-4" />
                     </div>
                     <div>
-                        <h4 className="font-medium text-slate-800 text-sm">{table.name}</h4>
+                        <h4 className="font-semibold text-foreground text-sm lowercase">{table.name}</h4>
                         <div className="flex items-center gap-2 mt-0.5">
                             {isSystem && (
-                                <span className="text-[9px] font-normal bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                    <Icons.lock className="w-2.5 h-2.5" /> {L.system || 'System'}
+                                <span className="text-xs font-normal text-amber-600 flex items-center gap-1">
+                                    <Icons.lock className="size-3" /> {L.system || 'system'}
                                 </span>
                             )}
-                            <span className="text-[10px] text-slate-500 font-normal">{table.rows.toLocaleString()} {L.rows || 'Rows'}</span>
+                            <span className="text-xs text-muted-foreground font-normal lowercase">{table.rows.toLocaleString()} {L.rows || 'rows'}</span>
                         </div>
                     </div>
                 </div>
                 {onDelete && !isSystem && (
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => onDelete(table.name)}
                         disabled={dropping}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                     >
-                        <Icons.delete className="w-4 h-4" />
-                    </button>
+                        <Icons.trash className="size-4" />
+                    </Button>
                 )}
             </div>
 
-            <div className="grid grid-cols-3 gap-2 py-3 border-t border-slate-50">
+            <div className="grid grid-cols-3 gap-2 py-3 border-t border-border">
                 <div className="text-center">
-                    <p className="text-[10px] uppercase text-slate-400 font-normal mb-1">{L.data || 'Data'}</p>
-                    <p className="text-xs font-medium text-slate-700">{table.sizeMb} {L.mb || 'MB'}</p>
+                    <p className="text-xs text-muted-foreground font-normal mb-1 lowercase">{L.data || 'data'}</p>
+                    <p className="text-xs font-semibold text-foreground lowercase">{table.sizeMb} {L.mb || 'mb'}</p>
                 </div>
                 <div className="text-center">
-                    <p className="text-[10px] uppercase text-slate-400 font-normal mb-1">{L.index || 'Index'}</p>
-                    <p className="text-xs font-medium text-blue-600">{table.indexSizeMb} {L.mb || 'MB'}</p>
+                    <p className="text-xs text-muted-foreground font-normal mb-1 lowercase">{L.index || 'index'}</p>
+                    <p className="text-xs font-semibold text-chart-1 lowercase">{table.indexSizeMb} {L.mb || 'mb'}</p>
                 </div>
                 <div className="text-center">
-                    <p className="text-[10px] uppercase text-slate-400 font-normal mb-1">{L.overhead || 'Overhead'}</p>
-                    <p className="text-xs font-medium text-amber-600">{table.overheadMb} {L.mb || 'MB'}</p>
+                    <p className="text-xs text-muted-foreground font-normal mb-1 lowercase">{L.overhead || 'overhead'}</p>
+                    <p className="text-xs font-semibold text-chart-2 lowercase">{table.overheadMb} {L.mb || 'mb'}</p>
                 </div>
             </div>
         </div>
@@ -124,65 +130,73 @@ const TableSection = ({
     if (!tables.length) return null;
 
     return (
-        <div className="bg-white rounded-xl shadow-sm shadow-slate-200/50 overflow-hidden">
+        <div className="overflow-hidden">
             {/* Section Header */}
-            <div className={`px-5 py-3 border-b border-slate-100 flex items-center gap-2 ${isSystem ? 'bg-amber-50/50' : 'bg-slate-50/50'}`}>
+            <div className={cn(
+                "px-1 py-3 border-b border-border flex items-center gap-2",
+                isSystem ? "bg-amber-500/5" : "bg-transparent"
+            )}>
                 {isSystem ? (
-                    <Icons.lock className="w-4 h-4 text-amber-600" />
+                    <Icons.lock className="size-4 text-amber-600" />
                 ) : (
-                    <Icons.table className="w-4 h-4 text-teal-600" />
+                    <Icons.table className="size-4 text-primary" />
                 )}
-                <h4 className={`text-sm font-medium ${isSystem ? 'text-amber-700' : 'text-slate-700'}`}>{title}</h4>
-                <span className="text-xs text-slate-400 ml-auto">{tables.length}</span>
+                <h4 className={cn("text-sm font-semibold lowercase", isSystem ? "text-amber-700" : "text-foreground")}>{title}</h4>
+                <span className="text-xs text-muted-foreground ml-auto lowercase">{tables.length} tables</span>
             </div>
 
             {/* Table */}
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                    <thead className="bg-slate-50/30 border-b border-slate-100">
+                    <thead className="bg-muted/5 border-b border-border">
                         <tr>
-                            <th className="py-2.5 px-5 text-[10px] font-medium text-slate-500 uppercase tracking-wider w-1/3">Table Name</th>
-                            <th className="py-2.5 px-5 text-[10px] font-medium text-slate-500 uppercase tracking-wider">{L.totalRows || 'Rows'}</th>
-                            <th className="py-2.5 px-5 text-[10px] font-medium text-slate-500 uppercase tracking-wider">{L.data || 'Data'}</th>
-                            <th className="py-2.5 px-5 text-[10px] font-medium text-slate-500 uppercase tracking-wider">{L.index || 'Index'}</th>
-                            <th className="py-2.5 px-5 text-[10px] font-medium text-slate-500 uppercase tracking-wider">{L.overhead || 'Overhead'}</th>
-                            {!isSystem && <th className="py-2.5 px-5 w-12"></th>}
+                            <th className="py-3 px-5 text-xs font-normal text-muted-foreground lowercase w-1/3">table name</th>
+                            <th className="py-3 px-5 text-xs font-normal text-muted-foreground lowercase text-center">rows</th>
+                            <th className="py-3 px-5 text-xs font-normal text-muted-foreground lowercase text-right">data</th>
+                            <th className="py-3 px-5 text-xs font-normal text-muted-foreground lowercase text-right">index</th>
+                            <th className="py-3 px-5 text-xs font-normal text-muted-foreground lowercase text-right">overhead</th>
+                            {!isSystem && <th className="py-3 px-5 w-12"></th>}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-border">
                         {tables.map((table) => {
                             const Icon = getTableIcon(table.name);
                             return (
-                                <tr key={table.name} className="hover:bg-slate-50/50 transition-colors group">
-                                    <td className="py-3 px-5">
+                                <tr key={table.name} className="hover:bg-muted/5 transition-all group">
+                                    <td className="py-2.5 px-5">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isSystem ? 'bg-amber-50 text-amber-500' : 'bg-slate-50 text-slate-500'}`}>
-                                                <Icon className="w-3 h-3" />
+                                            <div className={cn(
+                                                "size-8 rounded-xl flex items-center justify-center shrink-0",
+                                                isSystem ? "bg-amber-100/10 text-amber-500" : "bg-muted text-muted-foreground"
+                                            )}>
+                                                <Icon className="size-4" />
                                             </div>
-                                            <p className="font-normal text-xs text-slate-700 truncate">{table.name}</p>
+                                            <p className="font-normal text-sm text-foreground truncate lowercase">{table.name}</p>
                                         </div>
                                     </td>
-                                    <td className="py-2.5 px-5 text-xs font-mono text-slate-600 font-normal">
+                                    <td className="py-2.5 px-5 text-sm font-semibold text-foreground text-center tabular-nums">
                                         {table.rows.toLocaleString()}
                                     </td>
-                                    <td className="py-2.5 px-5 text-xs font-normal text-slate-700">
-                                        {table.sizeMb} {L.mb || 'MB'}
+                                    <td className="py-2.5 px-5 text-sm font-normal text-foreground text-right lowercase">
+                                        {table.sizeMb} {L.mb || 'mb'}
                                     </td>
-                                    <td className="py-2.5 px-5 text-xs text-blue-600 font-normal">
-                                        {table.indexSizeMb} {L.mb || 'MB'}
+                                    <td className="py-2.5 px-5 text-sm text-chart-1 font-semibold text-right lowercase">
+                                        {table.indexSizeMb} {L.mb || 'mb'}
                                     </td>
-                                    <td className="py-2.5 px-5 text-xs text-amber-600 font-normal">
-                                        {table.overheadMb} {L.mb || 'MB'}
+                                    <td className="py-2.5 px-5 text-sm text-chart-2 font-semibold text-right lowercase">
+                                        {table.overheadMb} {L.mb || 'mb'}
                                     </td>
                                     {!isSystem && (
-                                        <td className="py-3 px-5 text-right">
-                                            <button
+                                        <td className="py-2.5 px-5 text-right">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={() => onDeleteClick(table.name)}
                                                 disabled={dropping}
-                                                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                                                className="size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
                                             >
-                                                <Icons.trash className="w-3.5 h-3.5" />
-                                            </button>
+                                                <Icons.trash className="size-4" />
+                                            </Button>
                                         </td>
                                     )}
                                 </tr>
@@ -232,9 +246,10 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
 
     if (!tables.length) {
         return (
-            <div className="bg-white rounded-xl shadow-sm shadow-slate-200/50 p-8 text-center">
-                <Icons.database className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-                <p className="text-slate-500 font-medium text-sm">{L.noTablesFound || 'No tables found'}</p>
+            <div className="bg-card rounded-2xl border border-border p-12 text-center">
+                <Icons.database className="size-10 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-foreground font-semibold text-sm lowercase">{L.noTablesFound || 'no database tables found'}</p>
+                <p className="text-xs text-muted-foreground mt-1 lowercase">try refreshing the database state</p>
             </div>
         );
     }
@@ -243,17 +258,17 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-slate-800">{L.databaseTables || 'Database Tables'}</h3>
-                    <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
+                <div className="flex items-center gap-3">
+                    <h3 className="font-bold text-foreground lowercase tracking-normal">{L.databaseTables || 'database tables'}</h3>
+                    <div className="size-1.5 rounded-full bg-primary animate-pulse"></div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-lg font-medium">
+                    <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/10 rounded-lg font-semibold text-xs lowercase px-2 py-0.5">
                         {systemTables.length} system
-                    </span>
-                    <span className="text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-lg font-medium">
+                    </Badge>
+                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 rounded-lg font-semibold text-xs lowercase px-2 py-0.5">
                         {userTables.length} custom
-                    </span>
+                    </Badge>
                 </div>
             </div>
 
@@ -327,34 +342,34 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
 
             {/* Confirmation Modal */}
             {confirmDelete && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={() => !deleting && setConfirmDelete(null)} />
-                    <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
-                        <div className="text-center mb-6">
-                            <div className="w-12 h-12 rounded-full bg-red-100 mx-auto flex items-center justify-center mb-4">
-                                <Icons.alertTriangle className="w-6 h-6 text-red-600" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => !deleting && setConfirmDelete(null)} />
+                    <div className="relative bg-card rounded-2xl border border-border shadow-none max-w-sm w-full p-8 animate-in zoom-in-95 duration-200">
+                        <div className="text-center mb-8">
+                            <div className="size-14 rounded-2xl bg-destructive/10 mx-auto flex items-center justify-center mb-6">
+                                <Icons.alertTriangle className="size-7 text-destructive" />
                             </div>
-                            <h3 className="text-lg font-semibold text-slate-900 mb-2">{MSG.confirmDelete || 'Confirm Deletion'}</h3>
-                            <p className="text-sm text-slate-500">
-                                Are you sure you want to delete <span className="font-mono font-medium text-slate-900">{confirmDelete}</span>? {MSG.deleteWarning || 'This action cannot be undone.'}
+                            <h3 className="text-xl font-bold text-foreground mb-3 lowercase">{MSG.confirmDelete || 'confirm deletion'}</h3>
+                            <p className="text-sm text-muted-foreground lowercase">
+                                are you sure you want to delete <span className="font-semibold text-destructive">{confirmDelete}</span>? {MSG.deleteWarning || 'this action cannot be undone.'}
                             </p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-4">
                             <Button
-                                variant="ghost"
-                                className="flex-1"
+                                variant="outline"
+                                className="flex-1 rounded-xl lowercase"
                                 onClick={() => setConfirmDelete(null)}
                                 disabled={deleting}
                             >
-                                {BTN.cancel || 'Cancel'}
+                                {BTN.cancel || 'cancel'}
                             </Button>
                             <Button
                                 variant="destructive"
-                                className="flex-1"
+                                className="flex-1 rounded-xl lowercase"
                                 onClick={handleConfirmDelete}
                                 isLoading={deleting}
                             >
-                                {BTN.delete || 'Delete'}
+                                {BTN.delete || 'delete'}
                             </Button>
                         </div>
                     </div>

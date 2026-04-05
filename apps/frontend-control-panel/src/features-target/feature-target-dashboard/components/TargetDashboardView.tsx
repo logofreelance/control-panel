@@ -159,32 +159,27 @@ export function TargetDashboardView() {
             {summaryCards.map((metric) => (
               <Card
                 key={metric.key}
-                className="bg-card border-4 border-border/10 rounded-2xl sm:rounded-3xl p-0 transition-all duration-300 hover:border-primary/20"
+                className="bg-card rounded-2xl p-0 transition-all duration-300 hover:bg-muted/5 shadow-none border-none"
               >
-                <CardContent className="p-3 sm:p-4 flex flex-col gap-4 sm:gap-5">
+                <CardContent className="p-6 flex flex-col gap-5">
                   <div className="flex items-start justify-between">
-                    <span className="text-xs sm:text-sm text-muted-foreground font-normal tracking-tight lowercase">
+                    <span className="text-sm text-muted-foreground font-normal lowercase">
                       {metric.label}
                     </span>
                     <div
                       className={cn(
-                        'size-8 sm:size-10 aspect-square rounded-full flex items-center justify-center transition-all group-hover/card:rotate-6 group-hover/card:scale-110',
+                        'size-10 rounded-xl flex items-center justify-center transition-all',
                         metric.color,
                       )}
                     >
-                      <div className="scale-75 sm:scale-100">{metric.icon}</div>
+                      <div className="">{metric.icon}</div>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1 sm:gap-1.5">
-                    <TextHeading
-                      as="span"
-                      size="h2"
-                      weight="semibold"
-                      className="text-xl sm:text-4xl md:text-5xl lg:text-5xl tracking-tighter leading-none text-foreground"
-                    >
+                  <div className="flex flex-col gap-1.5 mt-auto">
+                    <span className="text-3xl sm:text-4xl font-bold text-foreground lowercase leading-none">
                       {metric.value || '0'}
-                    </TextHeading>
-                    <span className="text-[10px] sm:text-xs font-normal text-muted-foreground lowercase tracking-tight">
+                    </span>
+                    <span className="text-base font-normal text-muted-foreground lowercase">
                       {metric.sub}
                     </span>
                   </div>
@@ -196,38 +191,38 @@ export function TargetDashboardView() {
           {/* TELEMETRY FOOTER */}
           <footer className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-x-12 gap-y-6 pt-10">
             <div className="flex items-center gap-3">
-              <div className="size-8 rounded-full bg-muted flex items-center justify-center">
-                <Icons.clock className="size-3.5 text-muted-foreground" />
+              <div className="size-9 rounded-xl bg-muted flex items-center justify-center border border-border">
+                <Icons.clock className="size-4 text-muted-foreground" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground font-normal lowercase tracking-tight">
+                <span className="text-sm text-muted-foreground font-normal lowercase">
                   system uptime
                 </span>
-                <span className="text-base text-foreground/70 font-normal">
+                <span className="text-base text-foreground font-normal lowercase">
                   99.98% availability
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="size-8 rounded-full bg-muted flex items-center justify-center">
-                <Icons.zap className="size-3.5 text-primary" />
+              <div className="size-9 rounded-xl bg-muted flex items-center justify-center border border-border">
+                <Icons.zap className="size-4 text-primary" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground font-normal lowercase tracking-tight">
+                <span className="text-sm text-muted-foreground font-normal lowercase">
                   latency
                 </span>
-                <span className="text-base text-foreground/70 font-normal">24ms average</span>
+                <span className="text-base text-foreground font-normal lowercase">24ms average</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="size-8 rounded-full bg-muted flex items-center justify-center">
-                <Icons.shieldCheck className="size-3.5 text-chart-2" />
+              <div className="size-9 rounded-xl bg-muted flex items-center justify-center border border-border">
+                <Icons.shieldCheck className="size-4 text-chart-2" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground font-normal lowercase tracking-tight">
+                <span className="text-sm text-muted-foreground font-normal lowercase">
                   security
                 </span>
-                <span className="text-base text-foreground/70 font-normal">ssl 256-bit active</span>
+                <span className="text-base text-foreground font-normal lowercase">ssl 256-bit active</span>
               </div>
             </div>
           </footer>

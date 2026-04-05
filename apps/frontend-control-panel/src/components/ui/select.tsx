@@ -16,6 +16,8 @@ const Select = ({ options, placeholder, size, fullWidth, className, onChange, va
     value?: string;
 }) => {
   if (options) {
+    const selectedLabel = options.find(opt => opt.value === value)?.label;
+
     return (
       <SelectPrimitive.Root 
         value={value} 
@@ -26,7 +28,9 @@ const Select = ({ options, placeholder, size, fullWidth, className, onChange, va
         {...props}
       >
         <SelectTrigger className={cn(className, fullWidth ? "w-full" : "")} size={size as any}>
-            <SelectValue placeholder={placeholder} />
+            <SelectValue placeholder={placeholder}>
+              {selectedLabel}
+            </SelectValue>
         </SelectTrigger>
         <SelectContent>
            {options.map((option, i) => (

@@ -32,68 +32,68 @@ export const DatabaseStatsCard = ({ stats, loading }: DatabaseStatsCardProps) =>
     const totalRows = stats.totalRows;
 
     return (
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {/* Total Storage */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm shadow-slate-200/50 hover:shadow-md hover:shadow-slate-200/50 transition-all border border-slate-100">
-                <div className="flex justify-between items-start mb-2 sm:mb-3">
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider">{L.databaseStorage || 'Storage'}</p>
-                    <div className="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600">
-                        <Icons.database className="w-3.5 h-3.5" />
+            <div className="bg-card rounded-2xl p-6 border-none shadow-none transition-all hover:bg-muted/5">
+                <div className="flex justify-between items-start mb-5">
+                    <p className="text-sm font-normal text-muted-foreground lowercase">{L.databaseStorage || 'storage'}</p>
+                    <div className="size-8 rounded-xl bg-chart-1/10 flex items-center justify-center text-chart-1">
+                        <Icons.database className="size-4" />
                     </div>
                 </div>
-                <div>
-                    <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
-                        {totalStorageMB} <span className="text-xs sm:text-sm font-normal text-slate-400">{L.mb || 'MB'}</span>
+                <div className="flex flex-col gap-1.5">
+                    <p className="text-3xl sm:text-4xl font-bold text-foreground lowercase">
+                        {totalStorageMB} <span className="text-base font-normal text-muted-foreground">{L.mb || 'mb'}</span>
                     </p>
-                    <p className="text-sm text-teal-600 font-medium mt-1 truncate">{stats.databaseName}</p>
+                    <p className="text-base text-chart-1 font-medium truncate lowercase">{stats.databaseName}</p>
                 </div>
             </div>
 
             {/* Data Size */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm shadow-slate-200/50 hover:shadow-md hover:shadow-slate-200/50 transition-all border border-slate-100">
-                <div className="flex justify-between items-start mb-2 sm:mb-3">
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider">{L.data || 'Data'}</p>
-                    <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                        <Icons.fileText className="w-3.5 h-3.5" />
+            <div className="bg-card rounded-2xl p-6 border-none shadow-none transition-all hover:bg-muted/5">
+                <div className="flex justify-between items-start mb-5">
+                    <p className="text-sm font-normal text-muted-foreground lowercase">{L.data || 'data'}</p>
+                    <div className="size-8 rounded-xl bg-chart-2/10 flex items-center justify-center text-chart-2">
+                        <Icons.fileText className="size-4" />
                     </div>
                 </div>
-                <div>
-                    <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
-                        {totals?.dataMB.toFixed(2)} <span className="text-xs sm:text-sm font-normal text-slate-400">{L.mb || 'MB'}</span>
+                <div className="flex flex-col gap-1.5">
+                    <p className="text-3xl sm:text-4xl font-bold text-foreground lowercase">
+                        {totals?.dataMB.toFixed(2)} <span className="text-base font-normal text-muted-foreground">{L.mb || 'mb'}</span>
                     </p>
-                    <p className="text-sm text-slate-400 mt-1">Raw Data</p>
+                    <p className="text-base text-muted-foreground font-normal lowercase">raw data</p>
                 </div>
             </div>
 
             {/* Index Size */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm shadow-slate-200/50 hover:shadow-md hover:shadow-slate-200/50 transition-all border border-slate-100">
-                <div className="flex justify-between items-start mb-2 sm:mb-3">
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider">{L.index || 'Index'}</p>
-                    <div className="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
-                        <Icons.list className="w-3.5 h-3.5" />
+            <div className="bg-card rounded-2xl p-6 border-none shadow-none transition-all hover:bg-muted/5">
+                <div className="flex justify-between items-start mb-5">
+                    <p className="text-sm font-normal text-muted-foreground lowercase">{L.index || 'index'}</p>
+                    <div className="size-8 rounded-xl bg-chart-3/10 flex items-center justify-center text-chart-3">
+                        <Icons.list className="size-4" />
                     </div>
                 </div>
-                <div>
-                    <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
-                        {totals?.indexMB.toFixed(2)} <span className="text-xs sm:text-sm font-normal text-slate-400">{L.mb || 'MB'}</span>
+                <div className="flex flex-col gap-1.5">
+                    <p className="text-3xl sm:text-4xl font-bold text-foreground lowercase">
+                        {totals?.indexMB.toFixed(2)} <span className="text-base font-normal text-muted-foreground">{L.mb || 'mb'}</span>
                     </p>
-                    <p className="text-sm text-slate-400 mt-1">Indexes</p>
+                    <p className="text-base text-muted-foreground font-normal lowercase">indexes</p>
                 </div>
             </div>
 
             {/* Total Rows */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm shadow-slate-200/50 hover:shadow-md hover:shadow-slate-200/50 transition-all border border-slate-100">
-                <div className="flex justify-between items-start mb-2 sm:mb-3">
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-wider">{L.totalRows || 'Total Rows'}</p>
-                    <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        <Icons.list className="w-3.5 h-3.5" />
+            <div className="bg-card rounded-2xl p-6 border-none shadow-none transition-all hover:bg-muted/5">
+                <div className="flex justify-between items-start mb-5">
+                    <p className="text-sm font-normal text-muted-foreground lowercase">{L.totalRows || 'total rows'}</p>
+                    <div className="size-8 rounded-xl bg-chart-4/10 flex items-center justify-center text-chart-4">
+                        <Icons.list className="size-4" />
                     </div>
                 </div>
-                <div>
-                    <p className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
+                <div className="flex flex-col gap-1.5">
+                    <p className="text-3xl sm:text-4xl font-bold text-foreground lowercase">
                         {totalRows.toLocaleString()}
                     </p>
-                    <p className="text-sm text-slate-400 mt-1">Total Records</p>
+                    <p className="text-base text-muted-foreground font-normal lowercase">total records</p>
                 </div>
             </div>
         </section>

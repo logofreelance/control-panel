@@ -51,20 +51,15 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
     <div className="space-y-12 pb-20 animate-page-enter">
       {/* Header - Flat Luxury */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex flex-row items-center gap-4">
-          <div className="size-12 sm:size-14 aspect-square shrink-0 rounded-2xl bg-foreground flex items-center justify-center text-background shadow-none border-none transition-transform hover:scale-105 group">
-            <Icons.rocket className="size-6 sm:size-7" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <TextHeading as="h1" size="h3" className="lowercase text-foreground">
-              {L.title || 'route builder'}
-            </TextHeading>
-            <span className="text-sm md:text-lg text-muted-foreground/40 font-normal lowercase tracking-normal">
-              {L.subtitle || 'manage dynamic api routes and data binding'}
-            </span>
-          </div>
+        <div className="flex flex-col gap-1">
+          <TextHeading as="h1" size="h3" className="lowercase text-foreground">
+            {L.title || 'route builder'}
+          </TextHeading>
+          <span className="text-sm md:text-lg text-muted-foreground font-normal lowercase">
+            {L.subtitle || 'manage dynamic api routes and data binding'}
+          </span>
         </div>
-        <div className="flex flex-row items-center gap-2 sm:gap-3">
+        <div className="flex flex-row items-center gap-3">
           <Button
             variant="outline"
             onClick={() => {
@@ -72,15 +67,15 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
               setCategoryForm({ name: '', description: '' });
               setIsCategoryModalOpen(true);
             }}
-            className="h-10 px-4 sm:px-6 lowercase font-medium gap-1"
+            className="rounded-xl lowercase font-medium"
           >
             <Icons.plus className="size-4" />
             {L.buttons.newCategory || 'add category'}
           </Button>
           <Button
-            variant="default"
+            variant="destructive"
             onClick={() => onNavigate('editor')}
-            className="h-10 px-4 sm:px-8 lowercase font-medium gap-1"
+            className="rounded-xl lowercase font-medium"
           >
             <Icons.plus className="size-4" />
             {L.buttons.createEndpoint || 'create endpoint'}
@@ -92,77 +87,68 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
       <div className="relative min-h-[160px]">
         {loading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-3xl animate-in fade-in duration-500">
-            <div className="size-8 border-2 border-foreground/10 border-t-foreground/40 animate-spin rounded-full" />
+            <div className="size-8 border-2 border-border border-t-foreground animate-spin rounded-full" />
           </div>
         )}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
           {[
             {
               label: 'endpoints',
               value: stats.total,
               sub: 'active lineages',
               Icon: Icons.link,
-              color: 'text-white',
-              border: 'border-indigo-500/15 hover:border-indigo-500/40',
-              bg: 'bg-indigo-500',
+              color: 'text-chart-1',
+              bg: 'bg-chart-1/10',
             },
             {
               label: 'online',
               value: stats.active,
               sub: 'running nodes',
               Icon: Icons.checkCircle,
-              color: 'text-white',
-              border: 'border-emerald-500/15 hover:border-emerald-500/40',
-              bg: 'bg-emerald-500',
+              color: 'text-chart-2',
+              bg: 'bg-chart-2/10',
             },
             {
               label: 'categories',
               value: stats.categories,
               sub: 'logic groups',
               Icon: Icons.folder,
-              color: 'text-white',
-              border: 'border-purple-500/15 hover:border-purple-500/40',
-              bg: 'bg-purple-500',
+              color: 'text-chart-3',
+              bg: 'bg-chart-3/10',
             },
             {
               label: 'methods',
               value: stats.methods,
               sub: 'protocol types',
               Icon: Icons.branch,
-              color: 'text-white',
-              border: 'border-orange-500/15 hover:border-orange-500/40',
-              bg: 'bg-orange-500',
+              color: 'text-chart-4',
+              bg: 'bg-chart-4/10',
             },
           ].map((stat, i) => (
             <Card
               key={i}
-              className={cn(
-                'p-3.5 sm:p-4 rounded-3xl border-2 bg-card shadow-none overflow-hidden transition-all duration-500',
-                stat.border,
-              )}
+              className="bg-card rounded-2xl border-none shadow-none p-6 transition-all duration-300 hover:bg-muted/5 flex flex-col gap-5"
             >
               <div className="flex flex-row items-start justify-between">
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs sm:text-sm text-muted-foreground/50 font-normal lowercase tracking-normal">
-                    {stat.label}
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="text-4xl sm:text-5xl md:text-6xl font-semibold text-foreground tracking-tighter">
-                      {stat.value}
-                    </span>
-                    <span className="text-xs text-muted-foreground/30 font-normal lowercase mt-1">
-                      {stat.sub}
-                    </span>
-                  </div>
-                </div>
+                <span className="text-sm text-muted-foreground font-normal lowercase">
+                  {stat.label}
+                </span>
                 <div
                   className={cn(
-                    'size-9 sm:size-10 rounded-xl flex items-center justify-center shrink-0 ring-4 ring-background shadow-sm',
+                    'size-10 rounded-xl flex items-center justify-center shrink-0',
                     stat.bg,
                   )}
                 >
                   <stat.Icon className={cn('size-4', stat.color)} />
                 </div>
+              </div>
+              <div className="flex flex-col gap-1.5 mt-auto">
+                <span className="text-3xl sm:text-4xl font-bold text-foreground lowercase leading-none">
+                  {stat.value}
+                </span>
+                <span className="text-base text-muted-foreground font-normal lowercase mt-1">
+                  {stat.sub}
+                </span>
               </div>
             </Card>
           ))}
@@ -171,14 +157,14 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
 
       {/* Combined Search & Filter Bar - Flat Luxury All-in-One */}
       <div className="relative w-full max-w-4xl mx-auto">
-        <div className="relative flex items-center w-full min-h-[48px] bg-muted/40 border border-border/40 rounded-2xl p-1 focus-within:border-foreground/20 transition-all overflow-hidden">
+        <div className="relative flex items-center w-full min-h-[48px] bg-muted border border-border rounded-2xl p-1 focus-within:border-foreground/20 transition-all overflow-hidden shadow-none">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-            <Icons.search className="size-4 text-muted-foreground/40" />
+            <Icons.search className="size-4 text-muted-foreground" />
           </div>
 
           <Input
             placeholder="search lineage endpoints..."
-            className="flex-1 bg-transparent border-none focus-visible:ring-0 h-10 pl-11 pr-40 sm:pr-80 text-sm placeholder:text-muted-foreground/30 text-foreground lowercase tracking-tight font-normal"
+            className="flex-1 bg-transparent border-none focus-visible:ring-0 h-10 pl-11 pr-40 sm:pr-80 text-sm placeholder:text-muted-foreground text-foreground lowercase font-normal"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -188,7 +174,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
               <Select
                 placeholder="category"
                 size="sm"
-                className="h-9 px-3 rounded-xl bg-background border border-border/40 text-sm lowercase font-normal w-36 shadow-none"
+                className="h-9 px-3 rounded-xl bg-background border border-border text-sm lowercase font-normal w-36 shadow-none"
                 value={selectedCategory || ''}
                 onChange={(e) => setSelectedCategory(e.target.value || null)}
                 options={[
@@ -199,7 +185,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
               <Select
                 placeholder="method"
                 size="sm"
-                className="h-9 px-3 rounded-xl bg-background border border-border/40 text-sm lowercase font-normal w-28 shadow-none"
+                className="h-9 px-3 rounded-xl bg-background border border-border text-sm lowercase font-normal w-28 shadow-none"
                 value={selectedMethod || ''}
                 onChange={(e) => setSelectedMethod(e.target.value || null)}
                 options={[
@@ -217,14 +203,14 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-9 px-3 rounded-xl bg-background border border-border/40 text-sm lowercase font-normal gap-1.5"
+                    className="h-9 px-3 rounded-xl bg-background border border-border text-sm lowercase font-normal gap-1.5"
                   >
                     <Icons.plus className="size-3.5 rotate-45" />
                     <span>filter</span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-56 p-4 rounded-2xl flex flex-col gap-3 shadow-2xl border-border/10">
-                  <div className="space-y-1.5 text-sm text-muted-foreground/60 lowercase">
+                <PopoverContent className="w-56 p-4 rounded-2xl flex flex-col gap-3 shadow-2xl border border-border">
+                  <div className="space-y-1.5 text-sm text-muted-foreground lowercase">
                     <span>category filter</span>
                     <Select
                       placeholder="select category"
@@ -238,7 +224,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                       ]}
                     />
                   </div>
-                  <div className="space-y-1.5 text-sm text-muted-foreground/60 lowercase">
+                  <div className="space-y-1.5 text-sm text-muted-foreground lowercase">
                     <span>method filter</span>
                     <Select
                       placeholder="select method"
@@ -261,7 +247,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
             {(searchQuery || selectedCategory || selectedMethod) && (
               <Button
                 variant="ghost"
-                className="size-9 p-0 rounded-xl bg-background hover:bg-muted/10 shrink-0 text-muted-foreground/40 hover:text-foreground transition-all border border-border/40 shadow-none"
+                className="size-9 p-0 rounded-xl bg-background hover:bg-muted/10 shrink-0 text-muted-foreground hover:text-foreground transition-all border border-border"
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedCategory(null);
@@ -278,9 +264,9 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
       {/* Content Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
         {/* Categories Sidebar */}
-        <div className="md:col-span-3 space-y-6">
+        <div className="md:col-span-4 space-y-6">
           <div className="flex items-center justify-between mb-2">
-            <TextHeading as="h4" size="h4" className="lowercase text-foreground/80 tracking-tight">
+            <TextHeading as="h4" size="h4" className="lowercase text-foreground">
               {L.labels.categories || 'categories'}
             </TextHeading>
           </div>
@@ -289,9 +275,9 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
             <button
               onClick={() => setSelectedCategory(null)}
               className={cn(
-                'group relative w-full flex items-center justify-between px-4 py-2.5 rounded-[1.25rem] transition-all duration-300 lowercase text-base sm:text-lg font-normal text-left',
+                'group relative w-full flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300 lowercase text-base sm:text-lg font-normal text-left shadow-none',
                 !selectedCategory
-                  ? 'bg-muted/10 text-foreground ring-1 ring-inset ring-foreground/5'
+                  ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:bg-muted/5',
               )}
             >
@@ -300,118 +286,117 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                   className={cn(
                     'size-8 rounded-xl flex items-center justify-center transition-all',
                     !selectedCategory
-                      ? 'bg-foreground text-background scale-110'
-                      : 'bg-muted/10 text-muted-foreground group-hover:bg-muted/20',
+                      ? 'bg-foreground text-background scale-105'
+                      : 'bg-muted text-muted-foreground group-hover:bg-muted/20',
                   )}
                 >
-                  <Icons.zap className="size-4" />
+                  <span className="text-sm font-bold">{endpoints.length}</span>
                 </div>
                 <span>{L.labels.allRoutes || 'all routes'}</span>
               </div>
-              <span className="opacity-40 text-xs font-mono">{endpoints.length}</span>
               {!selectedCategory && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-foreground rounded-r-full" />
               )}
             </button>
 
-            {categories.map((category) => (
-              <div key={category.id} className="group relative">
-                <button
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={cn(
-                    'w-full flex items-center justify-between px-4 py-2.5 rounded-[1.25rem] transition-all duration-300 lowercase text-base sm:text-lg font-normal text-left pr-20',
-                    selectedCategory === category.id
-                      ? 'bg-muted/10 text-foreground ring-1 ring-inset ring-foreground/5'
-                      : 'text-muted-foreground hover:bg-muted/5',
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        'size-8 rounded-xl flex items-center justify-center transition-all',
-                        selectedCategory === category.id
-                          ? 'bg-foreground/5 text-foreground scale-110'
-                          : 'bg-muted/5 text-muted-foreground group-hover:bg-muted/10',
-                      )}
-                    >
-                      <Icons.folder className="size-4" />
+            {categories.map((category) => {
+              const count = endpoints.filter((e) => e.categoryId === category.id).length;
+              return (
+                <div key={category.id} className="group relative">
+                  <button
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={cn(
+                      'w-full flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300 lowercase text-base sm:text-lg font-normal text-left pr-20 shadow-none',
+                      selectedCategory === category.id
+                        ? 'bg-muted text-foreground'
+                        : 'text-muted-foreground hover:bg-muted/5',
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          'size-8 rounded-xl flex items-center justify-center transition-all',
+                          selectedCategory === category.id
+                            ? 'bg-background text-foreground scale-105'
+                            : 'bg-muted/5 text-muted-foreground group-hover:bg-muted/10',
+                        )}
+                      >
+                        <span className="text-sm font-bold">{count}</span>
+                      </div>
+                      <span className="truncate">{category.name}</span>
                     </div>
-                    <span className="truncate">{category.name}</span>
-                  </div>
-                  <span className="opacity-40 text-xs font-mono">
-                    {endpoints.filter((e) => e.categoryId === category.id).length}
-                  </span>
-                  {selectedCategory === category.id && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-foreground rounded-r-full" />
-                  )}
-                </button>
+                    {selectedCategory === category.id && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-foreground rounded-r-full" />
+                    )}
+                  </button>
 
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'size-8 p-0 rounded-xl hover:bg-muted/20',
-                      selectedCategory === category.id
-                        ? 'text-foreground hover:text-foreground'
-                        : 'text-muted-foreground/60',
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingCategory(category);
-                      setCategoryForm({
-                        name: category.name,
-                        description: category.description || '',
-                      });
-                      setIsCategoryModalOpen(true);
-                    }}
-                  >
-                    <Icons.edit className="size-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'size-8 p-0 rounded-xl hover:bg-rose-500/20 hover:text-rose-500',
-                      selectedCategory === category.id
-                        ? 'text-foreground hover:text-foreground'
-                        : 'text-muted-foreground/60',
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDeleteConfirm('category', category.id, category.name);
-                    }}
-                  >
-                    <Icons.trash className="size-3.5" />
-                  </Button>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        'size-10 p-0 rounded-xl hover:bg-muted/20',
+                        selectedCategory === category.id
+                          ? 'text-foreground hover:text-foreground'
+                          : 'text-muted-foreground',
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingCategory(category);
+                        setCategoryForm({
+                          name: category.name,
+                          description: category.description || '',
+                        });
+                        setIsCategoryModalOpen(true);
+                      }}
+                    >
+                      <Icons.edit className="size-4" strokeWidth={1.5} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        'size-10 p-0 rounded-xl hover:bg-destructive/10 hover:text-destructive',
+                        selectedCategory === category.id
+                          ? 'text-foreground hover:text-destructive'
+                          : 'text-muted-foreground',
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDeleteConfirm('category', category.id, category.name);
+                      }}
+                    >
+                      <Icons.trash className="size-4" strokeWidth={1.5} />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {/* Endpoints List */}
-        <div className="md:col-span-9 space-y-8">
-          <div className="flex items-center justify-between border-b border-border/5 pb-4">
-            <TextHeading as="h4" size="h4" className="lowercase text-foreground/80 tracking-tight">
+        <div className="md:col-span-8 space-y-8">
+          <div className="flex items-center justify-between border-b border-border/10 pb-4">
+            <TextHeading as="h4" size="h4" className="lowercase text-foreground">
               {selectedCategory
                 ? categories.find((c) => c.id === selectedCategory)?.name.toLowerCase()
                 : L.labels.allEndpoints || 'all endpoints'}
             </TextHeading>
-            <span className="text-sm text-muted-foreground/40 font-normal lowercase">
+            <span className="text-sm text-muted-foreground font-normal lowercase">
               showing {filteredEndpoints.length} of {endpoints.length} endpoints
             </span>
           </div>
 
           {filteredEndpoints.length === 0 ? (
-            <Card className="rounded-3xl border-2 border-dashed border-foreground/5 bg-transparent p-20 flex flex-col items-center justify-center text-center shadow-none">
+            <Card className="rounded-3xl border-2 border-dashed border-border bg-transparent p-20 flex flex-col items-center justify-center text-center shadow-none">
               <div className="size-20 rounded-full bg-muted/5 flex items-center justify-center mb-6">
-                <Icons.link className="size-10 text-muted-foreground/20" />
+                <Icons.link className="size-10 text-muted-foreground" />
               </div>
-              <TextHeading as="h3" size="h4" className="lowercase text-muted-foreground/50 mb-2">
+              <TextHeading as="h3" size="h4" className="lowercase text-muted-foreground mb-2">
                 no endpoints found
               </TextHeading>
-              <p className="text-sm text-muted-foreground/30 lowercase">
+              <p className="text-sm text-muted-foreground lowercase">
                 try adjusting your search or category filters
               </p>
             </Card>
@@ -420,25 +405,26 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
               {filteredEndpoints.map((endpoint) => (
                 <Card
                   key={endpoint.id}
-                  className="p-3.5 sm:p-4 rounded-3xl border-2 border-foreground/5 bg-card shadow-none hover:border-foreground/10 transition-all duration-300 group"
+                  className="p-5 rounded-2xl border-none bg-card shadow-none hover:bg-muted/10 transition-all duration-300 group cursor-pointer"
+                  onClick={() => onNavigate('detail', endpoint.id)}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex flex-row items-center gap-4">
                       <div
                         className={cn(
-                          'w-11 h-4 rounded-sm flex items-center justify-center shrink-0 border transition-all mt-0.5',
+                          'w-14 py-1.5 rounded-lg flex items-center justify-center shrink-0 border-none transition-all',
                           endpoint.method === 'GET'
-                            ? 'bg-blue-500/5 text-blue-500 border-blue-500/10'
+                            ? 'bg-blue-500/10 text-blue-500'
                             : endpoint.method === 'POST'
-                              ? 'bg-emerald-500/5 text-emerald-500 border-emerald-500/10'
+                              ? 'bg-emerald-500/10 text-emerald-500'
                               : endpoint.method === 'PUT'
-                                ? 'bg-amber-500/5 text-amber-500 border-amber-500/10'
+                                ? 'bg-amber-500/10 text-amber-500'
                                 : endpoint.method === 'DELETE'
-                                  ? 'bg-rose-500/5 text-rose-500 border-rose-500/10'
-                                  : 'bg-purple-500/5 text-purple-500 border-purple-500/10',
+                                  ? 'bg-rose-500/10 text-rose-500'
+                                  : 'bg-purple-500/10 text-purple-500',
                         )}
                       >
-                        <span className="text-[10px] font-bold tracking-widest leading-none">
+                        <span className="text-[10px] font-bold uppercase">
                           {endpoint.method}
                         </span>
                       </div>
@@ -448,12 +434,12 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                           <TextHeading
                             as="h3"
                             size="h4"
-                            className="lowercase text-foreground/80 text-sm sm:text-base font-medium"
+                            className="lowercase text-foreground text-base sm:text-lg font-medium"
                           >
                             {endpoint.path}
                           </TextHeading>
                           {!endpoint.isActive && (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-500/5 text-[9px] text-rose-500/60 lowercase font-medium border border-rose-500/10">
+                            <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-[10px] text-destructive lowercase font-medium">
                               disabled
                             </span>
                           )}
@@ -465,19 +451,27 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="flex items-center gap-2 h-9 px-3 rounded-xl hover:bg-muted/10 text-muted-foreground transition-all"
-                        onClick={() => onNavigate('editor', endpoint.id)}
+                        className="flex items-center gap-2 h-10 px-4 rounded-xl hover:bg-muted/10 text-muted-foreground transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigate('detail', endpoint.id);
+                        }}
                       >
-                        <Icons.edit className="size-3.5" />
-                        <span className="text-sm lowercase">{L.buttons.edit || 'manage'}</span>
+                        <Icons.edit className="size-4" />
+                        <span className="text-sm font-normal lowercase">
+                          {L.buttons.edit || 'manage'}
+                        </span>
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="size-9 p-0 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 text-muted-foreground/40 transition-all"
-                        onClick={() => openDeleteConfirm('endpoint', endpoint.id, endpoint.path)}
+                        className="size-10 p-0 rounded-xl hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteConfirm('endpoint', endpoint.id, endpoint.path);
+                        }}
                       >
-                        <Icons.trash className="size-3.5" />
+                        <Icons.trash className="size-4" />
                       </Button>
                     </div>
                   </div>

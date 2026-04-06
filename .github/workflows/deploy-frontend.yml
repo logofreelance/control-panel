@@ -9,6 +9,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'turbo.json'
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -28,11 +29,11 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build Frontend
-        run: npx turbo run build --filter=frontend-control-panel
+        run: npx turbo run build --filter=dashboard
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/frontend-control-panel/.output/public --project-name=lfengine
+          command: pages deploy apps/frontend-control-panel/.open-next --project-name=lfengine

@@ -42,7 +42,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
     // Middlewares dasar
     instance.use("*", logger());
     instance.use("*", cors({
-        origin: '*',
+        origin: (origin) => origin, // Izinkan origin yang memanggil
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allowHeaders: ["Content-Type", "Authorization", "x-api-key", "x-target-id"],
         credentials: true,

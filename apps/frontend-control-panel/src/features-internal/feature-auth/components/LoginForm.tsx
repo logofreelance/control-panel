@@ -5,14 +5,14 @@ import { AUTH_UI_LABELS } from '../constants/ui-labels';
 import { useAuth } from '../hooks/useAuth';
 
 export function LoginForm() {
-  const { formData, setFormData, status, handleLogin } = useAuth();
+  const { formData, status, handleLogin, handleInputChange } = useAuth();
 
   return (
     <form onSubmit={handleLogin} className="space-y-5">
       <Input
         label={AUTH_UI_LABELS.login.username}
         placeholder={AUTH_UI_LABELS.login.usernameExample}
-        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+        onChange={(e) => handleInputChange('username', e.target.value)}
         required
       />
 
@@ -20,7 +20,7 @@ export function LoginForm() {
         label={AUTH_UI_LABELS.login.password}
         type="password"
         placeholder={AUTH_UI_LABELS.login.passwordPlaceholder}
-        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        onChange={(e) => handleInputChange('password', e.target.value)}
         required
       />
 

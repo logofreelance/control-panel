@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { env } from '@/lib/env';
 import { Icons, LABELS as L } from '@/lib/config/client';
@@ -50,7 +50,7 @@ const LoadingScreen = () => (
   </div>
 );
 
-const ErrorScreen = ({ error }: { type: string; error: string }) => (
+const ErrorScreen = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
   <div className="min-h-screen flex items-center justify-center bg-background p-6">
     <Card className="max-w-md w-full p-8 text-center animate-page-enter">
       <div className="w-14 h-14 mx-auto mb-6 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive">
@@ -65,7 +65,7 @@ const ErrorScreen = ({ error }: { type: string; error: string }) => (
       <Button
         variant="default"
         size="lg"
-        onClick={() => window.location.reload()}
+        onClick={onRetry}
         className="w-full"
       >
         <Icons.refresh className="w-4 h-4 mr-2" /> Try Again
@@ -99,7 +99,7 @@ export function LoginView() {
 
   const router = useRouter();
 
-  const fetchBranding = () => {
+  const fetchBranding = useCallback(() => {
     fetch(`${env.API_URL}/settings`)
       .then((res) => res.json())
       .then((data) => {
@@ -112,41 +112,42 @@ export function LoginView() {
         }
       })
       .catch(() => {});
-  };
+  }, []);
+
+  const checkSystem = useCallback(async () => {
+    setSystemState('loading');
+    try {
+      const res = await fetch(`${env.API_URL}/system-status`);
+      const data = await res.json();
+
+      if (!data.hasDbUrl)
+        return (
+          setSystemState('no_database'),
+          setSystemError(L.common.login.databaseUrlNotFound)
+        );
+      if (!data.isDbConnected)
+        return (setSystemState('db_error'), setSystemError(L.common.login.unableToConnect));
+      if (!data.isAdminCreated) {
+        setSystemState('need_install');
+        setTimeout(() => router.replace('/install'), 1500);
+        return;
+      }
+
+      setSystemState('ready');
+      fetchBranding();
+    } catch {
+      setSystemState('db_error');
+      setSystemError(L.common.system.backendServerError);
+    }
+  }, [router, fetchBranding]);
 
   useEffect(() => {
-    const checkSystem = async () => {
-      try {
-        const res = await fetch(`${env.API_URL}/system-status`);
-        const data = await res.json();
-
-        if (!data.hasDbUrl)
-          return (
-            setSystemState('no_database'),
-            setSystemError(L.common.login.databaseUrlNotFound)
-          );
-        if (!data.isDbConnected)
-          return (setSystemState('db_error'), setSystemError(L.common.login.unableToConnect));
-        if (!data.isAdminCreated) {
-          setSystemState('need_install');
-          setTimeout(() => router.replace('/install'), 1500);
-          return;
-        }
-
-        setSystemState('ready');
-        fetchBranding();
-      } catch {
-        setSystemState('db_error');
-        setSystemError(L.common.system.backendServerError);
-      }
-    };
-
     checkSystem();
-  }, [router]);
+  }, [checkSystem]);
 
   if (systemState === 'loading') return <LoadingScreen />;
-  if (systemState === 'no_database') return <ErrorScreen type="no_database" error={systemError} />;
-  if (systemState === 'db_error') return <ErrorScreen type="db_error" error={systemError} />;
+  if (systemState === 'no_database') return <ErrorScreen error={systemError} onRetry={checkSystem} />;
+  if (systemState === 'db_error') return <ErrorScreen error={systemError} onRetry={checkSystem} />;
   if (systemState === 'need_install') return <InstallRedirectScreen />;
 
   return (

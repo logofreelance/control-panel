@@ -36,9 +36,13 @@ class ApiClient {
         const response = await fetch(url.toString(), fetchOptions);
 
         if (response.status === 401) {
-            // Unauthenticated: Global interceptor (only triggers on client-side)
-            if (typeof window !== 'undefined') {
+            // Only redirect if we are NOT already on the login page
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
                 window.location.href = '/login';
+            }
+            // If we ARE on login page, let the caller handle it (show error message)
+            if (response.headers.get('Content-Type')?.includes('application/json')) {
+                return await response.json();
             }
             throw new Error('Unauthorized');
         }

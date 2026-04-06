@@ -21,17 +21,25 @@ export function useAuth() {
                 router.push(AUTH_ROUTES.dashboard);
                 router.refresh();
             } else {
-                setStatus({ message: data.error?.message || data.message || AUTH_UI_LABELS.login.failedToConnect, status: 'error' });
+                const message = data.error?.message || data.message || AUTH_UI_LABELS.login.failedToConnect;
+                setStatus({ message: `LOGIN FAILED: ${message}`, status: 'error', loading: false });
             }
         } catch (err: any) {
-            setStatus({ message: err.message || AUTH_UI_LABELS.login.failedToConnect, status: 'error' });
+            console.error('[AUTH HOOK ERROR]', err);
+            const message = err.message || AUTH_UI_LABELS.login.failedToConnect;
+            setStatus({ message: `NETWORK ERROR: ${message}`, status: 'error', loading: false });
         }
     }, [formData, router]);
 
+    const handleInputChange = useCallback((key: 'username' | 'password', value: string) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
+        if (status?.message) setStatus(null); // Clear error when typing
+    }, [status]);
+
     return {
         formData,
-        setFormData,
         status,
         handleLogin,
+        handleInputChange
     };
 }

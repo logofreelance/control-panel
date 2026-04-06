@@ -90,7 +90,13 @@ async function buildAppInstance(env: EnvironmentConfig) {
     instance.route(`${apiPrefix}/app-users`, createFeatureTargetAppUsers());
     instance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
     instance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
-
+    
+    instance.get(`${apiPrefix}/system-status`, ctx => ctx.json({ 
+        status: 'ok', 
+        service: 'backend-control-panel',
+        version: '1.0.0'
+    }));
+    
     instance.get("/health", ctx => ctx.json({ status: 'ok', service: 'backend-control-panel' }));
 
     return instance;

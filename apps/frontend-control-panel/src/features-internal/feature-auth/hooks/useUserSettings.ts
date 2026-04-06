@@ -40,6 +40,8 @@ export function useUserSettings() {
 
     const handleLogout = useCallback(async () => {
         try { await authApi.logout(); } catch { }
+        // Clear manual cookie from both frontend & backend domains
+        document.cookie = "auth_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         window.location.href = AUTH_ROUTES.login;
     }, []);
 

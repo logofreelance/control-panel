@@ -66,7 +66,10 @@ export default function InstallPage() {
             .then(data => {
                 if (data.status === 'success' && data.data) {
                     setBranding(data.data);
-                    localStorage.setItem('site_settings', JSON.stringify(data.data));
+                    
+                    // Sync to new individual keys
+                    if (data.data.primaryColor) localStorage.setItem('theme_color', data.data.primaryColor);
+                    if (data.data.themePreset) localStorage.setItem('theme_preset', data.data.themePreset);
                 }
             })
             .catch(() => { });
@@ -77,7 +80,12 @@ export default function InstallPage() {
         const cached = localStorage.getItem('site_settings');
         if (cached) {
             try {
-                setBranding(JSON.parse(cached));
+                const data = JSON.parse(cached);
+                setBranding(data);
+                if (data.primaryColor) localStorage.setItem('theme_color', data.primaryColor);
+                if (data.themePreset) localStorage.setItem('theme_preset', data.themePreset);
+                // Clean up old key gradually
+                // localStorage.removeItem('site_settings'); 
             } catch { }
         }
 
@@ -307,7 +315,12 @@ export default function InstallPage() {
     return (
         <div
             className="min-h-screen flex items-center justify-center p-4 sm:p-8 relative overflow-hidden"
-            style={{ '--primary': primaryColor, '--primary-glow': primaryColor + '30' } as React.CSSProperties}
+            style={{ 
+                '--primary': primaryColor, 
+                '--primary-glow': primaryColor.startsWith('#') 
+                    ? primaryColor + '30' 
+                    : `color-mix(in srgb, ${primaryColor}, transparent 80%)`
+            } as React.CSSProperties}
         >
             {/* Animated Gradient Background */}
             <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -325,7 +338,11 @@ export default function InstallPage() {
                     <div className="flex items-center justify-center gap-3 mb-8">
                         <div
                             className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg"
-                            style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}99)` }}
+                            style={{ 
+                                background: primaryColor.startsWith('#') 
+                                    ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}99)`
+                                    : `linear-gradient(135deg, ${primaryColor}, color-mix(in srgb, ${primaryColor}, black 20%))`
+                            }}
                         >
                             {branding.siteName?.[0]?.toUpperCase() || 'M'}
                         </div>

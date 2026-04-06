@@ -19,6 +19,7 @@ export const VALID_SETTING_KEYS = [
     'primaryColor',
     'faviconUrl',
     'metaDescription',
+    'themePreset',
 ] as const;
 
 export type SettingKey = typeof VALID_SETTING_KEYS[number];

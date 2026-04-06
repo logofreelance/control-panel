@@ -11,6 +11,7 @@ const fontBrand = Instrument_Sans({
   weight: ['400', '500', '600', '700']
 });
 
+import { ThemeInitializer } from './ThemeInitializer';
 
 export const metadata = {
   title: `${BRAND.NAME} | Control Panel`,
@@ -21,20 +22,33 @@ export const metadata = {
 const themeScript = `
 (function() {
   try {
-    var storedColor = localStorage.getItem('theme_color') || '#FF4136';
-    var storedPreset = localStorage.getItem('theme_preset') || 'default';
+    var storedColor = localStorage.getItem('theme_color');
+    var storedPreset = localStorage.getItem('theme_preset');
     
-    // Apply immediately to prevent FLASH
-    if (storedPreset !== 'default') {
-      document.documentElement.classList.add('theme-' + storedPreset);
+    var html = document.documentElement;
+    
+    // 1. Apply Storage to HTML immediately (Flash Prevention)
+    if (storedColor && storedColor !== 'null') {
+      html.style.setProperty('--primary', storedColor);
+      var glow = storedColor;
+      if (storedColor.startsWith('#')) {
+        glow = storedColor + '26';
+      } else {
+        glow = 'color-mix(in srgb, ' + storedColor + ', transparent 85%)';
+      }
+      html.style.setProperty('--primary-glow', glow);
+      document.cookie = 'theme_color=' + encodeURIComponent(storedColor) + ';path=/;max-age=31536000;SameSite=Lax';
     }
     
-    document.documentElement.style.setProperty('--primary', storedColor);
-    document.documentElement.style.setProperty('--primary-glow', storedColor + '26');
-    
-    // Sync to cookies for next SSR
-    document.cookie = 'theme_color=' + encodeURIComponent(storedColor) + ';path=/;max-age=31536000;SameSite=Lax';
-    document.cookie = 'theme_preset=' + encodeURIComponent(storedPreset) + ';path=/;max-age=31536000;SameSite=Lax';
+    if (storedPreset && storedPreset !== 'null') {
+      var themeClasses = Array.from(html.classList).filter(function(c) { return c.startsWith('theme-'); });
+      themeClasses.forEach(function(c) { html.classList.remove(c); });
+      
+      if (storedPreset !== 'default') {
+        html.classList.add('theme-' + storedPreset);
+      }
+      document.cookie = 'theme_preset=' + encodeURIComponent(storedPreset) + ';path=/;max-age=31536000;SameSite=Lax';
+    }
   } catch (e) {}
 })();
 `;
@@ -46,14 +60,27 @@ export default async function RootLayout({
 }) {
   // Read theme from cookie on SERVER SIDE (sync, no flash)
   const cookieStore = await cookies();
-  const themeColor = cookieStore.get('theme_color')?.value;
-  const themePreset = cookieStore.get('theme_preset')?.value;
+  const rawColor = cookieStore.get('theme_color')?.value;
+  const rawPreset = cookieStore.get('theme_preset')?.value;
+
+  // Clean values from 'null' strings or empty values
+  const themeColor = (rawColor && rawColor !== 'null') ? rawColor : null;
+  const themePreset = (rawPreset && rawPreset !== 'null') ? rawPreset : 'default';
 
   // Validate color format
-  const isValidColor = themeColor && /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(themeColor);
-  const primaryColor = isValidColor ? themeColor : BRAND.PRIMARY_COLOR;
-  const primaryGlow = primaryColor + '26';
+  const isColorLikelyValid = themeColor && (themeColor.startsWith('#') || themeColor.startsWith('oklch') || themeColor.startsWith('rgb'));
+  const primaryColor = isColorLikelyValid ? themeColor : BRAND.PRIMARY_COLOR;
+  
+  // Safe Glow processing
+  let primaryGlow = primaryColor;
+  if (primaryColor.startsWith('#')) {
+    primaryGlow = primaryColor + '26';
+  } else {
+    primaryGlow = `color-mix(in srgb, ${primaryColor}, transparent 85%)`;
+  }
+
   const presetClass = themePreset && themePreset !== 'default' ? `theme-${themePreset}` : '';
+
 
   return (
     <html
@@ -69,7 +96,9 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`${fontBrand.variable} ${fontBrand.className} min-h-screen bg-background`} suppressHydrationWarning>
+        <ThemeInitializer />
         <NavigationProgressWrapper />
+
         <ConfigProvider>
           <ToastProvider>
             {children}

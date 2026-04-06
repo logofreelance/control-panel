@@ -17,6 +17,7 @@ const DEFAULTS: SiteSettings = {
     primaryColor: '#3B82F6',
     faviconUrl: '',
     metaDescription: '',
+    themePreset: 'default',
 };
 
 /**
@@ -35,6 +36,7 @@ export function rowsToSettingsMap(rows: SettingsRow[]): SiteSettings {
         primaryColor: map['primaryColor'] ?? DEFAULTS.primaryColor,
         faviconUrl: map['faviconUrl'] ?? DEFAULTS.faviconUrl,
         metaDescription: map['metaDescription'] ?? DEFAULTS.metaDescription,
+        themePreset: map['themePreset'] ?? DEFAULTS.themePreset,
     };
 }
 

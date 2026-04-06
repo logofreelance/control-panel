@@ -107,8 +107,17 @@ export function LoginView() {
           setBranding(data.data);
           const { primaryColor } = data.data;
           document.documentElement.style.setProperty('--primary', primaryColor);
-          document.documentElement.style.setProperty('--primary-glow', primaryColor + '15');
+          
+          let glowValue = primaryColor;
+          if (primaryColor.startsWith('#')) {
+            glowValue = primaryColor + '15'; 
+          } else if (primaryColor.includes('oklch') || primaryColor.includes('rgb')) {
+            glowValue = `color-mix(in srgb, ${primaryColor}, transparent 90%)`;
+          }
+          document.documentElement.style.setProperty('--primary-glow', glowValue);
+          
           document.title = `${data.data.siteName} - ${L.common.auth.login}`;
+
         }
       })
       .catch(() => {});

@@ -27,18 +27,29 @@ import { cn } from '@/lib/utils';
 import { TextHeading } from '@/components/ui/text-heading';
 import { InternalLayout } from '@/components/layout/InternalLayout';
 
-const THEME_PRESETS = [
+const LIGHT_PRESETS = [
     { name: 'simetri', label: 'simetri', color: 'oklch(0.556 0.22 27.325)' },
-    { name: 'midnight', label: 'midnight', color: 'oklch(0.7 0.15 250)' },
     { name: 'emerald', label: 'emerald', color: 'oklch(0.65 0.18 155)' },
-    { name: 'royal', label: 'royal', color: 'oklch(0.55 0.25 290)' },
+    { name: 'royal', label: 'royal', color: 'oklch(0.55 0.22 290)' },
     { name: 'slate', label: 'slate', color: 'oklch(0.45 0.05 260)' },
+    { name: 'rose', label: 'rose', color: 'oklch(0.65 0.18 5)' },
+    { name: 'amber', label: 'amber', color: 'oklch(0.7 0.18 75)' },
+];
+
+const DARK_PRESETS = [
+    { name: 'midnight', label: 'midnight', color: 'oklch(0.7 0.15 250)' },
+    { name: 'ebony', label: 'ebony', color: 'oklch(0.985 0 0)' },
+    { name: 'onyx', label: 'onyx', color: 'oklch(0.6 0.22 290)' },
+    { name: 'forest', label: 'forest', color: 'oklch(0.65 0.18 150)' },
+    { name: 'carbon', label: 'carbon', color: 'oklch(0.55 0.05 240)' },
+    { name: 'abyss', label: 'abyss', color: 'oklch(0.4 0.25 250)' },
 ];
 
 const COLOR_PALETTE = [
     '#FF4136', '#3B82F6', '#10B981', '#6366F1', '#F59E0B', '#EF4444',
     '#EC4899', '#8B5CF6', '#14B8A6', '#06B6D4', '#F43F5E', '#84CC16',
 ];
+
 
 const CleanHeroBackground = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
@@ -65,7 +76,7 @@ export function SettingsView() {
     };
 
     const handleApplyPreset = (presetName: string) => {
-        const preset = THEME_PRESETS.find(p => p.name === presetName);
+        const preset = [...LIGHT_PRESETS, ...DARK_PRESETS].find(p => p.name === presetName);
         if (!preset) return;
         updateField('themePreset', presetName);
         updateField('primaryColor', preset.color);
@@ -159,9 +170,31 @@ export function SettingsView() {
                                             <TextHeading size="h4" className="tracking-normal lowercase">visual atmosphere</TextHeading>
                                             <div className="space-y-8">
                                                 <div className="space-y-3">
-                                                    <Label className="ml-1 text-muted-foreground lowercase">interface presets</Label>
+                                                    <Label className="ml-1 text-muted-foreground lowercase">light themes</Label>
                                                     <div className="flex flex-wrap gap-2.5">
-                                                        {THEME_PRESETS.map((preset) => (
+                                                        {LIGHT_PRESETS.map((preset) => (
+                                                            <button
+                                                                key={preset.name}
+                                                                type="button"
+                                                                onClick={() => handleApplyPreset(preset.name)}
+                                                                className={cn(
+                                                                    "group flex items-center gap-3 pr-4 pl-1.5 py-1.5 rounded-full border transition-all",
+                                                                    settings.themePreset === preset.name 
+                                                                        ? 'border-foreground bg-foreground text-background shadow-none' 
+                                                                        : 'border-border bg-muted/20 hover:bg-muted'
+                                                                )}
+                                                            >
+                                                                <div className="size-5 rounded-full shrink-0 border border-black/5" style={{ backgroundColor: preset.color }} />
+                                                                <span className="text-sm font-normal lowercase">{preset.label}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-3 pt-4">
+                                                    <Label className="ml-1 text-muted-foreground lowercase">dark themes</Label>
+                                                    <div className="flex flex-wrap gap-2.5">
+                                                        {DARK_PRESETS.map((preset) => (
                                                             <button
                                                                 key={preset.name}
                                                                 type="button"

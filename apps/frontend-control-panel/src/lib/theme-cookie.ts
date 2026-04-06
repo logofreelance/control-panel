@@ -31,14 +31,18 @@ export function getThemeFromCookie(cookieHeader?: string): string | null {
 export function syncThemeToCookie(): void {
     if (typeof window === 'undefined') return;
     try {
-        const settings = localStorage.getItem('site_settings');
-        if (settings) {
-            const parsed = JSON.parse(settings);
-            if (parsed.primaryColor) {
-                setThemeCookie(parsed.primaryColor);
-            }
+        const color = localStorage.getItem('theme_color');
+        const preset = localStorage.getItem('theme_preset');
+        
+        if (color) {
+            setThemeCookie(color);
+        }
+        
+        if (preset) {
+            document.cookie = `theme_preset=${encodeURIComponent(preset)};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax`;
         }
     } catch {
         // Ignore errors
     }
 }
+

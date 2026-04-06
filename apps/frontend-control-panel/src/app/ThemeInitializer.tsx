@@ -5,32 +5,40 @@ import { BRAND } from '@/lib/config';
 
 export function ThemeInitializer() {
     useEffect(() => {
-        // Safely read and apply theme from localStorage
+        // Safely apply theme from independent localStorage keys
         try {
-            const settingsStr = localStorage.getItem('site_settings');
-            if (!settingsStr) {
-                // Use default if no settings
-                document.documentElement.style.setProperty('--primary', BRAND.PRIMARY_COLOR);
-                document.documentElement.style.setProperty('--primary-glow', BRAND.PRIMARY_COLOR + '26');
-                return;
+            const rawPrimary = localStorage.getItem('theme_color');
+            const rawPreset = localStorage.getItem('theme_preset');
+            
+            const primary = (rawPrimary && rawPrimary !== 'null' ? rawPrimary : null) || BRAND.PRIMARY_COLOR;
+            const preset = (rawPreset && rawPreset !== 'null' ? rawPreset : null) || 'default';
+
+            // 1. Apply Preset Class
+            const html = document.documentElement;
+            const themeClasses = Array.from(html.classList).filter(c => c.startsWith('theme-'));
+            themeClasses.forEach(c => html.classList.remove(c));
+            
+            if (preset !== 'default') {
+                html.classList.add(`theme-${preset}`);
             }
 
-            // Validate JSON and extract color
-            const settings = JSON.parse(settingsStr);
-            const primary = settings?.primaryColor || BRAND.PRIMARY_COLOR;
+            // 2. Apply Custom Primary Color
+            html.style.setProperty('--primary', primary);
 
-            // Validate color format (basic hex color validation)
-            const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-            const safeColor = colorRegex.test(primary) ? primary : BRAND.PRIMARY_COLOR;
+            // 3. Safely generate glow effect (Hex vs OKLCH)
+            let glowValue = primary;
+            if (primary.startsWith('#')) {
+                glowValue = primary + '26';
+            } else if (primary.includes('oklch') || primary.includes('rgb')) {
+                glowValue = `color-mix(in srgb, ${primary}, transparent 85%)`;
+            }
+            html.style.setProperty('--primary-glow', glowValue);
 
-            document.documentElement.style.setProperty('--primary', safeColor);
-            document.documentElement.style.setProperty('--primary-glow', safeColor + '26');
-        } catch {
-            // On any error, use default
-            document.documentElement.style.setProperty('--primary', BRAND.PRIMARY_COLOR);
-            document.documentElement.style.setProperty('--primary-glow', BRAND.PRIMARY_COLOR + '26');
+        } catch (e) {
+            console.error('[ThemeInitializer] Failed to apply cached theme', e);
         }
     }, []);
+
 
     return null;
 }

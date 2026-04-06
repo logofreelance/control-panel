@@ -18,4 +18,5 @@ export interface SiteSettings {
     primaryColor: string;
     faviconUrl: string;
     metaDescription: string;
+    themePreset: string;
 }

@@ -12,40 +12,71 @@ import type { SiteSettings } from '../types/settings.types';
 /** Apply primary color to CSS custom properties */
 function applyThemeColor(primaryColor: string) {
     if (!primaryColor) return;
+    
     document.documentElement.style.setProperty('--primary', primaryColor);
-    document.documentElement.style.setProperty('--primary-glow', primaryColor + '26');
+
+    // Safely generate glow effect for both hex and oklch
+    let glowValue = primaryColor;
+    if (primaryColor.startsWith('#')) {
+        glowValue = primaryColor + '26'; // 15% opacity hex
+    } else {
+        glowValue = `color-mix(in srgb, ${primaryColor}, transparent 85%)`;
+    }
+    document.documentElement.style.setProperty('--primary-glow', glowValue);
     
     // Sync to both storage layers
     localStorage.setItem('theme_color', primaryColor);
     document.cookie = `theme_color=${encodeURIComponent(primaryColor)};path=/;max-age=31536000;SameSite=Lax`;
 }
 
+
 /** Apply theme preset class to <html> */
 function applyThemePreset(presetName: string) {
-    // Clear manual inline primary color to let the preset take over
-    document.documentElement.style.removeProperty('--primary');
-    document.documentElement.style.removeProperty('--primary-glow');
+    const html = document.documentElement;
     
-    document.documentElement.className = document.documentElement.className
-        .replace(/theme-\w+/g, '')
-        .trim();
+    // Remove existing theme classes more safely
+    const themeClasses = Array.from(html.classList).filter(c => c.startsWith('theme-'));
+    themeClasses.forEach(c => html.classList.remove(c));
+
+    // Remove inline properties IF it's a known preset to avoid conflicts
     if (presetName && presetName !== 'default') {
-        document.documentElement.classList.add(`theme-${presetName}`);
+        html.style.removeProperty('--primary');
+        html.style.removeProperty('--primary-glow');
+        html.classList.add(`theme-${presetName}`);
     }
     
-    // Sync to both storage layers
-    localStorage.setItem('theme_preset', presetName || 'default');
-    document.cookie = `theme_preset=${presetName || 'default'};path=/;max-age=31536000;SameSite=Lax`;
+    // Sync to storage layers
+    const finalPreset = presetName || 'default';
+    localStorage.setItem('theme_preset', finalPreset);
+    document.cookie = `theme_preset=${finalPreset};path=/;max-age=31536000;SameSite=Lax`;
 }
 
+import { BRAND } from '@/lib/config';
+
+// ... (apply functions remain same)
+
 export function useSettings() {
-    const [settings, setSettings] = useState<SiteSettings>({
-        siteName: '',
-        siteTitle: '',
-        metaDescription: '',
-        primaryColor: '#FF4136',
-        faviconUrl: '',
-        themePreset: 'default',
+    const [settings, setSettings] = useState<SiteSettings>(() => {
+        if (typeof window !== 'undefined') {
+            const storedColor = localStorage.getItem('theme_color');
+            const storedPreset = localStorage.getItem('theme_preset');
+            return {
+                siteName: '',
+                siteTitle: '',
+                metaDescription: '',
+                primaryColor: (storedColor && storedColor !== 'null' ? storedColor : null) || BRAND.PRIMARY_COLOR,
+                faviconUrl: '',
+                themePreset: (storedPreset && storedPreset !== 'null' ? storedPreset : null) || 'default',
+            };
+        }
+        return {
+            siteName: '',
+            siteTitle: '',
+            metaDescription: '',
+            primaryColor: BRAND.PRIMARY_COLOR,
+            faviconUrl: '',
+            themePreset: 'default',
+        };
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -55,47 +86,47 @@ export function useSettings() {
         try {
             const res = await settingsApi.getAll();
             if (res.success && res.data) {
-                // Restore theme from localStorage as fallback if backend misses it
-                const storedTheme = localStorage.getItem('theme_preset');
-                const mergedData = { ...res.data };
-                if (storedTheme && (!res.data.themePreset || res.data.themePreset === 'default')) {
-                    mergedData.themePreset = storedTheme;
+                const newData = res.data;
+                
+                // IMPORTANT SINK: Only update state if data is valid
+                setSettings(newData);
+                
+                const preset = newData.themePreset || 'default';
+                const color = newData.primaryColor;
+
+                // Sync storage IF it's actually a valid theme-related change
+                // We use current storage as the ground truth if the API feels "empty"
+                const currentPreset = localStorage.getItem('theme_preset');
+                const currentColor = localStorage.getItem('theme_color');
+
+                if (preset !== 'default' || currentPreset === 'default') {
+                    if (preset !== currentPreset) {
+                       applyThemePreset(preset);
+                    }
                 }
                 
-                setSettings(mergedData);
-                
-                // ORDER MATTERS: Apply Preset FIRST, then Color Override
-                if (mergedData.themePreset) {
-                    applyThemePreset(mergedData.themePreset);
-                }
-                if (mergedData.primaryColor) {
-                    applyThemeColor(mergedData.primaryColor);
+                if (color && color !== currentColor) {
+                    applyThemeColor(color);
                 }
             }
         } catch {
-            console.error('[Settings] Failed to load settings');
+            console.error('[Settings] Failed to load settings from API');
         } finally {
             setLoading(false);
         }
     }, []);
 
+
+
     const saveSettings = useCallback(async (form: SiteSettings): Promise<boolean> => {
         setSaving(true);
         try {
-            // Save to localStorage as redundancy
-            if (form.themePreset) {
-                localStorage.setItem('theme_preset', form.themePreset);
-            }
-            if (form.primaryColor) {
-                localStorage.setItem('theme_color', form.primaryColor);
-            }
-            
             const res = await settingsApi.update(form);
             if (res.success) {
-                // ORDER MATTERS: Apply Preset FIRST, then Color Override
-                if (form.themePreset) {
-                    applyThemePreset(form.themePreset);
-                }
+                setSettings(form);
+                
+                // Immediately apply and sync
+                applyThemePreset(form.themePreset || 'default');
                 if (form.primaryColor) {
                     applyThemeColor(form.primaryColor);
                 }

@@ -17,6 +17,7 @@ export async function handleAdminLogin(c: Context, db: InternalDatabaseConnectio
         const { username, password } = await c.req.json();
         const result = await loginAdminUser(db, lucia, username, password);
         
+        // Lucia handles the serialization including SameSite=None and Secure
         const cookie = lucia.createSessionCookie(result.token);
         c.header('Set-Cookie', cookie.serialize(), { append: true });
         
@@ -27,14 +28,27 @@ export async function handleAdminLogin(c: Context, db: InternalDatabaseConnectio
 }
 
 export async function handleAdminLogout(c: Context, lucia: AuthPanelLuciaInstance) {
-    const bearer = c.req.header('Authorization')?.replace('Bearer ', '');
-    const cookie = c.req.header('Cookie')?.match(new RegExp(`${lucia.sessionCookieName}=([^;]+)`))?.[1];
-    const token = bearer || cookie;
+    // 1. Read token from multiple sources reliably
+    const cookieHeader = c.req.header('Cookie') || '';
+    const sessionId = lucia.readSessionCookie(cookieHeader) 
+                  || lucia.readBearerToken(c.req.header('Authorization') || '');
     
-    if (token) await logoutAdminUser(lucia, token);
+    // 2. Invalidate in Database
+    if (sessionId) {
+        try {
+            await logoutAdminUser(lucia, sessionId);
+        } catch (e) {
+            console.error('[LOGOUT] Failed to invalidate session in DB:', e);
+        }
+    }
     
+    // 3. Clear Cookie on browser
     const blankCookie = lucia.createBlankSessionCookie();
     c.header('Set-Cookie', blankCookie.serialize(), { append: true });
+    
+    // 4. Force browser to clear rest of the site data (Selective for logout safety)
+    // "cookies" clearing is standard for logout
+    c.header('Clear-Site-Data', '"cookies", "storage"', { append: true });
     
     return respondSuccess(c, null, AUTH_PANEL_RESPONSE_MESSAGES.logoutSuccess);
 }

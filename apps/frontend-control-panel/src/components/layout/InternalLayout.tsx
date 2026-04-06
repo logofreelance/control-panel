@@ -42,9 +42,22 @@ export function InternalLayout({
 
   const handleLogout = useCallback(async () => {
     try {
+      // 1. Backend Invalidation
       await authApi.logout();
-    } catch (e) {}
-    window.location.href = '/login';
+    } catch (e) {
+      console.warn('[LOGOUT] API call failed, continuing with client-side cleanup:', e);
+    } finally {
+      // 2. Client-side thorough cleanup
+      if (typeof window !== 'undefined') {
+        sessionStorage.clear();
+        // Clear all except theme preferences if we want to keep them, 
+        // but for security, clearing auth-specific tokens is more important.
+        //localStorage.removeItem('auth_token'); // If using Bearer tokens too
+        
+        // 3. Final Hard Redirect (replace ensures no back navigation to auth)
+        window.location.replace('/login');
+      }
+    }
   }, []);
 
   return (

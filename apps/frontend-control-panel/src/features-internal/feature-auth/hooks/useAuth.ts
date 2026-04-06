@@ -21,9 +21,17 @@ export function useAuth() {
             console.log("[USE_AUTH] Login result received:", data);
 
             if (data.success) {
-                console.log("[USE_AUTH] Success! Redirecting to dashboard...");
-                router.replace(AUTH_ROUTES.dashboard); // Gunakan replace agar tidak numpuk di history
-                setTimeout(() => window.location.reload(), 500); // Paksa reload jika router.push gantung
+                console.log("[USE_AUTH] Success! Syncing cookie and redirecting...");
+                
+                // MANUALLY SET COOKIE ON FRONTEND DOMAIN
+                // Ini penting karena domain backend & frontend berbeda di workers.dev
+                const SESSION_ID = data.data?.token || (data as any).token;
+                if (SESSION_ID) {
+                    document.cookie = `auth_session=${SESSION_ID}; path=/; SameSite=Lax; Secure; Max-Age=${60 * 60 * 24 * 30}`;
+                }
+
+                router.replace(AUTH_ROUTES.dashboard);
+                setTimeout(() => window.location.reload(), 300);
             } else {
                 console.log("[USE_AUTH] Login failed (success: false)");
                 const message = data.error?.message || data.message || AUTH_UI_LABELS.login.failedToConnect;

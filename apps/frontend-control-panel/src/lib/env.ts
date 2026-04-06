@@ -67,16 +67,21 @@ const getLocalApiUrl = () => {
 
 export const env = {
     get API_URL() {
+        if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            // Jika berjalan di cloudflare workers dev
+            if (hostname.endsWith('.workers.dev')) {
+                // Point ke backend-control-panel.logofreelance-com.workers.dev
+                return 'https://backend-control-panel.logofreelance-com.workers.dev/api';
+            }
+        }
+
         const value = envCore.get('NEXT_PUBLIC_API_URL');
         if (!value) {
             if (isLocalDev) {
                 return getLocalApiUrl();
             }
             return '/api';
-        }
-        // If env value contains localhost but we're accessing from LAN, swap hostname
-        if (typeof window !== 'undefined' && value.includes('localhost') && window.location.hostname !== 'localhost') {
-            return value.replace('localhost', window.location.hostname);
         }
         return value;
     }

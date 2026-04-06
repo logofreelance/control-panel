@@ -1,20 +1,21 @@
 /**
- * feature-monitor-database (HANYA MENGGUNAKAN TARGET DB)
+ * feature-monitor-database (SaaS REFACTOR)
  * Menyediakan statistik database, list table, dan pembersihan metadata
  */
 import { Hono } from 'hono';
-import { buildTargetDatabaseConnection } from '../target.db';
-import type { EnvironmentConfig } from '../../env';
 
-export function createFeatureMonitorDatabase(envConfig: EnvironmentConfig) {
-    const router = new Hono<{ Variables: { db: any } }>();
+export function createFeatureMonitorDatabase() {
+    const router = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
     
+    const getDb = (c: any) => c.get('targetDb');
+
+    // Middlewares guard
     router.use('*', async (c, next) => {
-        c.set('db', buildTargetDatabaseConnection(envConfig.DATABASE_URL_TARGET_BACKEND_SYSTEM));
+        if (!getDb(c)) {
+            return c.json({ status: 'error', message: 'Target database connection not established. Make sure x-target-id header is provided.' }, 400);
+        }
         await next();
     });
-
-    const getDb = (c: any) => c.get('db') as ReturnType<typeof buildTargetDatabaseConnection>;
 
     // === TEST CONNECTIVITY ===
     router.get('/test', async (c) => {
@@ -30,21 +31,17 @@ export function createFeatureMonitorDatabase(envConfig: EnvironmentConfig) {
     // === DATABASE STATS: Tables, Rows, and Sizes ===
     router.get('/stats', async (c) => {
         try {
-            // Get current database name first
+            // Get current database name
             let dbName: string | null = null;
             try {
                 const dbNameRes: any = await getDb(c).execute('SELECT DATABASE() as db');
-                dbName = Array.isArray(dbNameRes) ? dbNameRes[0]?.db : (dbNameRes.rows?.[0]?.db);
+                const rows = Array.isArray(dbNameRes) ? dbNameRes : (dbNameRes.rows || []);
+                dbName = rows.length > 0 ? rows[0]?.db : null;
             } catch (e) {
-                console.warn("[STATS-WARN] SELECT DATABASE() failed, falling back to env var", e);
+                console.warn("[STATS-WARN] SELECT DATABASE() failed", e);
             }
             
-            if (!dbName) {
-                // Pre-parse from URL or use fallback
-                dbName = envConfig.DATABASE_URL_TARGET_BACKEND_SYSTEM.split('/').pop()?.split('?')[0] || 'modularengine';
-            }
-
-            console.log("[STATS-DEBUG] Querying stats for database:", dbName);
+            if (!dbName) dbName = 'unknown';
 
             // Get all tables stats
             let res: any;
@@ -69,7 +66,6 @@ export function createFeatureMonitorDatabase(envConfig: EnvironmentConfig) {
 
             const tables = Array.isArray(res) ? res : (res.rows || []);
             const formattedTables = tables.map((t: any) => {
-                // Handle mapping from SHOW TABLE STATUS (cased properties) if needed
                 if (usingFallback) {
                     return {
                         name: t.Name || t.name,
@@ -88,11 +84,8 @@ export function createFeatureMonitorDatabase(envConfig: EnvironmentConfig) {
                 };
             });
 
-            // Aggregates
             const totalSizeMb = formattedTables.reduce((acc: any, t: any) => acc + Number(t.sizeMb) + Number(t.indexSizeMb), 0).toFixed(2);
             const totalRows = formattedTables.reduce((acc: any, t: any) => acc + t.rows, 0);
-            const totalTables = formattedTables.length;
-            const totalIndexSizeMb = formattedTables.reduce((acc: any, t: any) => acc + Number(t.indexSizeMb), 0).toFixed(2);
 
             return c.json({
                 status: 'success',
@@ -100,57 +93,12 @@ export function createFeatureMonitorDatabase(envConfig: EnvironmentConfig) {
                     databaseName: dbName,
                     totalSizeMb,
                     totalRows,
-                    totalTables,
-                    tables: formattedTables,
-                    summary: {
-                        largestTable: formattedTables[0] || { name: '-', sizeMb: '0', indexSizeMb: '0', overheadMb: '0', rows: 0 },
-                        mostRowsTable: [...formattedTables].sort((a, b) => b.rows - a.rows)[0] || { name: '-', sizeMb: '0', indexSizeMb: '0', overheadMb: '0', rows: 0 },
-                        indexRatio: totalSizeMb !== '0.00' ? (Number(totalIndexSizeMb) / Number(totalSizeMb) * 100).toFixed(1) : '0',
-                        totalIndexSizeMb
-                    }
+                    totalTables: formattedTables.length,
+                    tables: formattedTables
                 }
             });
         } catch (err: any) {
             console.error("[STATS-ERROR]", err);
-            return c.json({ status: 'error', message: err.message }, 500);
-        }
-    });
-
-    // === DROP TABLE ===
-    router.delete('/tables/:name', async (c) => {
-        try {
-            const tableName = c.req.param('name');
-            const dbName = c.req.query('db') || 'modularengine';
-
-            // Basic safety check: only allow alphanumeric and underscores
-            if (!/^[a-zA-Z0-9_]+$/.test(tableName)) {
-                return c.json({ status: 'error', message: 'Invalid table name' }, 400);
-            }
-
-            // We use direct execution for DROP TABLE
-            await getDb(c).execute(`DROP TABLE IF EXISTS \`${tableName}\``);
-            
-            return c.json({ status: 'success', message: `Table ${tableName} deleted` });
-        } catch (err: any) {
-            return c.json({ status: 'error', message: err.message }, 500);
-        }
-    });
-
-    // === CLEANUP ORPHANED METADATA ===
-    router.post('/cleanup', async (c) => {
-        try {
-            // Logic to cleanup target-system internal metadata if any
-            // For now, returning mock result matching frontend expectations
-            return c.json({
-                status: 'success',
-                data: {
-                    orphanedDataSources: 0,
-                    orphanedResources: 0,
-                    invalidRelations: 0,
-                    details: ['No orphaned items found']
-                }
-            });
-        } catch (err: any) {
             return c.json({ status: 'error', message: err.message }, 500);
         }
     });

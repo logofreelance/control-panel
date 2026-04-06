@@ -31,7 +31,7 @@ export interface ErrorTemplate {
 // App Environment Context for Hono
 export type AppEnv = {
     Variables: {
-        db: any; // The dynamically injected target database connection
+        targetDb: any; // The dynamically injected target database connection
         targetId: string;
     }
 };

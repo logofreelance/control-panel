@@ -1,0 +1,23 @@
+
+> dashboard@0.1.0 build
+> next build
+
+   ▲ Next.js 15.3.8
+   - Environments: .env.local, .env.production
+   - Experiments (use with caution):
+     · staleTimes
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/app/(dashboard)/database-schema/create/page.tsx
+Module not found: Can't resolve '@/modules/data-sources/pages'
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+> Build failed because of webpack errors
+npm error Lifecycle script `build` failed with error:
+npm error Error: command failed
+npm error   in workspace: dashboard@0.1.0
+npm error   at location: D:\6 WEBSITE\2 2025\desember\backend-engine\control-panel\apps\frontend-control-panel

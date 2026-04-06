@@ -12,7 +12,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Heading, Text, Badge, Stack } from '@/components/ui';
+import { Button, Badge } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { useConfig } from '@/modules/_core';
 import { ResourceForm } from '../components/ResourceForm';
 import type { DatabaseTable } from '../types';
@@ -60,7 +61,7 @@ export function CreateResourcePage() {
         return (
             <div className="p-12 text-center text-muted-foreground">
                 <Icons.loading className="w-6 h-6 animate-spin mx-auto" />
-                <Text variant="muted" className="mt-2">{L.labels.loadingSourceDetails}</Text>
+                <p className="text-sm text-muted-foreground mt-2">{L.labels.loadingSourceDetails}</p>
             </div>
         );
     }
@@ -86,12 +87,12 @@ export function CreateResourcePage() {
                     <Icons.arrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                     {L.labels.backToDataSources}
                 </Button>
-                <Stack direction="row" align="center" gap={3}>
-                    <Heading level={2}>{L.titles.createResource}</Heading>
+                <div className="flex flex-row items-center gap-3">
+                    <TextHeading size="h2" as="h2">{L.titles.createResource}</TextHeading>
                     <Badge variant="default">
                         {L.labels.forSource} {DatabaseTable.name}
                     </Badge>
-                </Stack>
+                </div>
             </div>
 
             <ResourceForm DatabaseTable={DatabaseTable} />

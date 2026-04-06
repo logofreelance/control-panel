@@ -1,20 +1,21 @@
 /**
- * feature-rbac-roles (HANYA MENGGUNAKAN TARGET DB)
+ * feature-rbac-roles (SaaS REFACTOR)
  * Mengelola tingkatan Role end-user pada target backend
  */
 import { Hono } from 'hono';
-import { buildTargetDatabaseConnection } from '../target.db';
-import type { EnvironmentConfig } from '../../env';
 
-export function createFeatureRbacRoles(envConfig: EnvironmentConfig) {
-    const router = new Hono<{ Variables: { db: any } }>();
+export function createFeatureRbacRoles() {
+    const router = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
     
+    const getDb = (c: any) => c.get('targetDb');
+
+    // Middleware guard
     router.use('*', async (c, next) => {
-        c.set('db', buildTargetDatabaseConnection(envConfig.DATABASE_URL_TARGET_BACKEND_SYSTEM));
+        if (!getDb(c)) {
+            return c.json({ status: 'error', message: 'Target database connection not established. Make sure x-target-id header is provided.' }, 400);
+        }
         await next();
     });
-
-    const getDb = (c: any) => c.get('db') as ReturnType<typeof buildTargetDatabaseConnection>;
 
     router.get('/', async (c) => {
         try {
@@ -26,7 +27,8 @@ export function createFeatureRbacRoles(envConfig: EnvironmentConfig) {
 
     router.post('/', async (c) => {
         try {
-            const { name, description, is_super = 0 } = await c.req.json();
+            const body = await c.req.json();
+            const { name, description, is_super = 0 } = body;
             const newId = crypto.randomUUID();
             await getDb(c).execute(
                 `INSERT INTO roles (id, name, description, is_super) VALUES (?, ?, ?, ?)`,

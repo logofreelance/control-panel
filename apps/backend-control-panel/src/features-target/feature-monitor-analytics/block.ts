@@ -1,20 +1,21 @@
 /**
- * feature-monitor-analytics (HANYA MENGGUNAKAN TARGET DB)
+ * feature-monitor-analytics (SaaS REFACTOR)
  * Menyediakan agregasi routing log dan kondisi node backend sasaran
  */
 import { Hono } from 'hono';
-import { buildTargetDatabaseConnection } from '../target.db';
-import type { EnvironmentConfig } from '../../env';
 
-export function createFeatureMonitorAnalytics(envConfig: EnvironmentConfig) {
-    const router = new Hono<{ Variables: { db: any } }>();
+export function createFeatureMonitorAnalytics() {
+    const router = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
     
+    const getDb = (c: any) => c.get('targetDb');
+
+    // Middleware guard
     router.use('*', async (c, next) => {
-        c.set('db', buildTargetDatabaseConnection(envConfig.DATABASE_URL_TARGET_BACKEND_SYSTEM));
+        if (!getDb(c)) {
+            return c.json({ status: 'error', message: 'Target database connection not established. Make sure x-target-id header is provided.' }, 400);
+        }
         await next();
     });
-
-    const getDb = (c: any) => c.get('db') as ReturnType<typeof buildTargetDatabaseConnection>;
 
     // === DASHBOARD STATS: Aggregates & Recent Logs ===
     router.get('/', async (c) => {
@@ -92,45 +93,6 @@ export function createFeatureMonitorAnalytics(envConfig: EnvironmentConfig) {
                 successCount: Number(row.success_count), errorCount: Number(row.error_count),
             }));
             return c.json({ status: 'success', data });
-        } catch (err: any) { return c.json({ status: 'error', message: err.message }, 500); }
-    });
-
-    // === ERROR DISTRIBUTION ===
-    router.get('/error-distribution', async (c) => {
-        try {
-            const res: any = await getDb(c).execute(`
-                SELECT CASE 
-                    WHEN status_code >= 200 AND status_code < 300 THEN '2xx'
-                    WHEN status_code >= 300 AND status_code < 400 THEN '3xx'
-                    WHEN status_code >= 400 AND status_code < 500 THEN '4xx'
-                    WHEN status_code >= 500 THEN '5xx' ELSE 'other'
-                END as category, COUNT(*) as count
-                FROM route_logs WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                GROUP BY category ORDER BY category ASC
-            `);
-            const rows = Array.isArray(res) ? res : (res.rows || []);
-            const data = rows.map((row: any) => ({ category: row.category, count: Number(row.count) }));
-            return c.json({ status: 'success', data });
-        } catch (err: any) { return c.json({ status: 'error', message: err.message }, 500); }
-    });
-
-    // === NODES HEALTH ===
-    router.get('/nodes-health', async (c) => {
-        try {
-            const res: any = await getDb(c).execute(`SELECT * FROM node_health_metrics ORDER BY lastHeartbeat`);
-            const rows = Array.isArray(res) ? res : (res.rows || []);
-            const OFFLINE_THRESHOLD_MS = 30000;
-            const STALE_THRESHOLD_MS = 5 * 60 * 1000;
-            const now = Date.now();
-            const nodes = rows.map((r: any) => {
-                const ageMs = now - new Date(r.lastHeartbeat).getTime();
-                return {
-                    nodeId: r.nodeId, endpointUrl: r.endpointUrl, cpuUsage: r.cpuUsage,
-                    memoryUsage: r.memoryUsage, uptime: r.uptime, status: ageMs < OFFLINE_THRESHOLD_MS ? 'online' : 'offline',
-                    lastHeartbeat: r.lastHeartbeat, _ageMs: ageMs
-                };
-            }).filter((n: any) => n._ageMs < STALE_THRESHOLD_MS).map(({ _ageMs, ...rest }: any) => rest);
-            return c.json({ status: 'success', data: nodes });
         } catch (err: any) { return c.json({ status: 'error', message: err.message }, 500); }
     });
 

@@ -47,7 +47,7 @@ describe('Feature Dynamic Routes endpoints', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         app = new Hono();
-        app.route('/api/route-builder', setupDynamicRoutesRouter({} as any));
+        app.route('/api/route-builder', setupDynamicRoutesRouter());
     });
 
     describe('Categories Resource', () => {

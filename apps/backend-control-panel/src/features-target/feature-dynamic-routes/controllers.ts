@@ -14,17 +14,17 @@ import type { AppEnv } from "./types";
 // CATEGORY CONTROLLERS
 // ============================================
 export const CategoryController = {
-  getAll: async (c: Context<AppEnv>) => {
+  getAll: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       return c.json({
         status: API_STATUS.SUCCESS,
-        data: await CategoryService.getAll(c.get("db")),
+        data: await CategoryService.getAll(c.get("targetDb")),
       });
     } catch (e: any) {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  create: async (c: Context<AppEnv>) => {
+  create: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       const body = await c.req.json();
       const { id, name, description } = body;
@@ -40,7 +40,7 @@ export const CategoryController = {
       }
 
       if (id) {
-        await CategoryService.update(c.get("db"), id, name, description);
+        await CategoryService.update(c.get("targetDb"), id, name, description);
         return c.json({
           status: API_STATUS.SUCCESS,
           data: { id, name: name.trim() },
@@ -48,7 +48,7 @@ export const CategoryController = {
       }
 
       const newId = randomUUID();
-      await CategoryService.create(c.get("db"), newId, name, description);
+      await CategoryService.create(c.get("targetDb"), newId, name, description);
       return c.json({
         status: API_STATUS.SUCCESS,
         data: { id: newId, name: name.trim() },
@@ -58,9 +58,9 @@ export const CategoryController = {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  delete: async (c: Context<AppEnv>) => {
+  delete: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
-      await CategoryService.delete(c.get("db"), c.req.param("id") as string);
+      await CategoryService.delete(c.get("targetDb"), c.req.param("id") as string);
       return c.json({ status: API_STATUS.SUCCESS });
     } catch (e: any) {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
@@ -72,30 +72,30 @@ export const CategoryController = {
 // ENDPOINT CONTROLLERS
 // ============================================
 export const EndpointController = {
-  getAll: async (c: Context<AppEnv>) => {
+  getAll: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       return c.json({
         status: API_STATUS.SUCCESS,
-        data: await EndpointService.getAll(c.get("db")),
+        data: await EndpointService.getAll(c.get("targetDb")),
       });
     } catch (e: any) {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  getStats: async (c: Context<AppEnv>) => {
+  getStats: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       return c.json({
         status: API_STATUS.SUCCESS,
-        data: await EndpointService.getStats(c.get("db")),
+        data: await EndpointService.getStats(c.get("targetDb")),
       });
     } catch (e: any) {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  getById: async (c: Context<AppEnv>) => {
+  getById: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       const endpoint = await EndpointService.getById(
-        c.get("db"),
+        c.get("targetDb"),
         c.req.param("id") as string,
       );
       return endpoint
@@ -105,29 +105,29 @@ export const EndpointController = {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  create: async (c: Context<AppEnv>) => {
+  create: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       const body = await c.req.json();
       const id = body.id || randomUUID();
-      await EndpointService.create(c.get("db"), id, body);
+      await EndpointService.create(c.get("targetDb"), id, body);
       return c.json({ status: API_STATUS.SUCCESS, data: { id } });
     } catch (e: any) {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  delete: async (c: Context<AppEnv>) => {
+  delete: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
-      await EndpointService.delete(c.get("db"), c.req.param("id") as string);
+      await EndpointService.delete(c.get("targetDb"), c.req.param("id") as string);
       return c.json({ status: API_STATUS.SUCCESS });
     } catch (e: any) {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  toggle: async (c: Context<AppEnv>) => {
+  toggle: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       const { is_active } = await c.req.json();
       await EndpointService.toggleActive(
-        c.get("db"),
+        c.get("targetDb"),
         c.req.param("id") as string,
         is_active,
       );
@@ -142,19 +142,19 @@ export const EndpointController = {
 // LOGS & CORE ROUTES CONTROLLERS
 // ============================================
 export const MiscController = {
-  getLogs: async (c: Context<AppEnv>) => {
+  getLogs: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       return c.json({
         status: API_STATUS.SUCCESS,
-        data: await LogService.getRecent(c.get("db")),
+        data: await LogService.getRecent(c.get("targetDb")),
       });
     } catch (e: any) {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  getApiRoutes: async (c: Context<AppEnv>) => {
+  getApiRoutes: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
-      const routes = await CoreRouteService.getAll(c.get("db"));
+      const routes = await CoreRouteService.getAll(c.get("targetDb"));
       console.log(`[CONTROLLER] getApiRoutes returning ${routes.length} routes`);
       return c.json({
         status: API_STATUS.SUCCESS,
@@ -170,21 +170,21 @@ export const MiscController = {
 // ERROR TEMPLATES CONTROLLERS
 // ============================================
 export const ErrorTemplateController = {
-  getAll: async (c: Context<AppEnv>) => {
+  getAll: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       return c.json({
         status: API_STATUS.SUCCESS,
-        data: await ErrorTemplateService.getAll(c.get("db")),
+        data: await ErrorTemplateService.getAll(c.get("targetDb")),
       });
     } catch (e: any) {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  create: async (c: Context<AppEnv>) => {
+  create: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       const body = await c.req.json();
       const id = randomUUID();
-      await ErrorTemplateService.create(c.get("db"), id, body);
+      await ErrorTemplateService.create(c.get("targetDb"), id, body);
       return c.json({
         status: API_STATUS.SUCCESS,
         data: { id, statusCode: body.statusCode },
@@ -193,10 +193,10 @@ export const ErrorTemplateController = {
       return c.json({ status: API_STATUS.ERROR, message: e.message }, 500);
     }
   },
-  delete: async (c: Context<AppEnv>) => {
+  delete: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       await ErrorTemplateService.delete(
-        c.get("db"),
+        c.get("targetDb"),
         c.req.param("id") as string,
       );
       return c.json({ status: API_STATUS.SUCCESS, message: "Deleted" });

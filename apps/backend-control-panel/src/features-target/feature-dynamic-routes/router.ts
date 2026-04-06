@@ -1,19 +1,20 @@
 import { Hono } from 'hono';
-import type { EnvironmentConfig } from '../../env';
-import type { AppEnv } from './types';
-import { injectTargetDatabase } from './middleware';
 import { CategoryController, EndpointController, MiscController, ErrorTemplateController } from './controllers';
 
 /**
- * FEATURE DYNAMIC ROUTES
- * - Di-mount di /api/route-builder
- * - Menyediakan endpoint CRUD untuk route categories, endpoints, logs, dan error templates
+ * FEATURE DYNAMIC ROUTES (SaaS REFACTOR)
+ * Menggunakan koneksi dinamis dari Middleware Global.
  */
-export function setupDynamicRoutesRouter(envConfig: EnvironmentConfig) {
-    const router = new Hono<AppEnv>();
+export function setupDynamicRoutesRouter() {
+    const router = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
 
-    // 1. Inject Target Database Connection via Header: x-target-id
-    router.use('*', injectTargetDatabase(envConfig));
+    // Middleware guard: pastikan koneksi database target tersedia
+    router.use('*', async (c, next) => {
+        if (!c.get('targetDb')) {
+            return c.json({ status: 'error', message: 'Target database connection not established.' }, 400);
+        }
+        await next();
+    });
 
     // 2. Categories Resource
     router.get('/categories', CategoryController.getAll);

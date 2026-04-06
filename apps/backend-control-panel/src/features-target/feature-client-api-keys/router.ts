@@ -1,20 +1,11 @@
 import { Hono } from 'hono';
 import { ApiKeyController } from './controllers';
-import { injectTargetDatabase } from './middleware';
-import type { EnvironmentConfig } from '../../env';
-import type { FeatureEnv } from './middleware';
 
-/**
- * Setup Client API Keys Feature Router
- * Self-contained module.
- */
-export function setupClientApiKeysRouter(envConfig: EnvironmentConfig) {
-    const router = new Hono<FeatureEnv>();
+export function setupClientApiKeysRouter() {
+    const router = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
 
-    // Inject DB middleware
-    router.use('*', injectTargetDatabase(envConfig));
-
-    // Routes
+    // Route langsung menggunakan controller tanpa middleware lokal 
+    // karena sudah ditangani oleh Middleware Global di index.ts
     router.get('/', ApiKeyController.getAll);
     router.post('/', ApiKeyController.create);
     router.put('/:id/toggle', ApiKeyController.toggle);

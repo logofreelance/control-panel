@@ -1,20 +1,22 @@
 /**
- * feature-target-app-users (TARGET DB ONLY)
- * Mengelola end-user pada target sistem yang dipilih.
- * Injeksi DB dilakukan secara dinamis melalui header x-target-id.
+ * feature-target-app-users (SaaS REFACTOR)
+ * Mengelola end-user pada target sistem yang dipilih secara dinamis.
  */
 import { Hono } from 'hono';
 import bcrypt from 'bcryptjs';
-import { injectTargetDatabase } from '../feature-dynamic-routes/middleware';
-import type { EnvironmentConfig } from '../../env';
 
-export function createFeatureTargetAppUsers(envConfig: EnvironmentConfig) {
-    const router = new Hono<{ Variables: { db: any, targetId: string } }>();
+export function createFeatureTargetAppUsers() {
+    const router = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
 
-    // 1. Dynamic Database Injection
-    router.use('*', injectTargetDatabase(envConfig));
+    const getDb = (c: any) => c.get('targetDb');
 
-    const getDb = (c: any) => c.get('db');
+    // Middleware guard: pastikan koneksi database target tersedia
+    router.use('*', async (c, next) => {
+        if (!getDb(c)) {
+            return c.json({ status: 'error', message: 'Target database connection not established. Make sure x-target-id header is provided.' }, 400);
+        }
+        await next();
+    });
 
     // List Users
     router.get('/', async (c) => {
@@ -27,8 +29,7 @@ export function createFeatureTargetAppUsers(envConfig: EnvironmentConfig) {
             const sort = c.req.query('sort') === 'asc' ? 'ASC' : 'DESC';
 
             const offset = (page - 1) * limit;
-            // Build WHERE clause
-            const conditions: string[] = ['1=1']; // Base condition
+            const conditions: string[] = ['1=1'];
             const params: any[] = [];
 
             if (search) {
@@ -46,14 +47,12 @@ export function createFeatureTargetAppUsers(envConfig: EnvironmentConfig) {
             }
 
             const whereClause = ` WHERE ${conditions.join(' AND ')}`;
-            // [FORCE RELOAD TIMESTAMP: 2026-03-28 08:45:00]
 
             // Get Total Count
             const countRes: any = await getDb(c).execute(
                 `SELECT COUNT(*) as total FROM users u ${whereClause}`,
                 params
             );
-            console.log('[DEBUG-LIST-USERS] countRes:', JSON.stringify(countRes).substring(0, 200));
             const countRows = Array.isArray(countRes) ? countRes : (countRes.rows || []);
             const total = countRows[0]?.total || countRows[0]?.['COUNT(*)'] || 0;
 
@@ -70,7 +69,6 @@ export function createFeatureTargetAppUsers(envConfig: EnvironmentConfig) {
                 [...params, limit, offset]
             );
             const rows = Array.isArray(dataRes) ? dataRes : (dataRes.rows || []);
-            console.log('[DEBUG-LIST-USERS] data length:', rows.length);
 
             return c.json({
                 status: 'success',

@@ -318,7 +318,7 @@ export function TargetRegistryView() {
           title={TARGET_UI_LABELS.confirm.deleteTitle.toLowerCase()}
           message={TARGET_UI_LABELS.confirm.deleteMessage.toLowerCase()}
           confirmText={TARGET_UI_LABELS.confirm.deleteConfirm.toLowerCase()}
-          variant="destructive"
+          variant="danger"
           loading={deletingId === confirmDeleteId}
         />
       </div>

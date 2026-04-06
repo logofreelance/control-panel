@@ -11,7 +11,8 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { Button, Heading, Text } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { useConfig } from '@/modules/_core';
 import { CreateSchemaForm } from '../components/CreateSchemaForm';
 
@@ -33,10 +34,10 @@ export function CreateSchemaPage() {
                     <Icons.arrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                     {L.labels.backToDataSources}
                 </Button>
-                <Heading level={2}>{L.titles.createSchema}</Heading>
-                <Text variant="muted" className="mt-2">
+                <TextHeading size="h2" as="h2">{L.titles.createSchema}</TextHeading>
+                <p className="text-sm text-muted-foreground mt-2">
                     {L.forms.schemaDefinitionSubtitle}
-                </Text>
+                </p>
             </div>
 
             <CreateSchemaForm />

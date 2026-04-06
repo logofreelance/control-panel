@@ -1,0 +1,140 @@
+
+> dashboard@0.1.0 build
+> next build
+
+   ▲ Next.js 15.3.8
+   - Environments: .env.local, .env.production
+   - Experiments (use with caution):
+     · staleTimes
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 8.0s
+
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+Attempted import error: 'Text' is not exported from '@/components/ui' (imported as 'Text').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+Attempted import error: 'Stack' is not exported from '@/components/ui' (imported as 'Stack').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+Attempted import error: 'Heading' is not exported from '@/components/ui' (imported as 'Heading').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/CreateSchemaPage.tsx
+Attempted import error: 'Heading' is not exported from '@/components/ui' (imported as 'Heading').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateSchemaPage.tsx
+
+./src/features-target/feature-target-database-schema/pages/CreateSchemaPage.tsx
+Attempted import error: 'Text' is not exported from '@/components/ui' (imported as 'Text').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateSchemaPage.tsx
+
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+Attempted import error: 'Text' is not exported from '@/components/ui' (imported as 'Text').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+Attempted import error: 'Stack' is not exported from '@/components/ui' (imported as 'Stack').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+Attempted import error: 'Heading' is not exported from '@/components/ui' (imported as 'Heading').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+
+Found 1 warning while optimizing generated CSS:
+
+[2m│   }[22m
+[2m│ }[22m
+[2m│[22m @import "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&display=swap";
+[2m┆[22m        [33m[2m^--[22m @import rules must precede all rules aside from @charset and @layer statements[39m
+[2m┆[22m
+[2m│ * {[22m
+[2m│   scrollbar-width: none !important;[22m
+
+ ⚠ Compiled with warnings in 19.0s
+
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+Attempted import error: 'Text' is not exported from '@/components/ui' (imported as 'Text').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+Attempted import error: 'Stack' is not exported from '@/components/ui' (imported as 'Stack').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+Attempted import error: 'Heading' is not exported from '@/components/ui' (imported as 'Heading').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/CreateSchemaPage.tsx
+Attempted import error: 'Heading' is not exported from '@/components/ui' (imported as 'Heading').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateSchemaPage.tsx
+
+./src/features-target/feature-target-database-schema/pages/CreateSchemaPage.tsx
+Attempted import error: 'Text' is not exported from '@/components/ui' (imported as 'Text').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/CreateSchemaPage.tsx
+
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+Attempted import error: 'Text' is not exported from '@/components/ui' (imported as 'Text').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+Attempted import error: 'Stack' is not exported from '@/components/ui' (imported as 'Stack').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+Attempted import error: 'Heading' is not exported from '@/components/ui' (imported as 'Heading').
+
+Import trace for requested module:
+./src/features-target/feature-target-database-schema/pages/EditResourcePage.tsx
+
+ ✓ Compiled successfully in 28.0s
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/app/(dashboard)/database-schema/[id]/relations/[rid]/edit/page.tsx:13:30
+Type error: Type '{ dataSourceId: number; relationName: string; }' is not assignable to type 'IntrinsicAttributes & EditRelationFormProps'.
+  Property 'dataSourceId' does not exist on type 'IntrinsicAttributes & EditRelationFormProps'.
+
+[0m [90m 11 |[39m     [36mif[39m (isNaN(id) [33m||[39m [33m![39mrid) [36mreturn[39m [36mnull[39m[33m;[39m[0m
+[0m [90m 12 |[39m[0m
+[0m[31m[1m>[22m[39m[90m 13 |[39m     [36mreturn[39m [33m<[39m[33mEditRelationForm[39m dataSourceId[33m=[39m{id} relationName[33m=[39m{rid} [33m/[39m[33m>[39m[33m;[39m[0m
+[0m [90m    |[39m                              [31m[1m^[22m[39m[0m
+[0m [90m 14 |[39m }[0m
+[0m [90m 15 |[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+npm error Lifecycle script `build` failed with error:
+npm error Error: command failed
+npm error   in workspace: dashboard@0.1.0
+npm error   at location: D:\6 WEBSITE\2 2025\desember\backend-engine\control-panel\apps\frontend-control-panel

@@ -6,4 +6,4 @@
  * ✅ THIN LAYER: Only routing - all logic in modules
  */
 
-export { CreateSourcePage as default } from '@/modules/data-sources/pages';
+export { CreateSchemaPage as default } from '@/features-target/feature-target-database-schema/pages';

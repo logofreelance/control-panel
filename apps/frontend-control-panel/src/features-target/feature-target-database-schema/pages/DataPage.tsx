@@ -31,28 +31,28 @@ export function DataPage() {
     const [error, setError] = useState<string | null>(null);
 
     // Fetch data source details
-    useEffect(() => {
+    const fetchSource = async () => {
         const tableId = params.tableId || params.id;
         if (!tableId) return;
 
-        const fetchSource = async () => {
-            try {
-                const res = await fetch(`${api.databaseSchema.detail(Number(tableId))}`);
-                const data = await res.json();
+        try {
+            const res = await fetch(`${api.databaseSchema.detail(Number(tableId))}`);
+            const data = await res.json();
 
-                if (data.status === API_STATUS.SUCCESS) {
-                    setSource(data.data);
-                } else {
-                    setError(data.message || L.messages.error.loadFailed);
-                }
-            } catch (e) {
-                console.error(e);
-                setError(L.messages.error.network);
-            } finally {
-                setLoading(false);
+            if (data.status === API_STATUS.SUCCESS) {
+                setSource(data.data);
+            } else {
+                setError(data.message || L.messages.error.loadFailed);
             }
-        };
+        } catch (e) {
+            console.error(e);
+            setError(L.messages.error.network);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchSource();
     }, [params.id, api, API_STATUS]);
 
@@ -134,7 +134,7 @@ export function DataPage() {
                             variant="ghost"
                             size="sm"
                             className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted"
-                            onClick={() => fetchData()} // Local fetchData might not exist here, but good for placeholder
+                            onClick={() => fetchSource()} // Trigger source re-fetch
                         >
                             <Icons.refresh className="size-3.5" />
                         </Button>

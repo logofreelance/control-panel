@@ -123,7 +123,7 @@ export const DatabaseSchemaTrashView = () => {
                     isOpen={!!confirmDialog}
                     onConfirm={handleAction}
                     onClose={() => setConfirmDialog(null)}
-                    variant={confirmDialog?.action === 'destroy' ? 'danger' : 'success'}
+                    variant={confirmDialog?.action === 'destroy' ? 'danger' : 'info'}
                     title={confirmDialog?.action === 'restore' ? `restore schema?` : `destroy permanently?`}
                     message={confirmDialog?.action === 'restore'
                         ? `${L.messages.confirm.confirmRestore} "${confirmDialog?.name}"?`.toLowerCase()

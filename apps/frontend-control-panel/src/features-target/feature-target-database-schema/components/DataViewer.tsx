@@ -228,7 +228,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                                 checked={selection.isSelected(row.id as number)}
                                 onChange={() => selection.toggle(row.id as number)}
                             />
-                            <Badge variant="outline" className="text-[10px] font-mono border-none bg-muted px-2 py-0.5">#{row.id}</Badge>
+                            <Badge variant="outline" className="text-[10px] font-mono border-none bg-muted px-2 py-0.5">#{String(row.id)}</Badge>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              {columns.slice(0, 4).map(col => (
@@ -313,7 +313,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                 title="delete record?"
                 message={L.messages.confirm.deleteRow.toLowerCase()}
                 confirmText={C.actions.delete.toLowerCase()}
-                variant="destructive"
+                variant="danger"
             />
 
             <ImportDataModal

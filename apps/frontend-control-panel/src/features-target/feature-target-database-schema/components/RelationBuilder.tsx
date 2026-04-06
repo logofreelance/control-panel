@@ -184,7 +184,7 @@ export const RelationBuilder = ({ DatabaseTableId, DatabaseTableName, onRelation
                 title="delete relation?"
                 message={`${C.messages.confirmDelete} "${deleteTarget?.target?.name}"`.toLowerCase()}
                 confirmText={C.actions.delete.toLowerCase()}
-                variant="destructive"
+                variant="danger"
             />
         </div>
     );

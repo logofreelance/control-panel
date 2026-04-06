@@ -151,7 +151,7 @@ export const UsersView = () => {
                 title={L.buttons.delete}
                 message={L.messages.confirmDelete}
                 confirmText={L.buttons.delete}
-                variant="destructive"
+                variant="danger"
                 loading={submitting}
             />
         </div>

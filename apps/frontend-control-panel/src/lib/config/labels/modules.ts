@@ -241,6 +241,7 @@ export const MODULE_LABELS = {
                 destroySource: 'Delete Permanently?',
                 confirmRestore: 'Are you sure you want to restore this data source?',
                 confirmDestroy: 'Are you sure you want to permanently delete this data source? This action cannot be undone and will DROP the database table.',
+                irreversible_action: 'This action is irreversible',
             },
             warnings: {
                 systemTableRestricted: 'System Table Restricted',

@@ -166,7 +166,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                         <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                             <Icons.api className="size-5" />
                         </div>
-                        <TextHeading as="h1" size="h3">{resource ? L.buttons.editResource : L.buttons.createResource}</TextHeading>
+                        <TextHeading as="h1" size="h3">{resource ? L.titles.editResource : L.titles.createResource}</TextHeading>
                     </div>
                     <p className="text-sm text-muted-foreground lowercase px-1">define api endpoint for <strong>{DatabaseTable.name}</strong></p>
                 </header>

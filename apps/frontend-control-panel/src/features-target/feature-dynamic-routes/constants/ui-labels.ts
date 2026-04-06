@@ -6,6 +6,8 @@ export const DYNAMIC_ROUTES_LABELS = {
             loading: 'Loading API Management...',
             categories: 'Categories',
             endpoints: 'Endpoints',
+            allRoutes: 'All Routes',
+            allEndpoints: 'All Endpoints',
             endpoint: 'endpoint',
             noCategories: 'No categories yet',
             noEndpoints: 'No endpoints in this category',

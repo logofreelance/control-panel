@@ -122,7 +122,7 @@ export const CreateSchemaForm = () => {
             <div className="flex flex-col gap-10 animate-page-enter max-w-5xl mx-auto pb-32">
                 {/* Header */}
                 <header className="px-1 space-y-1">
-                    <TextHeading as="h1" size="h3">{L.forms.createSchema}</TextHeading>
+                    <TextHeading as="h1" size="h3">{L.titles.createSchema}</TextHeading>
                     <p className="text-sm text-muted-foreground lowercase">define your database structure and columns</p>
                 </header>
 
@@ -286,14 +286,14 @@ export const CreateSchemaForm = () => {
                             <div className="grid md:grid-cols-2 gap-6">
                                 <CheckboxOption
                                     checked={options.timestamps}
-                                    onChange={(val) => setOptions({ ...options, timestamps: val })}
+                                    onChange={(val: boolean) => setOptions({ ...options, timestamps: val })}
                                     label={L.forms.timestamps}
                                     desc={L.forms.timestampsDescription}
                                     icon={Icons.clock}
                                 />
                                 <CheckboxOption
                                     checked={options.softDelete}
-                                    onChange={(val) => setOptions({ ...options, softDelete: val })}
+                                    onChange={(val: boolean) => setOptions({ ...options, softDelete: val })}
                                     label={L.forms.softDelete}
                                     desc={L.forms.softDeleteDescription}
                                     icon={Icons.trash}

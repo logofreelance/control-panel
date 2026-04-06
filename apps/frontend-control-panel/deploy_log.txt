@@ -1,0 +1,14 @@
+﻿
+ Γ¢à∩╕Å wrangler 3.114.17 (update available 4.80.0)
+-----------------------------------------------
+
+≡ƒîÇ Building list of assets...
+≡ƒîÇ Starting asset upload...
+No files to upload. Proceeding with deployment...
+Total Upload: 8505.60 KiB / gzip: 1553.72 KiB
+Worker Startup Time: 25 ms
+No bindings found.
+Uploaded lfengine (19.54 sec)
+Deployed lfengine triggers (1.22 sec)
+  https://lfengine.logofreelance-com.workers.dev
+Current Version ID: e26a2de4-633b-4066-98ca-2f8ad0815bab

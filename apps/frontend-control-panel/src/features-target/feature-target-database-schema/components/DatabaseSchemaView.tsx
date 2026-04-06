@@ -164,7 +164,7 @@ export const DatabaseSchemaView = () => {
                                 onToggleExpand={() => toggleExpand(src.id)}
                                 onClone={() => handleClone(src.id)}
                                 onDelete={() => setConfirmDialog({ id: src.id, name: src.name })}
-                                onDeleteResource={(resourceId, resourceName) =>
+                                onDeleteResource={(resourceId: number, resourceName: string) =>
                                     setConfirmDialog({ id: resourceId, name: resourceName, type: 'resource', sourceId: src.id })
                                 }
                                 nodeId={nodeId}
@@ -177,7 +177,7 @@ export const DatabaseSchemaView = () => {
                     isOpen={!!confirmDialog}
                     onConfirm={handleDelete}
                     onClose={() => setConfirmDialog(null)}
-                    variant="destructive"
+                    variant="danger"
                     title={confirmDialog?.type === 'resource'
                         ? `delete resource?`
                         : `delete database schema?`}

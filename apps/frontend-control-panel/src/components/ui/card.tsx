@@ -14,7 +14,7 @@ function Card({
       className={cn(
         "group/card flex flex-col overflow-hidden transition-all duration-300",
         "bg-card text-card-foreground",
-        "rounded-2xl border border-border/40 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]",
+        "rounded-xl border-none shadow-sm",
         "py-5 data-[size=sm]:py-3 gap-5 data-[size=sm]:gap-3",
         "has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0",
         "*:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",

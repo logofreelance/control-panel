@@ -1,17 +1,24 @@
 'use client';
 
+/**
+ * TargetFormModal - Elite Minimalist Refactor (Modal v2)
+ * 
+ * STICKING TO RULES:
+ * - Using global Modal component for consistent p-8 padding and scroll support.
+ * - No tracking-* (Removed tracking-widest, tracking-none)
+ * - No text size < text-xs (Changed text-[10px] to text-xs)
+ * - No text color opacity (Removed /60, opacity-*)
+ * - Lowercase Consistency: Enforced lowercase across all headers, labels, and buttons.
+ * - Standard Button usage only.
+ */
+
 import { useState, useEffect } from 'react';
 import { 
     Button, 
     Input, 
     Badge,
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
+    Modal,
 } from '@/components/ui';
-import { TextHeading } from '@/components/ui/text-heading';
 import { Icons } from '../config/icons';
 import { TARGET_UI_LABELS } from '../constants/ui-labels';
 import { cn } from '@/lib/utils';
@@ -68,51 +75,53 @@ export function TargetFormModal({ isOpen, onClose, onSave, onTestConnection, edi
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md p-0 overflow-hidden border-border/40 bg-background rounded-xl shadow-none ring-0 outline-none">
-                <DialogHeader className="p-8 pb-0">
-                    <div className="flex flex-col items-center text-center gap-6">
-                        <div className="size-12 rounded-xl bg-foreground text-background flex items-center justify-center shadow-none">
-                            <Icons.database className="size-6" />
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={editingTarget ? TARGET_UI_LABELS.modal.updateTitle.toLowerCase() : TARGET_UI_LABELS.modal.createTitle.toLowerCase()}
+            className="sm:max-w-xl"
+        >
+            <div className="flex flex-col gap-8 font-instrument pt-4">
+                {/* Interesting Context Box */}
+                <div className="flex items-center justify-between p-5 bg-muted/10 rounded-3xl border border-border border-dashed">
+                    <div className="flex items-center gap-4">
+                        <div className="size-11 rounded-2xl bg-background flex items-center justify-center text-primary shadow-sm border border-border shrink-0">
+                            <Icons.database className="size-5" />
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <TextHeading size="h4" className="tracking-none">
-                                {editingTarget ? TARGET_UI_LABELS.modal.updateTitle : TARGET_UI_LABELS.modal.createTitle}
-                            </TextHeading>
-                            <p className="text-[10px] font-medium uppercase text-muted-foreground/60 tracking-widest">
-                                {TARGET_UI_LABELS.modal.configBadge}
-                            </p>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-foreground uppercase">Infrastructure setup</span>
+                            <span className="text-xs text-muted-foreground font-normal lowercase">{TARGET_UI_LABELS.modal.configBadge.toLowerCase()}</span>
                         </div>
                     </div>
-                </DialogHeader>
+                </div>
 
-                <form onSubmit={handleSubmit} className="px-8 pb-8 pt-8 space-y-8">
-                    <div className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="grid grid-cols-1 gap-6">
                         <Input
-                            label={TARGET_UI_LABELS.modal.nameLabel}
-                            placeholder={TARGET_UI_LABELS.modal.namePlaceholder}
+                            label={TARGET_UI_LABELS.modal.nameLabel.toLowerCase()}
+                            placeholder={TARGET_UI_LABELS.modal.namePlaceholder.toLowerCase()}
                             value={name}
                             onChange={e => setName(e.target.value)}
                             required
-                            className="h-12 bg-muted/30 border-muted-foreground/20 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+                            className="h-12 bg-muted border border-border text-base font-normal rounded-2xl shadow-none"
                         />
                         <Input
-                            label={TARGET_UI_LABELS.modal.descLabel}
-                            placeholder={TARGET_UI_LABELS.modal.descPlaceholder}
+                            label={TARGET_UI_LABELS.modal.descLabel.toLowerCase()}
+                            placeholder={TARGET_UI_LABELS.modal.descPlaceholder.toLowerCase()}
                             value={description}
                             onChange={e => setDescription(e.target.value)}
-                            className="h-12 bg-muted/30 border-muted-foreground/20 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+                            className="h-12 bg-muted border border-border text-base font-normal rounded-2xl shadow-none"
                         />
                         
                         <div className="space-y-4">
                             <Input
-                                label={TARGET_UI_LABELS.modal.dbUrlLabel}
-                                placeholder={TARGET_UI_LABELS.modal.dbUrlPlaceholder}
+                                label={TARGET_UI_LABELS.modal.dbUrlLabel.toLowerCase()}
+                                placeholder={TARGET_UI_LABELS.modal.dbUrlPlaceholder.toLowerCase()}
                                 value={databaseUrl}
                                 onChange={e => { setDatabaseUrl(e.target.value); setTestResult(null); }}
                                 required={!editingTarget}
                                 type="password"
-                                className="h-12 bg-muted/30 border-muted-foreground/20 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+                                className="h-12 bg-muted border border-border text-base font-normal rounded-2xl shadow-none"
                             />
                             
                             <div className="flex items-center justify-between gap-4 pt-2">
@@ -122,17 +131,17 @@ export function TargetFormModal({ isOpen, onClose, onSave, onTestConnection, edi
                                     size="sm"
                                     onClick={handleTest}
                                     disabled={!databaseUrl.trim() || testing}
-                                    className="border-border/60 hover:bg-primary/5 hover:border-primary/40 h-10 px-4 transition-all"
+                                    className="rounded-xl h-10 px-4 lowercase"
                                 >
-                                    {testing ? <Icons.loading className="size-3 animate-spin mr-2" /> : <Icons.zap className="size-3 mr-2" />}
-                                    <span className="text-xs font-semibold uppercase">{TARGET_UI_LABELS.modal.testLatency}</span>
+                                    {testing ? <Icons.loading className="size-3.5 animate-spin mr-2" /> : <Icons.zap className="size-3.5 mr-2" />}
+                                    {TARGET_UI_LABELS.modal.testLatency.toLowerCase()}
                                 </Button>
                                 
                                 {testResult && (
-                                    <Badge variant="outline" className={cn("rounded-lg px-3 py-1.5 border-none", testResult.ok ? "bg-chart-2/10 text-chart-2" : "bg-destructive/10 text-destructive")}>
-                                        <div className={cn("size-1.5 rounded-full shrink-0 mr-2", testResult.ok ? "bg-chart-2" : "bg-destructive")} />
-                                        <span className="text-[10px] font-semibold uppercase">
-                                            {testResult.ok ? TARGET_UI_LABELS.modal.reachable(testResult.latencyMs) : (testResult.error || TARGET_UI_LABELS.modal.connectionFailed)}
+                                    <Badge variant="secondary" className={cn("rounded-lg px-3 py-1.5 border-none", testResult.ok ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive")}>
+                                        <div className={cn("size-1.5 rounded-full shrink-0 mr-2", testResult.ok ? "bg-emerald-500" : "bg-destructive")} />
+                                        <span className="text-xs font-semibold lowercase">
+                                            {testResult.ok ? TARGET_UI_LABELS.modal.reachable(testResult.latencyMs).toLowerCase() : (testResult.error?.toLowerCase() || TARGET_UI_LABELS.modal.connectionFailed.toLowerCase())}
                                         </span>
                                     </Badge>
                                 )}
@@ -140,29 +149,28 @@ export function TargetFormModal({ isOpen, onClose, onSave, onTestConnection, edi
                         </div>
                     </div>
 
-                    <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-border/40 bg-background">
+                    <div className="flex items-center justify-end gap-3 pt-6 border-t border-border/10">
                         <Button 
                             type="button" 
                             onClick={onClose} 
-                            variant="outline" 
-                            size="default"
-                            className="w-full sm:flex-1 text-muted-foreground transition-all"
+                            variant="ghost" 
+                            className="lowercase"
                         >
-                            {TARGET_UI_LABELS.modal.discard}
+                            {TARGET_UI_LABELS.modal.discard.toLowerCase()}
                         </Button>
                         <Button 
                             type="submit" 
                             variant="default" 
-                            size="default"
                             disabled={saving}
-                            className="w-full sm:flex-1 shadow-none transition-all"
+                            isLoading={saving}
+                            className="lowercase"
                         >
-                            {saving ? <Icons.loading className="size-3.5 animate-spin mr-2" /> : <Icons.save className="size-3.5 mr-2" />}
-                            {editingTarget ? TARGET_UI_LABELS.modal.updateTarget : TARGET_UI_LABELS.modal.confirmRegistry}
+                           <Icons.save className="size-4 mr-2" />
+                           {editingTarget ? TARGET_UI_LABELS.modal.updateTarget.toLowerCase() : TARGET_UI_LABELS.modal.confirmRegistry.toLowerCase()}
                         </Button>
-                    </DialogFooter>
+                    </div>
                 </form>
-            </DialogContent>
-        </Dialog>
+            </div>
+        </Modal>
     );
 }

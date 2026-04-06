@@ -11,6 +11,7 @@ import { DYNAMIC_ROUTES_LABELS } from '../../../constants/ui-labels';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ConfirmDialog, FullPageLoading as LoadingOverlay } from '@/modules/_core';
 import { cn } from '@/lib/utils';
+import { Modal } from '@/components/ui/modal';
 import { useRouteBuilder } from '../composables/useRouteBuilder';
 
 interface RouteBuilderViewProps {
@@ -48,14 +49,14 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
   const L = DYNAMIC_ROUTES_LABELS.routeBuilder;
 
   return (
-    <div className="space-y-12 pb-20 animate-page-enter">
+    <div className="space-y-10 pb-20 animate-page-enter">
       {/* Header - Flat Luxury */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
         <div className="flex flex-col gap-1">
           <TextHeading as="h1" size="h3" className="lowercase text-foreground">
             {L.title || 'route builder'}
           </TextHeading>
-          <span className="text-sm md:text-lg text-muted-foreground font-normal lowercase">
+          <span className="text-base text-muted-foreground font-normal lowercase">
             {L.subtitle || 'manage dynamic api routes and data binding'}
           </span>
         </div>
@@ -67,17 +68,17 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
               setCategoryForm({ name: '', description: '' });
               setIsCategoryModalOpen(true);
             }}
-            className="rounded-xl lowercase font-medium"
+            className="lowercase"
           >
-            <Icons.plus className="size-4" />
+            <Icons.plus className="size-4 mr-2" />
             {L.buttons.newCategory || 'add category'}
           </Button>
           <Button
-            variant="destructive"
+            variant="default"
             onClick={() => onNavigate('editor')}
-            className="rounded-xl lowercase font-medium"
+            className="lowercase"
           >
-            <Icons.plus className="size-4" />
+            <Icons.plus className="size-4 mr-2" />
             {L.buttons.createEndpoint || 'create endpoint'}
           </Button>
         </div>
@@ -127,10 +128,10 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
           ].map((stat, i) => (
             <Card
               key={i}
-              className="bg-card rounded-2xl border-none shadow-none p-6 transition-all duration-300 hover:bg-muted/5 flex flex-col gap-5"
+              className="bg-card p-6 transition-all duration-300 hover:bg-muted/40 flex flex-col gap-5"
             >
               <div className="flex flex-row items-start justify-between">
-                <span className="text-sm text-muted-foreground font-normal lowercase">
+                <span className="text-sm text-muted-foreground font-medium lowercase">
                   {stat.label}
                 </span>
                 <div
@@ -139,7 +140,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                     stat.bg,
                   )}
                 >
-                  <stat.Icon className={cn('size-4', stat.color)} />
+                  <stat.Icon className={cn('size-4.5', stat.color)} />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 mt-auto">
@@ -275,10 +276,10 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
             <button
               onClick={() => setSelectedCategory(null)}
               className={cn(
-                'group relative w-full flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300 lowercase text-base sm:text-lg font-normal text-left shadow-none',
+                'group relative w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 lowercase text-base font-medium text-left shadow-none',
                 !selectedCategory
                   ? 'bg-muted text-foreground'
-                  : 'text-muted-foreground hover:bg-muted/5',
+                  : 'text-muted-foreground hover:bg-muted/20',
               )}
             >
               <div className="flex items-center gap-3">
@@ -286,11 +287,11 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                   className={cn(
                     'size-8 rounded-xl flex items-center justify-center transition-all',
                     !selectedCategory
-                      ? 'bg-foreground text-background scale-105'
-                      : 'bg-muted text-muted-foreground group-hover:bg-muted/20',
+                      ? 'bg-foreground text-background'
+                      : 'bg-muted text-muted-foreground group-hover:bg-muted/30',
                   )}
                 >
-                  <span className="text-sm font-bold">{endpoints.length}</span>
+                  <span className="text-xs font-bold">{endpoints.length}</span>
                 </div>
                 <span>{L.labels.allRoutes || 'all routes'}</span>
               </div>
@@ -333,11 +334,10 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-opacity">
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon-sm"
                       className={cn(
-                        'size-10 p-0 rounded-xl hover:bg-muted/20',
                         selectedCategory === category.id
-                          ? 'text-foreground hover:text-foreground'
+                          ? 'text-foreground'
                           : 'text-muted-foreground',
                       )}
                       onClick={(e) => {
@@ -354,11 +354,11 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon-sm"
                       className={cn(
-                        'size-10 p-0 rounded-xl hover:bg-destructive/10 hover:text-destructive',
+                        'hover:text-destructive',
                         selectedCategory === category.id
-                          ? 'text-foreground hover:text-destructive'
+                          ? 'text-foreground'
                           : 'text-muted-foreground',
                       )}
                       onClick={(e) => {
@@ -389,7 +389,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
           </div>
 
           {filteredEndpoints.length === 0 ? (
-            <Card className="rounded-3xl border-2 border-dashed border-border bg-transparent p-20 flex flex-col items-center justify-center text-center shadow-none">
+            <Card className="border-2 border-dashed border-border bg-transparent p-20 flex flex-col items-center justify-center text-center">
               <div className="size-20 rounded-full bg-muted/5 flex items-center justify-center mb-6">
                 <Icons.link className="size-10 text-muted-foreground" />
               </div>
@@ -405,14 +405,14 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
               {filteredEndpoints.map((endpoint) => (
                 <Card
                   key={endpoint.id}
-                  className="p-5 rounded-2xl border-none bg-card shadow-none hover:bg-muted/10 transition-all duration-300 group cursor-pointer"
+                  className="p-5 bg-card hover:bg-muted/10 transition-all duration-300 group cursor-pointer"
                   onClick={() => onNavigate('detail', endpoint.id)}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex flex-row items-center gap-4">
                       <div
                         className={cn(
-                          'w-14 py-1.5 rounded-lg flex items-center justify-center shrink-0 border-none transition-all',
+                          'w-14 h-7 rounded-lg flex items-center justify-center shrink-0 border-none transition-all',
                           endpoint.method === 'GET'
                             ? 'bg-blue-500/10 text-blue-500'
                             : endpoint.method === 'POST'
@@ -424,7 +424,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                                   : 'bg-purple-500/10 text-purple-500',
                         )}
                       >
-                        <span className="text-[10px] font-bold uppercase">
+                        <span className="text-[11px] font-bold">
                           {endpoint.method}
                         </span>
                       </div>
@@ -439,7 +439,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                             {endpoint.path}
                           </TextHeading>
                           {!endpoint.isActive && (
-                            <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-[10px] text-destructive lowercase font-medium">
+                            <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-xs text-destructive lowercase font-medium">
                               disabled
                             </span>
                           )}
@@ -450,22 +450,21 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                     <div className="flex items-center gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-2 h-10 px-4 rounded-xl hover:bg-muted/10 text-muted-foreground transition-all"
+                        className="flex items-center gap-2 lowercase"
                         onClick={(e) => {
                           e.stopPropagation();
                           onNavigate('detail', endpoint.id);
                         }}
                       >
                         <Icons.edit className="size-4" />
-                        <span className="text-sm font-normal lowercase">
+                        <span>
                           {L.buttons.edit || 'manage'}
                         </span>
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="size-10 p-0 rounded-xl hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all"
+                        size="icon-sm"
+                        className="hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
                           openDeleteConfirm('endpoint', endpoint.id, endpoint.path);
@@ -484,60 +483,71 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
 
       {/* MODALS SECTION */}
 
-      {/* Category Modal (Inline Implementation) */}
-      <Popover
-        open={isCategoryModalOpen}
-        onOpenChange={(open: boolean) => setIsCategoryModalOpen(open)}
+      {/* Category Modal */}
+      <Modal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        className="sm:max-w-lg p-0 overflow-hidden"
       >
-        <PopoverContent className="w-[400px] p-8 rounded-4xl shadow-2xl border-border/10">
-          <div className="space-y-6">
-            <TextHeading size="h4" className="lowercase">
-              {editingCategory ? L.buttons.edit : L.buttons.newCategory}
-            </TextHeading>
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <span className="text-xs text-muted-foreground/40 lowercase ml-1">name</span>
+        <div className="flex flex-col">
+          {/* Custom Header Banner */}
+          <div className="px-8 py-8 flex items-center gap-4">
+            <div className="size-11 rounded-xl bg-muted/40 flex items-center justify-center shrink-0">
+              <Icons.folder className="size-5.5 text-chart-3" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-medium text-foreground lowercase leading-none mb-1.5">
+                {editingCategory ? L.buttons.edit.toLowerCase() : L.buttons.newCategory.toLowerCase()}
+              </span>
+              <span className="text-sm text-muted-foreground lowercase">
+                group your API routes into logical categories
+              </span>
+            </div>
+          </div>
+
+          <div className="px-8 pb-8 space-y-8">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <span className="text-sm text-muted-foreground lowercase ml-1">category name</span>
                 <Input
-                  placeholder={L.placeholders.categoryName}
+                  placeholder={L.placeholders.categoryName.toLowerCase()}
                   value={categoryForm.name}
                   onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  className="rounded-xl h-11 bg-muted/5 border-border/40 lowercase"
+                  className="rounded-xl h-11 bg-muted border-none lowercase text-base px-4"
                 />
               </div>
-              <div className="space-y-1.5">
-                <span className="text-xs text-muted-foreground/40 lowercase ml-1">description</span>
+              <div className="space-y-2">
+                <span className="text-sm text-muted-foreground lowercase ml-1">description</span>
                 <Input
-                  placeholder={L.placeholders.categoryDescription}
+                  placeholder={L.placeholders.categoryDescription.toLowerCase()}
                   value={categoryForm.description}
                   onChange={(e) =>
                     setCategoryForm({ ...categoryForm, description: e.target.value })
                   }
-                  className="rounded-xl h-11 bg-muted/5 border-border/40 lowercase"
+                  className="rounded-xl h-11 bg-muted border-none lowercase text-base px-4"
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end items-center gap-4 pt-2">
               <Button
                 variant="ghost"
-                size="sm"
                 onClick={() => setIsCategoryModalOpen(false)}
-                className="lowercase rounded-xl h-10 px-6"
+                className="lowercase"
               >
                 {L.buttons.cancel}
               </Button>
               <Button
                 variant="default"
-                size="sm"
                 onClick={handleSaveCategory}
                 disabled={isSavingCategory}
-                className="lowercase rounded-xl h-10 px-8 shadow-none"
+                className="lowercase"
               >
                 {isSavingCategory ? 'saving...' : L.buttons.save}
               </Button>
             </div>
           </div>
-        </PopoverContent>
-      </Popover>
+        </div>
+      </Modal>
 
       {/* Global Delete Confirmation */}
       {deleteConfirm && (

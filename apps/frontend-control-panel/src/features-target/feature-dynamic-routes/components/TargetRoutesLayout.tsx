@@ -53,13 +53,13 @@ export function TargetRoutesLayout({ targetId }: TargetRoutesLayoutProps) {
                                 key={tab.id}
                                 onClick={() => handleTabChange(tab.id)}
                                 className={cn(
-                                    "flex items-center gap-2 px-6 py-3 text-xs font-bold rounded-2xl whitespace-nowrap transition-all active:scale-95 lowercase tracking-tight border-2",
+                                    "flex items-center gap-2.5 sm:gap-3 px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-medium rounded-2xl whitespace-nowrap transition-all active:scale-95 lowercase border-none",
                                     activeTab === tab.id
-                                        ? 'bg-foreground text-background border-foreground shadow-none'
-                                        : 'bg-muted/30 text-muted-foreground/40 border-transparent hover:border-foreground/5 hover:text-foreground/60'
+                                        ? 'bg-foreground text-background shadow-none'
+                                        : 'bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                                 )}
                             >
-                                <tab.icon className={cn("size-3.5 transition-transform", activeTab === tab.id && "scale-110")} />
+                                <tab.icon className={cn("size-4.5 sm:size-5 transition-transform", activeTab === tab.id && "scale-105")} />
                                 {tab.label}
                             </button>
                         ))}

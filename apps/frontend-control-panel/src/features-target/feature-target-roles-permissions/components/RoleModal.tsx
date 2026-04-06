@@ -1,12 +1,10 @@
 'use client';
 
-/**
- * RoleModal - Unified create/edit role form for roles-permissions feature
- */
-
 import { Button, Input, Badge, Modal } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { useRoleModal } from '../composables/useRoleModal';
+import { cn } from '@/lib/utils';
 import type { Role, Permission } from '../types';
 
 const L = MODULE_LABELS.rolesPermissions.roles;
@@ -32,112 +30,158 @@ export const RoleModal = ({ isOpen, role, onClose, onSuccess }: RoleModalProps) 
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={role ? L.modal.editTitle : L.modal.addTitle}
+            title={role ? L.modal.editTitle.toLowerCase() : L.modal.addTitle.toLowerCase()}
         >
-            <form onSubmit={handleSubmit} className="space-y-10">
+            <form onSubmit={handleSubmit} className="space-y-10 pt-4 px-1">
                 {/* Basic Info Section */}
                 <div className="space-y-6">
-                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase flex items-center gap-2">
-                         <Icons.info className="w-4 h-4 text-indigo-400" /> Basic Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Input
-                            label={L.modal.nameLabel}
-                            placeholder={L.labels.namePlaceholder}
-                            value={form.name}
-                            onChange={(e) => setForm({ name: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
-                            required
-                            disabled={!!role}
-                        />
-                        <Input
-                            label={L.modal.displayNameLabel}
-                            placeholder={L.labels.displayNamePlaceholder}
-                            value={form.displayName}
-                            onChange={(e) => setForm({ displayName: e.target.value })}
-                        />
+                    <div className="flex items-center gap-3 mb-2 px-1">
+                        <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <Icons.info className="size-4" />
+                        </div>
+                        <TextHeading size="h6" className="text-base font-semibold lowercase">
+                            basic information
+                        </TextHeading>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pl-1">
+                        <div className="space-y-2">
+                            <label className="text-sm text-muted-foreground lowercase px-1 font-medium">{L.modal.nameLabel}</label>
+                            <Input
+                                className="h-12 rounded-xl lowercase bg-muted/20 border-none focus-visible:ring-1 focus-visible:ring-primary/20"
+                                placeholder={L.labels.namePlaceholder}
+                                value={form.name}
+                                onChange={(e) => setForm({ name: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
+                                required
+                                disabled={!!role}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm text-muted-foreground lowercase px-1 font-medium">{L.modal.displayNameLabel}</label>
+                            <Input
+                                className="h-12 rounded-xl lowercase bg-muted/20 border-none focus-visible:ring-1 focus-visible:ring-primary/20"
+                                placeholder={L.labels.displayNamePlaceholder}
+                                value={form.displayName}
+                                onChange={(e) => setForm({ displayName: e.target.value })}
+                            />
+                        </div>
                     </div>
 
-                    <Input
-                        label={L.modal.descriptionLabel}
-                        placeholder={L.labels.descriptionPlaceholder}
-                        value={form.description}
-                        onChange={(e) => setForm({ description: e.target.value })}
-                    />
+                    <div className="space-y-2 pl-1">
+                        <label className="text-sm text-muted-foreground lowercase px-1 font-medium">{L.modal.descriptionLabel}</label>
+                        <Input
+                            className="h-12 rounded-xl lowercase bg-muted/20 border-none focus-visible:ring-1 focus-visible:ring-primary/20"
+                            placeholder={L.labels.descriptionPlaceholder}
+                            value={form.description}
+                            onChange={(e) => setForm({ description: e.target.value })}
+                        />
+                    </div>
                 </div>
 
                 {/* Security Level Section */}
-                <div className="space-y-6 pt-4">
-                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase flex items-center gap-2">
-                         <Icons.shield className="w-4 h-4 text-emerald-400" /> Access Level & Security
-                    </h3>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 mb-2 px-1">
+                        <div className="size-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                            <Icons.shield className="size-4" />
+                        </div>
+                        <TextHeading size="h6" className="text-base font-semibold lowercase">
+                            access level & security
+                        </TextHeading>
+                    </div>
                     
-                    <div className="bg-slate-50 p-6 rounded-2xl space-y-6">
+                    <div className="bg-muted/30 p-6 rounded-2xl space-y-8 border border-border/5">
                         {/* Level Slider */}
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <label className="text-sm font-semibold text-slate-700">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between px-1">
+                                <label className="text-sm font-medium text-foreground lowercase">
                                     {L.modal.levelLabel}
                                 </label>
-                                <Badge variant="default" className="text-[10px] px-3 py-1 rounded-full bg-slate-900 text-white border-0 shadow-sm">{form.level}</Badge>
+                                <Badge variant="secondary" className="px-3 py-1 rounded-lg lowercase font-bold bg-background shadow-sm">
+                                    {form.level}
+                                </Badge>
                             </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={form.level}
-                                onChange={(e) => setForm({ level: parseInt(e.target.value) })}
-                                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                            />
+                            <div className="px-1">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={form.level}
+                                    onChange={(e) => setForm({ level: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary transition-all hover:h-2"
+                                />
+                            </div>
                         </div>
 
-                        <div className={`flex items-center gap-4 p-5 rounded-xl transition-all duration-500 ${form.isSuper ? 'bg-red-50 shadow-sm ring-1 ring-red-100' : 'bg-white'}`}>
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-500 ${form.isSuper ? 'bg-red-100 text-red-500' : 'bg-slate-100/50 text-slate-400'}`}>
-                                <Icons.crown className="w-5 h-5" />
+                        <div 
+                            className={cn(
+                                "flex items-center gap-4 p-5 rounded-xl transition-all duration-300 border cursor-pointer",
+                                form.isSuper ? 'bg-rose-500/5 border-rose-500/10' : 'bg-background/40 border-transparent hover:bg-background/60'
+                            )}
+                            onClick={() => setForm({ isSuper: !form.isSuper })}
+                        >
+                            <div className={cn(
+                                "size-10 rounded-xl flex items-center justify-center transition-colors duration-300",
+                                form.isSuper ? 'bg-rose-500/20 text-rose-600' : 'bg-muted text-muted-foreground'
+                            )}>
+                                <Icons.crown className="size-5" />
                             </div>
                             <div className="flex-1">
-                                <p className={`font-semibold text-sm ${form.isSuper ? 'text-red-700' : 'text-slate-600'}`}>
+                                <p className={cn(
+                                    "font-semibold text-sm lowercase",
+                                    form.isSuper ? 'text-rose-700' : 'text-foreground'
+                                )}>
                                     {L.modal.superAdminLabel}
                                 </p>
-                                <p className="text-[10px] text-slate-400 mt-0.5">Bypasses all checks</p>
+                                <p className="text-xs text-muted-foreground lowercase mt-0.5">
+                                    bypasses all security checks
+                                </p>
                             </div>
-                            <input 
-                                type="checkbox" 
-                                checked={form.isSuper} 
-                                onChange={(e) => setForm({ isSuper: e.target.checked })}
-                                className="w-4 h-4 rounded border-slate-300 text-red-500 focus:ring-red-500 transition-all cursor-pointer"
-                            />
+                            <div className={cn(
+                                "size-5 rounded-md border flex items-center justify-center transition-all",
+                                form.isSuper ? 'bg-rose-500 border-rose-500 text-white' : 'border-muted-foreground/30'
+                            )}>
+                                {form.isSuper && <Icons.check className="size-3.5 stroke-3" />}
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Permissions Picker Section */}
-                <div className="space-y-6 pt-4">
-                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase flex items-center gap-2">
-                         <Icons.unlock className="w-4 h-4 text-amber-400" /> Fine-grained Permissions
-                    </h3>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 mb-2 px-1">
+                        <div className="size-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                            <Icons.unlock className="size-4" />
+                        </div>
+                        <TextHeading size="h6" className="text-base font-semibold lowercase">
+                            fine-grained permissions
+                        </TextHeading>
+                    </div>
 
                     {Object.keys(groupedPermissions).length === 0 ? (
-                        <div className="p-8 bg-slate-50 rounded-2xl text-[11px] text-slate-400 text-center border border-dashed border-slate-200">
-                            No permissions available to assign.
+                        <div className="p-10 bg-muted/20 rounded-2xl text-sm text-muted-foreground text-center border border-dashed border-border/20 lowercase">
+                            no permissions available to assign.
                         </div>
                     ) : (
-                        <div className="bg-slate-50 p-6 rounded-2xl space-y-6">
+                        <div className="bg-muted/30 p-6 rounded-2xl space-y-8 border border-border/5">
                             {Object.entries(groupedPermissions).map(([group, perms]) => (
-                                <div key={group} className="space-y-3">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{group}</p>
-                                    <div className="flex flex-wrap gap-2">
+                                <div key={group} className="space-y-4">
+                                    <p className="text-xs font-bold text-muted-foreground/40 uppercase tracking-widest px-1">{group}</p>
+                                    <div className="flex flex-wrap gap-2.5">
                                         {(perms as Permission[]).map(perm => (
-                                            <button
+                                            <Button
                                                 key={perm.id}
                                                 type="button"
+                                                variant={form.selectedPermissions.includes(perm.name) ? 'default' : 'outline'}
+                                                size="sm"
                                                 onClick={() => togglePermission(perm.name)}
-                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all duration-200 ${form.selectedPermissions.includes(perm.name)
-                                                    ? 'bg-slate-900 text-white shadow-sm'
-                                                    : 'bg-white text-slate-500 hover:text-slate-800 hover:shadow-xs'
-                                                    }`}
+                                                className={cn(
+                                                    "h-9 rounded-xl px-4 lowercase transition-all duration-300 border-none font-medium",
+                                                    form.selectedPermissions.includes(perm.name) 
+                                                        ? "shadow-sm bg-primary text-primary-foreground" 
+                                                        : "bg-background/50 hover:bg-background text-muted-foreground hover:text-foreground"
+                                                )}
                                             >
                                                 {perm.name}
-                                            </button>
+                                            </Button>
                                         ))}
                                     </div>
                                 </div>
@@ -147,11 +191,21 @@ export const RoleModal = ({ isOpen, role, onClose, onSuccess }: RoleModalProps) 
                 </div>
 
                 {/* Modal Footer */}
-                <div className="pt-6 flex gap-3 sticky bottom-0 bg-transparent">
-                    <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={loading}>
+                <div className="pt-8 flex gap-4">
+                    <Button 
+                        type="button" 
+                        variant="ghost" 
+                        className="flex-1 h-12 lowercase rounded-xl hover:bg-muted/50" 
+                        onClick={onClose} 
+                        disabled={loading}
+                    >
                         {L.buttons.cancel}
                     </Button>
-                    <Button type="submit" className="flex-1" isLoading={loading}>
+                    <Button 
+                        type="submit" 
+                        className="flex-1 h-12 lowercase rounded-xl shadow-lg shadow-primary/20" 
+                        isLoading={loading}
+                    >
                         {role ? L.buttons.save : L.buttons.create}
                     </Button>
                 </div>

@@ -1,38 +1,31 @@
 'use client';
 
-// CreateSourceForm - Full page form for creating data sources
-// Pure UI component - all data operations via useCreateSource composable
-// CreateSchemaForm - Full page form for creating data sources
-// Pure UI component - all data operations via useCreateSchema composable
-// ✅ PURE DI: Uses useConfig() hook for all config, labels, icons
+/**
+ * CreateSchemaForm - Enhanced with Flat Luxury UI
+ * Integrated with TargetLayout and consistent Design System
+ */
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Badge, Heading, Text, Stack, Card } from '@/components/ui';
+import { Button, Badge, Card, CardContent } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
+import { TargetLayout } from '@/components/layout/TargetLayout';
 import { ColumnBuilder } from './ColumnBuilder';
 import { useCreateSchema } from '../composables';
 import { useConfig } from '@/modules/_core';
 import type { ColumnDefinition } from '../types';
 
-const USER_TABLE_PREFIX = 'usr_';
-
-interface Template {
-    id: string;
-    icon: React.ReactNode;
-    name: string;
-    description: string;
-    schema: {
-        columns: ColumnDefinition[];
-        timestamps?: boolean;
-    };
-}
+const L = MODULE_LABELS.databaseSchema;
 
 export const CreateSchemaForm = () => {
     const router = useRouter();
+    const params = useParams();
+    const nodeId = params.id as string;
+    
     // ✅ Pure DI: Get all dependencies from context
     const { labels, icons: Icons, defaults } = useConfig();
-    const L = labels.mod.databaseSchema;
     const C = labels.common;
 
     // All data operations from composable
@@ -87,12 +80,9 @@ export const CreateSchemaForm = () => {
         setForm(newForm);
     };
 
-    const { id: targetId } = useParams() as { id: string };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // DEBUG: Log the payload being sent
         const payload = {
             name: form.name,
             tableName: form.tableName,
@@ -104,17 +94,16 @@ export const CreateSchemaForm = () => {
             },
         };
 
-
         const result = await create(payload);
         
         if (result) {
-            router.refresh();
-            const path = targetId ? `/target/${targetId}/database-schema` : '/database-schema';
+            const path = nodeId ? `/target/${nodeId}/database-schema` : '/database-schema';
             router.push(path);
+            router.refresh();
         }
     };
 
-    const applyTemplate = (tpl: Template) => {
+    const applyTemplate = (tpl: any) => {
         setForm({
             name: form.name || tpl.name,
             tableName: form.tableName || '',
@@ -125,25 +114,30 @@ export const CreateSchemaForm = () => {
             ...prev,
             timestamps: tpl.schema.timestamps ?? true,
         }));
-        window.scrollTo({ top: 300, behavior: 'smooth' });
+        window.scrollTo({ top: 400, behavior: 'smooth' });
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Section 0: Template Gallery */}
-            <Card >
-                <div className="p-6 md:p-8">
-                    <Stack direction="row" gap={4} align="center" className="mb-8">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><Icons.sparkles className="w-6 h-6" /></div>
-                        <div>
-                            <Heading level={5}>{L.forms.startFromTemplate}</Heading>
-                            <Text variant="muted" className="mt-1">{L.forms.choosePrebuilt}</Text>
+        <TargetLayout>
+            <div className="flex flex-col gap-10 animate-page-enter max-w-5xl mx-auto pb-32">
+                {/* Header */}
+                <header className="px-1 space-y-1">
+                    <TextHeading as="h1" size="h3">{L.forms.createSchema}</TextHeading>
+                    <p className="text-sm text-muted-foreground lowercase">define your database structure and columns</p>
+                </header>
+
+                {/* Section 0: Template Gallery */}
+                <section className="space-y-6 px-1">
+                    <div className="flex items-center gap-3">
+                        <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <Icons.sparkles className="w-4 h-4" />
                         </div>
-                    </Stack>
+                        <TextHeading size="h6" className="text-sm font-semibold lowercase">{L.forms.startFromTemplate}</TextHeading>
+                    </div>
 
                     {loadingTemplates ? (
-                        <div className="flex gap-4 overflow-x-auto pb-4">
-                            {[1, 2, 3].map(i => <div key={i} className="w-64 h-40 bg-muted rounded-xl animate-pulse shrink-0"></div>)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {[1, 2, 3, 4].map(i => <div key={i} className="h-44 bg-muted/40 rounded-2xl animate-pulse" />)}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -152,235 +146,233 @@ export const CreateSchemaForm = () => {
                                     key={tpl.id}
                                     type="button"
                                     onClick={() => applyTemplate(tpl)}
-                                    className="bg-card hover:bg-muted/50 transition-all p-5 rounded-xl text-left border border-border hover:border-primary/40 flex flex-col h-full group relative overflow-hidden"
+                                    className="bg-card hover:bg-muted/10 transition-all duration-300 p-6 rounded-2xl text-left shadow-sm hover:shadow-md flex flex-col h-full group border-none"
                                 >
-                                    <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Icons.arrowRight className="w-4 h-4 text-primary/60" />
-                                    </div>
                                     <span className="text-3xl mb-4 block group-hover:scale-110 transition-transform origin-left">{tpl.icon}</span>
-                                    <Heading level={5}>{tpl.name}</Heading>
-                                    <Text variant="muted" className="text-xs leading-relaxed mb-4 flex-1">{tpl.description}</Text>
-                                    <div className="mt-auto flex items-center gap-2 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-1.5 rounded-lg w-fit">
-                                        <span>{L.forms.useTemplate}</span>
+                                    <TextHeading size="h6" className="text-sm font-bold mb-1 lowercase">{tpl.name}</TextHeading>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed lowercase flex-1 mb-4">{tpl.description}</p>
+                                    <div className="mt-auto inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-tighter text-primary bg-primary/10 px-2.5 py-1.5 rounded-lg w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                        {L.forms.useTemplate}
                                     </div>
                                 </button>
                             ))}
                         </div>
                     )}
-                </div>
-            </Card>
+                </section>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Section 1: Basic Info */}
-                <Card >
-                    <div className="p-6 md:p-8">
-                        <Stack direction="row" gap={3} align="center" className="mb-8 pb-4 border-b border-border">
-                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Icons.info className="w-5 h-5" /></div>
-                            <Heading level={5}>{L.forms.basicInformation}</Heading>
-                        </Stack>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-2">
-                                    {L.forms.displayName} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={form.name}
-                                    onChange={(e) => handleNameChange(e.target.value)}
-                                    placeholder={L.forms.displayNamePlaceholder}
-                                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-sm"
-                                    required
-                                />
-                                <Text variant="muted" className="text-xs mt-2 ml-1">{L.forms.displayNameHint}</Text>
+                <form onSubmit={handleSubmit} className="space-y-10">
+                    {/* Section 1: Basic Info */}
+                    <Card className="border-none shadow-sm bg-card/40">
+                        <CardContent className="p-8 space-y-8">
+                            <div className="flex items-center gap-3 border-b border-border/5 pb-6 mb-2">
+                                <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary"><Icons.info className="size-5" /></div>
+                                <TextHeading size="h5" className="text-base font-semibold lowercase">{L.forms.basicInformation}</TextHeading>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-2">
-                                    {L.forms.tableNameSql} <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground lowercase px-1">
+                                        {L.forms.displayName}
+                                    </label>
                                     <input
                                         type="text"
-                                        value={form.tableName}
-                                        onChange={(e) => setForm({ ...form, tableName: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
-                                        placeholder={L.forms.tableNameSqlPlaceholder}
-                                        className={`w-full px-4 py-2.5 rounded-lg border outline-none transition-all font-mono text-sm ${validationResult?.errors?.some(e => e.includes('Table') || e.includes('reserved prefix'))
-                                            ? 'border-red-300 focus:ring-2 focus:ring-red-100'
-                                            : validationResult && !validating
-                                                ? 'border-green-300 focus:ring-2 focus:ring-green-100'
-                                                : 'border-border focus:ring-2 focus:ring-primary/10 focus:border-primary'
-                                            }`}
+                                        value={form.name}
+                                        onChange={(e) => handleNameChange(e.target.value)}
+                                        placeholder={L.forms.displayNamePlaceholder}
+                                        className="w-full h-12 px-5 rounded-2xl bg-muted/20 border-none focus:ring-1 focus:ring-primary/20 outline-none transition-all font-medium text-sm lowercase"
                                         required
                                     />
-                                    {validating && (
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                            <div className="w-4 h-4 border-2 border-border border-t-transparent animate-spin rounded-full"></div>
-                                        </div>
-                                    )}
-                                    {!validating && validationResult && !validationResult.errors?.some(e => e.includes('Table') || e.includes('reserved prefix')) && (
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
-                                            <Icons.check className="w-5 h-5" />
-                                        </div>
-                                    )}
+                                    <p className="text-[11px] text-muted-foreground/60 lowercase px-2">{L.forms.displayNameHint}</p>
                                 </div>
-                                {validationResult?.sanitizedTableName && (
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <Badge variant="outline">{USER_TABLE_PREFIX}{validationResult.sanitizedTableName}</Badge>
-                                        <Text variant="muted" className="text-xs">{L.forms.finalDatabaseTableName}</Text>
-                                    </div>
-                                )}
-                                {validationResult?.errors && validationResult.errors.filter(e => e.includes('Table') || e.includes('reserved prefix')).length > 0 && (
-                                    <Text className="text-sm text-red-500 mt-2 font-medium">
-                                        {validationResult.errors.filter(e => e.includes('Table') || e.includes('reserved prefix'))[0]}
-                                    </Text>
-                                )}
-                            </div>
 
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-foreground mb-2">{L.forms.description}</label>
-                                <textarea
-                                    value={form.description}
-                                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                    placeholder={L.forms.descriptionPlaceholder}
-                                    className="w-full px-4 py-2.5 rounded-lg border border-border focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all text-sm min-h-[100px] resize-y"
-                                />
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground lowercase px-1">
+                                        {L.forms.tableNameSql}
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={form.tableName}
+                                            onChange={(e) => setForm({ ...form, tableName: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
+                                            placeholder={L.forms.tableNameSqlPlaceholder}
+                                            className={cn(
+                                                "w-full h-12 px-5 pr-12 rounded-2xl bg-muted/20 border-none outline-none transition-all font-mono text-sm lowercase",
+                                                validationResult?.errors?.some(e => e.includes('Table') || e.includes('reserved prefix'))
+                                                    ? 'focus:ring-1 focus:ring-rose-500/20'
+                                                    : 'focus:ring-1 focus:ring-primary/20'
+                                            )}
+                                            required
+                                        />
+                                        {validating && (
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                <Icons.loading className="size-4 animate-spin text-muted-foreground/40" />
+                                            </div>
+                                        )}
+                                        {!validating && validationResult && !validationResult.errors?.some(e => e.includes('Table') || e.includes('reserved prefix')) && (
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500">
+                                                <Icons.check className="size-5" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col gap-2 mt-2 px-2">
+                                        {validationResult?.sanitizedTableName && (
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="secondary" className="px-2 py-0 h-5 font-mono text-[10px] bg-emerald-500/10 text-emerald-600 border-none">usr_{validationResult.sanitizedTableName}</Badge>
+                                                <span className="text-[10px] text-muted-foreground/60 lowercase">{L.forms.finalDatabaseTableName}</span>
+                                            </div>
+                                        )}
+                                        {validationResult?.errors && validationResult.errors.filter(e => e.includes('Table') || e.includes('reserved prefix')).length > 0 && (
+                                            <p className="text-[11px] text-rose-500 font-medium lowercase">
+                                                {validationResult.errors.filter(e => e.includes('Table') || e.includes('reserved prefix'))[0]}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground lowercase px-1">{L.forms.description}</label>
+                                    <textarea
+                                        value={form.description}
+                                        onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                        placeholder={L.forms.descriptionPlaceholder}
+                                        className="w-full px-5 py-4 rounded-2xl bg-muted/20 border-none focus:ring-1 focus:ring-primary/20 outline-none transition-all text-sm min-h-[120px] resize-none lowercase"
+                                    />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Section 2: Schema Builder */}
+                    <section className="space-y-6">
+                        <div className="flex items-center gap-3 px-1">
+                            <div className="size-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600"><Icons.clipboardList className="w-4 h-4" /></div>
+                            <div className="space-y-0.5">
+                                <TextHeading size="h6" className="text-sm font-semibold lowercase">{L.forms.schemaDefinition}</TextHeading>
+                                <p className="text-[11px] text-muted-foreground lowercase">{L.forms.schemaDefinitionSubtitle.toLowerCase()}</p>
                             </div>
                         </div>
-                    </div>
-                </Card>
 
-                {/* Section 2: Schema */}
-                <Card >
-                    <div className="p-6 md:p-8">
-                        <Stack direction="row" gap={3} align="center" className="mb-8 pb-4 border-b border-border">
-                            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600"><Icons.clipboardList className="w-5 h-5" /></div>
-                            <div>
-                                <Heading level={5}>{L.forms.schemaDefinition}</Heading>
-                                <Text variant="muted" className="mt-1">{L.forms.schemaDefinitionSubtitle}</Text>
-                            </div>
-                        </Stack>
-
-                        <div className="-mx-4 sm:mx-0">
+                        <div className="bg-muted/10 rounded-3xl p-2 md:p-4">
                             <ColumnBuilder
                                 columns={columns}
                                 onChange={setColumns}
                                 availableSources={availableSources}
                             />
+                            
                             {validationResult?.errors && validationResult.errors.filter(e => !e.includes('Table') && !e.includes('reserved prefix')).length > 0 && (
-                                <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-sm flex items-start gap-3">
-                                    <Icons.warning className="w-5 h-5 shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="font-bold">{L.forms.schemaValidationErrors}</p>
-                                        <ul className="list-disc pl-4 mt-1 space-y-1">
-                                            {validationResult.errors.filter(e => !e.includes('Table') && !e.includes('reserved prefix')).map((err, i) => (
-                                                <li key={i}>{err}</li>
-                                            ))}
-                                        </ul>
+                                <div className="mt-8 p-6 bg-rose-500/5 text-rose-600 rounded-2xl border border-rose-500/10 text-xs space-y-3">
+                                    <div className="flex items-center gap-2 font-black uppercase tracking-tighter">
+                                        <Icons.warning className="size-4" />
+                                        <span>{L.forms.schemaValidationErrors}</span>
                                     </div>
+                                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1.5 list-disc pl-5 lowercase">
+                                        {validationResult.errors.filter(e => !e.includes('Table') && !e.includes('reserved prefix')).map((err: string, i: number) => (
+                                            <li key={i}>{err}</li>
+                                        ))}
+                                    </ul>
                                 </div>
                             )}
                         </div>
-                    </div>
-                </Card>
+                    </section>
 
-                {/* Section 3: Options */}
-                <Card  className="mb-24">
-                    <div className="p-6 md:p-8">
-                        <Stack direction="row" gap={3} align="center" className="mb-8 pb-4 border-b border-border">
-                            <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600"><Icons.settings className="w-5 h-5" /></div>
-                            <Heading level={5}>{L.forms.configuration}</Heading>
-                        </Stack>
+                    {/* Section 3: Options */}
+                    <Card className="border-none shadow-sm bg-card/40">
+                        <CardContent className="p-8">
+                            <div className="flex items-center gap-3 border-b border-border/5 pb-6 mb-8">
+                                <div className="size-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600"><Icons.settings className="size-5" /></div>
+                                <TextHeading size="h5" className="text-base font-semibold lowercase">{L.forms.configuration}</TextHeading>
+                            </div>
 
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <label className={cn(
-                                "flex items-start gap-4 p-5 rounded-xl border transition-all cursor-pointer group",
-                                options.timestamps
-                                    ? 'bg-primary/[0.03] border-primary/20 ring-1 ring-primary/20'
-                                    : 'bg-card border-border hover:border-border'
-                            )}>
-                                <div className="pt-1">
-                                    <input
-                                        type="checkbox"
-                                        checked={options.timestamps}
-                                        onChange={(e) => setOptions({ ...options, timestamps: e.target.checked })}
-                                        className="w-5 h-5 rounded border-border text-primary focus:ring-primary cursor-pointer"
-                                    />
-                                </div>
-                                <div>
-                                    <span className={cn(
-                                        "block font-semibold text-base mb-1",
-                                        options.timestamps ? 'text-primary' : 'text-foreground'
-                                    )}>{L.forms.timestamps}</span>
-                                    <Text variant="muted" className="leading-relaxed group-hover:text-foreground">
-                                        {L.forms.timestampsDescription}
-                                    </Text>
-                                </div>
-                            </label>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <CheckboxOption
+                                    checked={options.timestamps}
+                                    onChange={(val) => setOptions({ ...options, timestamps: val })}
+                                    label={L.forms.timestamps}
+                                    desc={L.forms.timestampsDescription}
+                                    icon={Icons.clock}
+                                />
+                                <CheckboxOption
+                                    checked={options.softDelete}
+                                    onChange={(val) => setOptions({ ...options, softDelete: val })}
+                                    label={L.forms.softDelete}
+                                    desc={L.forms.softDeleteDescription}
+                                    icon={Icons.trash}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </form>
 
-                            <label className={cn(
-                                "flex items-start gap-4 p-5 rounded-xl border transition-all cursor-pointer group",
-                                options.softDelete
-                                    ? 'bg-primary/[0.03] border-primary/20 ring-1 ring-primary/20'
-                                    : 'bg-card border-border hover:border-border'
-                            )}>
-                                <div className="pt-1">
-                                    <input
-                                        type="checkbox"
-                                        checked={options.softDelete}
-                                        onChange={(e) => setOptions({ ...options, softDelete: e.target.checked })}
-                                        className="w-5 h-5 rounded border-border text-primary focus:ring-primary cursor-pointer"
-                                    />
-                                </div>
-                                <div>
-                                    <span className={cn(
-                                        "block font-semibold text-base mb-1",
-                                        options.softDelete ? 'text-primary' : 'text-foreground'
-                                    )}>{L.forms.softDelete}</span>
-                                    <Text variant="muted" className="leading-relaxed group-hover:text-foreground">
-                                        {L.forms.softDeleteDescription}
-                                    </Text>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </Card>
-
-                <div className="h-24"></div>
-
-                {/* Fixed Action Bar */}
-                <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-50">
-                    <div className="max-w-5xl mx-auto flex items-center justify-between">
-                        <Stack direction="row" gap={2} align="center">
+                {/* Premium Action Bar */}
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-50">
+                    <div className="bg-background/80 backdrop-blur-xl border border-border/40 p-4 rounded-3xl shadow-2xl flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 px-2">
                             <Button
                                 type="button"
                                 variant="ghost"
                                 onClick={() => router.back()}
-                                className="text-muted-foreground hover:text-foreground"
+                                className="h-11 rounded-xl px-6 lowercase font-bold text-muted-foreground hover:bg-muted"
                             >
                                 {C.actions.cancel}
                             </Button>
                             {validationResult?.valid === false && (
-                                <span className="hidden sm:inline-block text-sm text-red-500 font-medium animate-pulse ml-2">
-                                    {L.forms.pleaseFixValidation}
-                                </span>
+                                <div className="hidden sm:flex items-center gap-2 text-rose-500 animate-pulse">
+                                    <Icons.warning className="size-4" />
+                                    <span className="text-[11px] font-black uppercase tracking-tighter">
+                                        validation pending
+                                    </span>
+                                </div>
                             )}
-                        </Stack>
+                        </div>
 
-                        <Stack direction="row" gap={4} align="center">
-                            <Button
-                                type="submit"
-                                size="lg"
-                                isLoading={submitting}
-                                disabled={validationResult?.valid === false || submitting}
-                                className="min-w-[200px]"
-                            >
-                                {L.buttons.createSchema}
-                            </Button>
-                        </Stack>
+                        <Button
+                            onClick={handleSubmit}
+                            size="lg"
+                            isLoading={submitting}
+                            disabled={validationResult?.valid === false || submitting}
+                            className="h-11 min-w-[180px] rounded-xl lowercase shadow-lg shadow-primary/20"
+                        >
+                            {L.buttons.createSchema}
+                        </Button>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </TargetLayout>
     );
 };
+
+const CheckboxOption = ({ checked, onChange, label, desc, icon: Icon }: any) => (
+    <div 
+        onClick={() => onChange(!checked)}
+        className={cn(
+            "flex items-start gap-5 p-6 rounded-2xl border transition-all duration-300 cursor-pointer group",
+            checked
+                ? 'bg-primary/5 border-primary/20 shadow-sm'
+                : 'bg-muted/10 border-transparent hover:bg-muted/20'
+        )}
+    >
+        <div className={cn(
+            "size-10 rounded-xl flex items-center justify-center transition-colors shrink-0",
+            checked ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/10' : 'bg-muted text-muted-foreground'
+        )}>
+            <Icon className="size-5" />
+        </div>
+        <div className="space-y-1">
+            <div className="flex items-center justify-between">
+                <TextHeading size="h6" className={cn(
+                    "text-sm font-bold lowercase",
+                    checked ? 'text-primary' : 'text-foreground'
+                )}>
+                    {label}
+                </TextHeading>
+                <div className={cn(
+                    "size-5 rounded-md border flex items-center justify-center transition-all",
+                    checked ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/20 bg-background/50'
+                )}>
+                    {checked && <Icons.check className="size-3.5 stroke-3" />}
+                </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed lowercase">{desc.toLowerCase()}</p>
+        </div>
+    </div>
+);

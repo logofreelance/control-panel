@@ -1,6 +1,19 @@
 'use client';
 
-import { Card, Button, Text } from '@/components/ui';
+/**
+ * AppUserPagination - Refactored to Analytics Style (V2 Clean Typography)
+ * 
+ * STICKING TO RULES:
+ * - No tracking-*
+ * - No text size < text-xs
+ * - No text color opacity (text-foreground/80)
+ * - Standard Button usage only
+ * 
+ * UPDATE: Removed forced 'lowercase' transformation from status text 
+ * to avoid 'overdoing' lowercase while keeping a premium minimalist feel.
+ */
+
+import { Button } from '@/components/ui';
 import { Icons } from '../config/icons';
 import { APP_USER_LABELS } from '../constants/ui-labels';
 import { cn } from '@/lib/utils';
@@ -54,50 +67,53 @@ export const AppUserPagination = ({
     if (totalPages <= 1) return null;
 
     return (
-        <Card >
-            <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <Text variant="detail">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-10 py-6 px-1 border-t border-border mt-4">
+            <div className="flex items-center gap-3">
+                 <div className="size-2 rounded-full bg-chart-2 animate-pulse" />
+                 <p className="text-xs font-normal text-muted-foreground">
                     {APP_USER_LABELS.pagination.showing(start, end, totalItems)}
-                </Text>
+                </p>
+            </div>
 
-                <div className="flex items-center gap-1.5">
-                    <Button
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => onPageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                    >
-                        <Icons.chevronLeft className="size-4" />
-                    </Button>
+            <div className="flex items-center gap-1 bg-muted/20 p-1.5 rounded-xl border border-border">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onPageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                >
+                    <Icons.chevronLeft className="size-4" />
+                </Button>
 
+                <div className="flex items-center gap-1 px-1">
                     {getPageNumbers().map((page, idx) => (
                         <button
                             key={idx}
                             onClick={() => typeof page === 'number' && onPageChange(page)}
                             disabled={page === '...'}
                             className={cn(
-                                "size-8 rounded-lg flex items-center justify-center text-xs font-semibold transition-colors",
+                                "h-9 min-w-[36px] px-2 rounded-lg flex items-center justify-center text-xs font-semibold transition-all",
                                 page === currentPage
-                                    ? 'bg-foreground text-background'
+                                    ? 'bg-foreground text-background shadow-none'
                                     : page === '...'
                                         ? 'cursor-default text-muted-foreground'
-                                        : 'text-foreground hover:bg-muted'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-background'
                             )}
                         >
                             {page}
                         </button>
                     ))}
-
-                    <Button
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => onPageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                    >
-                        <Icons.chevronRight className="size-4" />
-                    </Button>
                 </div>
+
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onPageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                    <Icons.chevronRight className="size-4" />
+                </Button>
             </div>
-        </Card>
+        </div>
     );
 };

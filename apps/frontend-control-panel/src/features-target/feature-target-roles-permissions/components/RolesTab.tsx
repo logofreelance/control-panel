@@ -1,14 +1,12 @@
 'use client';
 
-/**
- * RolesTab - Extracted from legacy RolesView
- */
-
-import { Button, Badge } from '@/components/ui';
+import { Button, Badge, Card, CardContent } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { useRoles } from '../composables/useRoles';
 import { RoleModal } from './RoleModal';
 import { PageLoadingSkeleton } from '@/modules/_core';
+import { cn } from '@/lib/utils';
 import type { Role } from '../types';
 
 const L = MODULE_LABELS.rolesPermissions.roles;
@@ -32,86 +30,109 @@ export const RolesTab = () => {
     if (loading) return <PageLoadingSkeleton showStats={false} contentRows={4} />;
 
     return (
-        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="space-y-6 animate-page-enter">
             {/* Header Actions */}
-            <div className="flex justify-end mb-8 mt-2">
-                <Button onClick={handleCreate} size="default" className="gap-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]">
-                    <Icons.plus className="w-5 h-5" /> {L.buttons.addRole}
+            <div className="flex justify-end pt-1">
+                <Button onClick={handleCreate} className="gap-2 rounded-xl lowercase">
+                    <Icons.plus className="size-5" /> {L.buttons.addRole}
                 </Button>
             </div>
 
             {/* Roles Grid */}
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 pb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {roles.map((role: Role) => (
-                    <div key={role.id} className="bg-white/70 backdrop-blur-xl rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-500 group relative overflow-hidden">
-                        {/* Subtle glass reflection effect */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-white/20 to-transparent -mr-16 -mt-16 rounded-full blur-2xl" />
-                        {/* Status indicators */}
-                        <div className="absolute top-6 right-6 flex gap-2">
-                             {role.is_active ? (
-                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-                            ) : (
-                                <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                            )}
-                        </div>
-
-                        {/* Role Header */}
-                        <div className="flex items-start justify-between mb-6">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 duration-500 ${getLevelColor(role.level)}`}>
-                                    {role.is_super ? <Icons.crown className="w-7 h-7" /> : <Icons.shield className="w-7 h-7" />}
+                    <Card key={role.id} className="bg-card group overflow-hidden relative border-none shadow-sm">
+                        <CardContent className="p-6 sm:p-8 space-y-6">
+                            {/* Role Header */}
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className={cn(
+                                        "size-14 rounded-xl flex items-center justify-center transition-transform duration-500",
+                                        role.level >= 90 ? "bg-amber-500/10 text-amber-600" : "bg-primary/10 text-primary"
+                                    )}>
+                                        {role.is_super ? <Icons.crown className="size-8" /> : <Icons.shield className="size-8" />}
+                                    </div>
+                                    <div>
+                                        <TextHeading size="h5" className="font-semibold text-lg leading-tight lowercase">
+                                            {role.display_name || role.name}
+                                        </TextHeading>
+                                        <p className="text-sm text-muted-foreground lowercase">
+                                            {role.name}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="space-y-0.5">
-                                    <h3 className="font-semibold text-slate-800 text-lg leading-tight">{role.display_name || role.name}</h3>
-                                    <p className="text-[10px] text-slate-400 font-medium uppercase">{role.name}</p>
-                                </div>
+                                <div className={cn(
+                                    "size-2.5 rounded-full",
+                                    role.is_active ? "bg-emerald-500" : "bg-muted"
+                                )} />
                             </div>
-                        </div>
 
-                        {/* Description */}
-                        {role.description ? (
-                            <p className="text-sm text-slate-500 mb-6 line-clamp-2 min-h-10 leading-relaxed italic">
-                                "{role.description}"
+                            {/* Description */}
+                            <p className="text-sm text-muted-foreground min-h-[40px] leading-relaxed lowercase italic">
+                                {role.description ? `"${role.description}"` : "no description provided"}
                             </p>
-                        ) : (
-                            <div className="mb-6 h-10" />
-                        )}
 
-                        {/* Level Bar */}
-                        <div className="mb-8 bg-slate-50/40 backdrop-blur-sm p-4 rounded-2xl">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] font-semibold text-slate-400 uppercase">{L.labels.level}</span>
-                                <span className="text-sm font-semibold text-slate-700">{role.level} / 100</span>
+                            {/* Level Bar */}
+                            <div className="bg-muted/30 p-4 rounded-xl">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-semibold text-muted-foreground lowercase">
+                                        {L.labels.level}
+                                    </span>
+                                    <span className="text-sm font-bold text-foreground">
+                                        {role.level} / 100
+                                    </span>
+                                </div>
+                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div 
+                                        className={cn(
+                                            "h-full rounded-full transition-all duration-1000",
+                                            role.level >= 90 ? "bg-amber-500" : "bg-primary"
+                                        )} 
+                                        style={{ width: `${Math.min(role.level, 100)}%` }} 
+                                    />
+                                </div>
                             </div>
-                            <div className="h-1.5 bg-slate-200/40 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full transition-all duration-1000 ease-out ${getLevelBarColor(role.level)}`} style={{ width: `${Math.min(role.level, 100)}%` }} />
-                            </div>
-                        </div>
 
-                        {/* Actions Overlay for non-system roles */}
-                        <div className="flex gap-2.5">
-                             {!isSystemRole(role.name) ? (
-                                 <>
-                                    <button onClick={() => handleEdit(role)} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/60 hover:bg-white text-slate-600 font-semibold text-xs transition-all shadow-sm">
-                                        <Icons.pencil className="w-4 h-4" /> Edit
-                                    </button>
-                                    <button onClick={() => deleteRole(role)} className="flex items-center justify-center w-11 h-11 rounded-xl bg-white/60 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm">
-                                        <Icons.trash className="w-4 h-4" />
-                                    </button>
-                                </>
-                            ) : (
-                                <button onClick={() => handleEdit(role)} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/60 hover:bg-white text-slate-500 font-semibold text-xs transition-all shadow-sm group/system">
-                                    <Icons.pencil className="w-4 h-4 group-hover:text-indigo-500 transition-colors" /> Configure System Role
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                            {/* Actions */}
+                            <div className="flex gap-2 pt-2">
+                                {!isSystemRole(role.name) ? (
+                                    <>
+                                        <Button 
+                                            variant="secondary" 
+                                            size="sm" 
+                                            onClick={() => handleEdit(role)} 
+                                            className="flex-1 gap-2 rounded-lg lowercase bg-muted/50 hover:bg-muted"
+                                        >
+                                            <Icons.pencil className="size-4" /> edit
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={() => deleteRole(role)}
+                                            className="size-9 p-0 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+                                        >
+                                            <Icons.trash className="size-4" />
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button 
+                                        variant="secondary" 
+                                        size="sm" 
+                                        onClick={() => handleEdit(role)} 
+                                        className="flex-1 gap-2 rounded-lg lowercase bg-muted/50 hover:bg-muted"
+                                    >
+                                        <Icons.pencil className="size-4" /> configure system role
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 ))}
 
                 {roles.length === 0 && (
-                    <div className="col-span-full text-center py-20 text-slate-400 bg-white/50 rounded-[3rem] border border-slate-100 border-dashed">
-                        <Icons.info className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        <p className="font-medium">{L.messages.empty}</p>
+                    <div className="col-span-full py-20 text-center bg-muted/10 rounded-3xl border border-dashed border-border/20">
+                        <Icons.info className="size-12 mx-auto mb-4 text-muted-foreground/30" />
+                        <p className="text-muted-foreground lowercase">{L.messages.empty}</p>
                     </div>
                 )}
             </div>

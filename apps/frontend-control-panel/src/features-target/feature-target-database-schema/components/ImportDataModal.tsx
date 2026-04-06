@@ -1,10 +1,18 @@
-// ImportDataModal - Modal for bulk importing JSON data
-// ✅ PURE DI: Uses useConfig() hook for labels
+'use client';
+
+/**
+ * ImportDataModal - Flat Luxury UI Refactor
+ * Modal for bulk importing JSON data with persistent context and design standards
+ */
 
 import React, { useState } from 'react';
-import { Button, Heading, Text, Stack } from '@/components/ui';
+import { Button, Badge } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { useConfig } from '@/modules/_core';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { useImportData } from '../composables';
+
+const L = MODULE_LABELS.databaseSchema;
 
 interface ImportDataModalProps {
     isOpen: boolean;
@@ -19,9 +27,7 @@ export function ImportDataModal({
     DatabaseTableId,
     onSuccess
 }: ImportDataModalProps) {
-    // ✅ Pure DI: Get all dependencies from context
     const { labels, icons: Icons } = useConfig();
-    const L = labels.mod.databaseSchema;
     const C = labels.common;
 
     const [inputData, setInputData] = useState('');
@@ -39,44 +45,78 @@ export function ImportDataModal({
                 setInputData('');
             }
         } catch {
-            // JSON parse error is handled internally
+            // Error handling in composable
         }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/20 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-card w-full max-w-2xl rounded-4xl p-8 animate-in zoom-in-95 duration-300">
-                <Stack direction="col">
-                    <Stack direction="row" justify="between" align="center" className="mb-6">
-                        <Heading level={5}>{L.buttons.importData}</Heading>
-                        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-                            <Icons.close className="w-6 h-6" />
-                        </button>
-                    </Stack>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-500 flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-card w-full max-w-2xl rounded-[2.5rem] shadow-2xl shadow-black/10 p-10 animate-in zoom-in-95 duration-500 overflow-hidden relative">
+                {/* Background Decor */}
+                <div className="absolute top-0 right-0 size-48 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+                
+                <div className="relative space-y-8">
+                    <header className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm shadow-primary/5">
+                                <Icons.upload className="size-6" />
+                            </div>
+                            <div>
+                                <TextHeading size="h5" className="text-base font-semibold lowercase leading-none">{L.buttons.importData}</TextHeading>
+                                <p className="text-[11px] text-muted-foreground lowercase mt-1.5 opacity-60">bulk import records via json data structure</p>
+                            </div>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="icon-sm" 
+                            onClick={onClose} 
+                            className="h-10 w-10 rounded-xl hover:bg-muted text-muted-foreground/30"
+                        >
+                            <Icons.close className="size-5" />
+                        </Button>
+                    </header>
 
-                    <div className="space-y-4 mb-8">
-                        <div className="space-y-2">
-                            <label htmlFor="json-input" className="text-sm font-medium text-foreground">{C.table.type}</label>
+                    <div className="space-y-4">
+                        <div className="relative group">
                             <textarea
                                 id="json-input"
-                                placeholder={L.buttons.importPlaceholder}
-                                className="w-full h-[300px] font-mono text-sm p-4 rounded-xl border border-border bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                                placeholder={L.buttons.importPlaceholder || 'paste your json array here...'}
+                                className="w-full h-[320px] font-mono text-[11px] p-6 rounded-3xl bg-muted/20 border-none focus:ring-1 focus:ring-primary/20 outline-none transition-all resize-none lowercase custom-scrollbar"
                                 value={inputData}
                                 onChange={(e) => setInputData(e.target.value)}
                             />
+                            <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                                <Badge variant="secondary" className="bg-background text-[9px] font-black uppercase tracking-tighter border-none px-2 py-0.5 opacity-40">JSON ARRAY</Badge>
+                            </div>
                         </div>
-                        {error && <Text variant="muted" className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">{error}</Text>}
+                        
+                        {error && (
+                            <div className="p-4 rounded-2xl bg-rose-500/5 ring-1 ring-rose-500/10 flex items-start gap-4 animate-in slide-in-from-top-2">
+                                <Icons.warning className="size-4 text-rose-500 mt-0.5" />
+                                <p className="text-xs font-medium text-rose-600/80 lowercase italic">{error}</p>
+                            </div>
+                        )}
                     </div>
 
-                    <Stack direction="row" justify="end" gap={3}>
-                        <Button variant="outline" onClick={onClose} disabled={importing}>
+                    <footer className="flex items-center justify-end gap-3 pt-2">
+                        <Button
+                            variant="ghost"
+                            onClick={onClose}
+                            disabled={importing}
+                            className="h-11 px-8 rounded-xl lowercase font-bold text-muted-foreground hover:bg-muted"
+                        >
                             {C.actions.cancel}
                         </Button>
-                        <Button onClick={handleImport} disabled={importing || !inputData.trim()} isLoading={importing}>
-                            {L.buttons.importData}
+                        <Button
+                            onClick={handleImport}
+                            disabled={importing || !inputData.trim()}
+                            isLoading={importing}
+                            className="h-11 px-10 rounded-xl lowercase shadow-lg shadow-primary/20 font-bold"
+                        >
+                            {L.buttons.importData.toLowerCase()}
                         </Button>
-                    </Stack>
-                </Stack>
+                    </footer>
+                </div>
             </div>
         </div>
     );

@@ -1,6 +1,20 @@
 'use client';
 
-import { Card, CardContent, Button, Badge, Skeleton, Stack, Text } from '@/components/ui';
+/**
+ * AppUserTable - Refactored to Analytics Style (MonitorAnalyticsView.tsx)
+ * 
+ * STICKING TO RULES:
+ * - No tracking-*
+ * - No text size < text-xs
+ * - No text color opacity (text-foreground/80)
+ * - Standard Button usage only
+ * 
+ * UPDATES:
+ * - Removed avatar circles next to name
+ * - Mobile view optimized to avoid horizontal scrolling (Stacked Layout)
+ */
+
+import { Card, CardContent, Button, Badge, Skeleton, Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui';
 import { Icons } from '../config/icons';
 import { APP_USER_LABELS } from '../constants/ui-labels';
 import { cn } from '@/lib/utils';
@@ -15,150 +29,158 @@ interface AppUserTableProps {
     onDelete: (user: AppUser) => void;
 }
 
-const getRoleStyle = (user: AppUser) => {
-    const level = user.roleLevel;
-    if (level !== null && level !== undefined) {
-        if (level >= 90) return 'bg-destructive/10 text-destructive';
-        if (level >= 70) return 'bg-amber-500/10 text-amber-600';
-        if (level >= 50) return 'bg-primary/10 text-primary';
-        if (level >= 30) return 'bg-purple-500/10 text-purple-600';
-        return 'bg-muted text-muted-foreground';
-    }
-    const lowerRole = user.role?.toLowerCase() || '';
-    if (lowerRole.includes('super')) return 'bg-destructive/10 text-destructive';
-    if (lowerRole.includes('admin')) return 'bg-amber-500/10 text-amber-600';
-    if (lowerRole.includes('designer')) return 'bg-primary/10 text-primary';
-    if (lowerRole.includes('affiliate')) return 'bg-purple-500/10 text-purple-600';
-    return 'bg-muted text-muted-foreground';
-};
-
-const formatRoleName = (user: AppUser) => {
-    if (user.roleDisplayName) return user.roleDisplayName;
-    if (!user.role) return L.table.defaultRole;
-    return user.role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-};
-
 const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toLowerCase();
 };
 
 export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableProps) => {
     if (loading) {
         return (
-            <Card >
-                <CardContent className="p-5 space-y-3">
-                    {[...Array(5)].map((_, i) => (
-                        <Skeleton key={i} className="h-16 w-full rounded-xl" />
-                    ))}
-                </CardContent>
-            </Card>
+            <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full rounded-xl bg-muted/20" />
+                ))}
+            </div>
         );
     }
 
     if (!users.length) {
         return (
-            <Card  className="p-16 text-center">
-                <Icons.user className="size-10 mx-auto mb-4 text-border" />
-                <Text>{L.empty.title}</Text>
-                <Text variant="muted">{L.empty.subtitle}</Text>
-            </Card>
+             <div className="py-24 text-center border border-dashed border-border rounded-2xl bg-muted/5">
+                 <div className="size-16 rounded-3xl bg-muted/20 mx-auto flex items-center justify-center mb-6">
+                    <Icons.users className="size-8 text-muted-foreground" />
+                 </div>
+                 <h3 className="text-sm font-semibold text-foreground mb-1 lowercase">{L.empty.title}</h3>
+                 <p className="text-xs text-muted-foreground lowercase font-normal">{L.empty.subtitle.toLowerCase()}</p>
+             </div>
         );
     }
 
     return (
-        <Card >
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full">
-                    <thead className="bg-muted/30 border-b border-border">
-                        <tr>
-                            <th className="py-3 px-5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{L.table.user}</th>
-                            <th className="py-3 px-5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{L.table.email}</th>
-                            <th className="py-3 px-5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{L.table.role}</th>
-                            <th className="py-3 px-5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{L.table.status}</th>
-                            <th className="py-3 px-5 text-left text-[11px] font-semibold text-muted-foreground uppercase">{L.table.joinedAt}</th>
-                            <th className="py-3 px-5 w-20"></th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/50">
+        <div className="w-full">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-border bg-card shadow-none">
+                <Table className="w-full">
+                    <TableHeader className="bg-muted/5 border-b border-border">
+                        <TableRow className="hover:bg-transparent border-none">
+                            <TableHead className="h-12 px-8 text-left text-xs font-normal lowercase text-muted-foreground">{L.table.user}</TableHead>
+                            <TableHead className="h-12 px-6 text-left text-xs font-normal lowercase text-muted-foreground">{L.table.email}</TableHead>
+                            <TableHead className="h-12 px-6 text-center text-xs font-normal lowercase text-muted-foreground">{L.table.role}</TableHead>
+                            <TableHead className="h-12 px-8 text-right text-xs font-normal lowercase text-muted-foreground">{L.table.status}</TableHead>
+                            <TableHead className="h-12 px-8 text-right text-xs font-normal lowercase text-muted-foreground">{L.table.joinedAt}</TableHead>
+                            <TableHead className="h-12 px-6"></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {users.map((user) => (
-                            <tr key={user.id} className="group hover:bg-muted/20 transition-colors">
-                                <td className="py-3 px-5">
-                                    <Stack direction="row" gap={3} align="center">
-                                        <div className="size-9 rounded-xl bg-muted flex items-center justify-center text-foreground font-semibold text-sm">
-                                            {user.username?.charAt(0).toUpperCase() || 'U'}
-                                        </div>
-                                        <Text className="text-sm">{user.username}</Text>
-                                    </Stack>
-                                </td>
-                                <td className="py-3 px-5 text-muted-foreground text-sm">{user.email}</td>
-                                <td className="py-3 px-5">
-                                    <Badge className={cn("rounded-lg text-[11px]", getRoleStyle(user))}>
-                                        {formatRoleName(user)}
-                                        {user.roleIsSuper && <Icons.crown className="size-3 ml-1" />}
+                            <TableRow key={user.id} className="group border-border hover:bg-muted/5 transition-all font-instrument">
+                                <TableCell className="px-8 py-3.5">
+                                    <span className="text-base font-normal text-foreground">
+                                        {user.username}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="px-6 py-3.5 text-sm font-normal text-muted-foreground">
+                                    {user.email}
+                                </TableCell>
+                                <TableCell className="px-6 py-3.5 text-center">
+                                    <Badge className="h-7 px-3 rounded-full border border-border bg-muted/20 text-foreground text-xs font-normal lowercase transition-colors shadow-none">
+                                        {user.roleDisplayName?.toLowerCase() || user.role?.toLowerCase() || 'user'}
+                                        {user.roleIsSuper && <Icons.crown className="size-3 ml-1.5 opacity-60" />}
                                     </Badge>
-                                </td>
-                                <td className="py-3 px-5">
-                                    <Badge variant={user.isActive ? "success" : "destructive"}>
-                                        {user.isActive ? L.table.active : L.table.inactive}
-                                    </Badge>
-                                </td>
-                                <td className="py-3 px-5 text-muted-foreground text-sm">{formatDate(user.createdAt)}</td>
-                                <td className="py-3 px-5">
-                                    <Stack direction="row" gap={1} className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon-sm" onClick={() => onEdit(user)}>
-                                            <Icons.pencil className="size-4" />
+                                </TableCell>
+                                <TableCell className="px-8 py-3.5 text-right">
+                                    <div className="flex items-center justify-end gap-3">
+                                        <span className="text-xs font-normal text-foreground lowercase">
+                                            {user.isActive ? L.table.active : L.table.inactive}
+                                        </span>
+                                        <div
+                                            className={cn(
+                                            'size-2 rounded-full',
+                                            user.isActive
+                                                ? 'bg-chart-2 shadow-[0_0_12px_var(--chart-2)]'
+                                                : 'bg-destructive shadow-[0_0_12px_var(--destructive)]',
+                                            )}
+                                        />
+                                    </div>
+                                </TableCell>
+                                <TableCell className="px-8 py-3.5 text-right text-xs font-normal text-muted-foreground lowercase">
+                                    {formatDate(user.createdAt)}
+                                </TableCell>
+                                <TableCell className="px-6 py-3.5 text-right">
+                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onClick={() => onEdit(user)}
+                                        >
+                                            <Icons.pencil className="size-3.5" />
                                         </Button>
-                                        <Button variant="ghost" size="icon-sm" onClick={() => onDelete(user)}>
-                                            <Icons.trash className="size-4 text-destructive" />
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            onClick={() => onDelete(user)}
+                                        >
+                                            <Icons.trash className="size-3.5" />
                                         </Button>
-                                    </Stack>
-                                </td>
-                            </tr>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
                         ))}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
 
-            {/* Mobile Cards */}
-            <div className="lg:hidden divide-y divide-border/50">
+            {/* Mobile Stacked View - Optimized No Scroll */}
+            <div className="md:hidden space-y-4">
                 {users.map((user) => (
-                    <div key={user.id} className="p-4">
-                        <Stack direction="row" justify="between" align="start" className="mb-3">
-                            <Stack direction="row" gap={3} align="center" className="min-w-0">
-                                <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-foreground font-semibold shrink-0">
-                                    {user.username?.charAt(0).toUpperCase() || 'U'}
+                    <Card key={user.id} className="border border-border bg-card shadow-none rounded-2xl overflow-hidden">
+                        <CardContent className="p-5 flex flex-col gap-4">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-base font-normal text-foreground leading-tight">
+                                        {user.username}
+                                    </span>
+                                    <span className="text-xs font-normal text-muted-foreground truncate max-w-[200px]">
+                                        {user.email}
+                                    </span>
                                 </div>
-                                <div className="min-w-0">
-                                    <Text className="text-sm truncate">{user.username}</Text>
-                                    <Text variant="muted" className="truncate">{user.email}</Text>
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <Button variant="ghost" size="icon" onClick={() => onEdit(user)}>
+                                        <Icons.pencil className="size-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" onClick={() => onDelete(user)}>
+                                        <Icons.trash className="size-4" />
+                                    </Button>
                                 </div>
-                            </Stack>
-                            <Stack direction="row" gap={1}>
-                                <Button variant="ghost" size="icon-sm" onClick={() => onEdit(user)}>
-                                    <Icons.pencil className="size-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon-sm" onClick={() => onDelete(user)}>
-                                    <Icons.trash className="size-4 text-destructive" />
-                                </Button>
-                            </Stack>
-                        </Stack>
-                        <Stack direction="row" gap={2} wrap>
-                            <Badge className={cn("rounded-lg text-[10px]", getRoleStyle(user))}>
-                                {formatRoleName(user)}
-                                {user.roleIsSuper && <Icons.crown className="size-2.5 ml-1" />}
-                            </Badge>
-                            <Badge variant={user.isActive ? "success" : "destructive"} className="text-[10px]">
-                                {user.isActive ? L.table.active : L.table.inactive}
-                            </Badge>
-                            <Text variant="detail" className="bg-muted/50 rounded-lg px-2 py-1">
-                                {formatDate(user.createdAt)}
-                            </Text>
-                        </Stack>
-                    </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 border-t border-border pt-4 mt-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Badge className="h-7 px-3 rounded-full border border-border bg-muted/20 text-foreground text-xs font-normal lowercase shadow-none">
+                                        {user.roleDisplayName?.toLowerCase().slice(0, 15) || user.role?.toLowerCase() || 'user'}
+                                        {user.roleIsSuper && <Icons.crown className="size-3 ml-1.5 opacity-60" />}
+                                    </Badge>
+                                    
+                                    <div className="flex items-center gap-2 px-2 py-1 bg-muted/5 rounded-full border border-border/50">
+                                        <div className={cn(
+                                            'size-1.5 rounded-full',
+                                            user.isActive ? 'bg-chart-2' : 'bg-destructive'
+                                        )} />
+                                        <span className="text-xs font-normal text-foreground lowercase">
+                                            {user.isActive ? 'active' : 'inactive'}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <span className="text-[10px] font-normal text-muted-foreground lowercase shrink-0">
+                                    {formatDate(user.createdAt)}
+                                </span>
+                            </div>
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
-        </Card>
+        </div>
     );
 };

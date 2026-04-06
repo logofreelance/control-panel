@@ -1,31 +1,30 @@
 'use client';
 
-// databaseSchemaView - Enhanced with Premium Mobile-First UI
-// Uses composables for all data operations, component is pure UI
-// ✅ PURE DI: Main component uses useConfig(), sub-components use module-level constants
+/**
+ * databaseSchemaView - Enhanced with Flat Luxury UI
+ * Integrated with TargetLayout and consistent Design System
+ */
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Badge, Heading, Text, Stack, Card } from '@/components/ui';
+import { Button, Badge, Card, CardContent } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
-import { Icons } from '../config/icons';
-import { DATABASE_SCHEMA_LABELS } from '../constants/ui-labels';
-import { ConfirmDialog, useConfig, PageLoadingSkeleton } from '@/modules/_core';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
+import { TargetLayout } from '@/components/layout/TargetLayout';
 import { useDatabaseSchema, useSchemaActions, useResources, useSchemaStats } from '../composables';
+import { ConfirmDialog, PageLoadingSkeleton } from '@/modules/_core';
+import { RelationBuilder } from './RelationBuilder';
 import type { DatabaseTable, Resource } from '../types';
 
-// Module-level constants for sub-components (can't use hooks)
-const L = DATABASE_SCHEMA_LABELS;
+const L = MODULE_LABELS.databaseSchema;
 
 export const DatabaseSchemaView = () => {
     const router = useRouter();
-    const { id: targetId } = useParams();
-    // ✅ Pure DI: Get all dependencies from context
-    const { labels, icons: Icons } = useConfig();
-    const L = labels.mod.databaseSchema;
-    const C = labels.common;
+    const params = useParams();
+    const nodeId = params.id as string;
 
-    // Data from composables (no fetch logic here)
+    // Data from composables
     const { items: sources, loading, remove, fetchAll } = useDatabaseSchema();
     const { clone } = useSchemaActions();
 
@@ -45,13 +44,9 @@ export const DatabaseSchemaView = () => {
     // Server-side Stats
     const { stats } = useSchemaStats();
 
-    // UI handlers (delegate to composables)
+    // UI handlers
     const toggleExpand = (id: number) => {
-        if (expandedId === id) {
-            setExpandedId(null);
-        } else {
-            setExpandedId(id);
-        }
+        setExpandedId(prev => (prev === id ? null : id));
     };
 
     const handleDelete = async () => {
@@ -75,113 +70,91 @@ export const DatabaseSchemaView = () => {
         }
     };
 
-    // Loading state
-    // if (loading) return null; // Removed blocking return
-
-    const LoadingOverlay = () => (
-        <div className="absolute inset-0 bg-background z-10 flex items-center justify-center rounded-xl">
-            <div className="w-6 h-6 border-2 border-(--primary) border-t-transparent rounded-full animate-spin" />
-        </div>
-    );
+    if (loading && !sources) return <PageLoadingSkeleton showStats={true} contentRows={3} />;
 
     return (
-        <div className="space-y-8">
-            {/* Header & Stats */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <Stack direction="row" align="center" gap={3}>
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icons.database className="w-5 h-5 text-primary" />
+        <TargetLayout>
+            <div className="flex flex-col gap-10 animate-page-enter">
+                {/* Header & Stats */}
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
+                    <div className="space-y-1">
+                        <TextHeading as="h1" size="h3">{L.title}</TextHeading>
+                        <p className="text-sm md:text-base text-muted-foreground lowercase">{L.subtitle.toLowerCase()}</p>
                     </div>
-                    <div>
-                        <Heading level={2}>{L.title}</Heading>
-                        <Text variant="muted">{L.subtitle}</Text>
+
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl border-border/40 hover:bg-muted/50 text-muted-foreground lowercase"
+                            onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/trash` : '/database-schema/trash')}
+                        >
+                            <Icons.trash className="w-4 h-4 mr-2" /> {L.labels.trash}
+                        </Button>
+                        <Button
+                            size="sm"
+                            className="rounded-xl shadow-lg shadow-primary/10 lowercase"
+                            onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/create` : '/database-schema/create')}
+                        >
+                            <Icons.plus className="w-4 h-4 mr-2" />
+                            {L.buttons.createSchema}
+                        </Button>
                     </div>
-                </Stack>
-                <Stack direction="row" gap={3}>
-                    <Button
-                        variant="ghost"
-                        className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                        onClick={() => router.push(targetId ? `/target/${targetId}/database-schema/trash` : '/database-schema/trash')}
+                </header>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-1">
+                    <StatCard 
+                        label={L.labels.sources} 
+                        value={stats.total_sources} 
+                        subtitle={L.labels.activeConnections} 
+                        icon={Icons.bookOpen} 
+                    />
+                    <StatCard 
+                        label={L.labels.tables} 
+                        value={stats.total_tables} 
+                        subtitle={L.labels.schemasDefined} 
+                        icon={Icons.storage} 
+                    />
+                    <StatCard 
+                        label={L.labels.records} 
+                        value={(stats.total_records || 0).toLocaleString()} 
+                        subtitle={L.labels.totalRows} 
+                        icon={Icons.chart} 
+                    />
+                    
+                    {/* Create New CTA Card */}
+                    <div 
+                        className="bg-muted/30 hover:bg-muted/50 border border-dashed border-border/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all duration-300 cursor-pointer group"
+                        onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/create` : '/database-schema/create')}
                     >
-                        <Icons.trash className="w-4 h-4 mr-2" /> {L.labels.viewTrash}
-                    </Button>
-                    <Button
-                        onClick={() => router.push(targetId ? `/target/${targetId}/database-schema/create` : '/database-schema/create')}
-                    >
-                        <Icons.plus className="w-4 h-4 mr-2" />
-                        {L.buttons.createSchema}
-                    </Button>
-                </Stack>
-            </div>
-
-            <div className="relative min-h-[140px]">
-                {loading && <LoadingOverlay />}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                    {/* Active Sources */}
-                    <Card  className="p-4 sm:p-5">
-                        <Stack direction="row" justify="between" align="start" className="mb-3">
-                            <Text variant="detail">{L.labels.sources}</Text>
-                            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                <Icons.bookOpen className="w-3.5 h-3.5" />
-                            </div>
-                        </Stack>
-                        <div>
-                            <div className="text-xl font-semibold text-foreground">{stats.total_sources}</div>
-                            <Text variant="muted" className="text-[10px] mt-1">{L.labels.activeConnections}</Text>
+                        <div className="size-10 rounded-xl bg-background border border-border/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <Icons.plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
-                    </Card>
-
-                    {/* Tables */}
-                    <Card  className="p-4 sm:p-5">
-                        <Stack direction="row" justify="between" align="start" className="mb-3">
-                            <Text variant="detail">{L.labels.tables}</Text>
-                            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                <Icons.storage className="w-3.5 h-3.5" />
-                            </div>
-                        </Stack>
-                        <div>
-                            <div className="text-xl font-semibold text-foreground">{stats.total_tables}</div>
-                            <Text variant="muted" className="text-[10px] mt-1">{L.labels.schemasDefined}</Text>
-                        </div>
-                    </Card>
-
-                    {/* Records */}
-                    <Card  className="p-4 sm:p-5">
-                        <Stack direction="row" justify="between" align="start" className="mb-3">
-                            <Text variant="detail">{L.labels.records}</Text>
-                            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                <Icons.chart className="w-3.5 h-3.5" />
-                            </div>
-                        </Stack>
-                        <div>
-                            <div className="text-xl font-semibold text-foreground">{(stats.total_records || 0).toLocaleString()}</div>
-                            <Text variant="muted" className="text-[10px] mt-1">{L.labels.totalRows}</Text>
-                        </div>
-                    </Card>
-
-                    {/* Filler/Action Card */}
-                    <div className="bg-muted rounded-xl p-4 sm:p-5 border border-dashed border-border flex flex-col items-center justify-center text-center hover:bg-muted transition-colors cursor-pointer group" onClick={() => router.push(targetId ? `/target/${targetId}/database-schema/create` : '/database-schema/create')}>
-                        <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center mb-2 group-hover:border-primary/50 group-hover:text-primary transition-colors">
-                            <Icons.plus className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
-                        </div>
-                        <span className="text-xs font-medium text-muted-foreground group-hover:text-primary">{L.buttons.createSchema}</span>
+                        <span className="text-xs font-semibold text-muted-foreground group-hover:text-primary lowercase">{L.buttons.createSchema}</span>
                     </div>
                 </div>
-            </div>
 
-            {/* List */}
-            <div className="relative min-h-[300px]">
-                {loading && <LoadingOverlay />}
-                <div className="grid gap-4">
-                    {(sources || []).length === 0 ? (
-                        <div className="text-center py-20 bg-muted rounded-xl border border-dashed border-border">
-                            <div className="text-6xl mb-4 opacity-50 flex justify-center"><Icons.folderOpen className="w-16 h-16 text-muted-foreground" /></div>
-                            <Heading level={5}>{L.empty.title}</Heading>
-                            <Text variant="muted" className="mb-6 max-w-md mx-auto mt-2">{L.empty.description}</Text>
-                            <Button onClick={() => router.push(targetId ? `/target/${targetId}/database-schema/create` : '/database-schema/create')}>{L.buttons.createSchema}</Button>
+                {/* Main List Section */}
+                <div className="space-y-4 px-1 pb-10">
+                    {sources.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center py-24 bg-muted/20 rounded-3xl border border-dashed border-border/40">
+                            <div className="size-20 rounded-3xl bg-muted/40 flex items-center justify-center mb-6">
+                                <Icons.folderOpen className="w-10 h-10 text-muted-foreground/30" />
+                            </div>
+                            <TextHeading size="h5" className="mb-2">{L.empty.title.toLowerCase()}</TextHeading>
+                            <p className="text-sm text-muted-foreground max-w-sm lowercase mb-8">
+                                {L.empty.description.toLowerCase()}
+                            </p>
+                            <Button 
+                                className="rounded-xl px-8 lowercase"
+                                onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/create` : '/database-schema/create')}
+                            >
+                                {L.buttons.createSchema}
+                            </Button>
                         </div>
                     ) : (
-                        (sources || []).map((src: any) => (
+                        sources.map((src: any) => (
                             <TableCard
                                 key={src.id}
                                 source={src}
@@ -194,45 +167,50 @@ export const DatabaseSchemaView = () => {
                                 onDeleteResource={(resourceId, resourceName) =>
                                     setConfirmDialog({ id: resourceId, name: resourceName, type: 'resource', sourceId: src.id })
                                 }
-                                router={router}
+                                nodeId={nodeId}
                             />
                         ))
                     )}
                 </div>
-            </div>
 
-            <ConfirmDialog
-                isOpen={!!confirmDialog}
-                onConfirm={handleDelete}
-                onClose={() => setConfirmDialog(null)}
-                variant="destructive"
-                title={confirmDialog?.type === 'resource'
-                    ? `${C.actions.delete} Resource?`
-                    : `${C.actions.delete} ${L.title}?`}
-                message={confirmDialog?.type === 'resource'
-                    ? L.messages.confirm.deleteResource
-                    : L.messages.confirm.deleteSource}
-                loading={submitting}
-            />
-        </div>
+                <ConfirmDialog
+                    isOpen={!!confirmDialog}
+                    onConfirm={handleDelete}
+                    onClose={() => setConfirmDialog(null)}
+                    variant="destructive"
+                    title={confirmDialog?.type === 'resource'
+                        ? `delete resource?`
+                        : `delete database schema?`}
+                    message={confirmDialog?.type === 'resource'
+                        ? L.messages.confirm.deleteResource.toLowerCase()
+                        : L.messages.confirm.deleteSource.toLowerCase()}
+                    loading={submitting}
+                />
+            </div>
+        </TargetLayout>
     );
 };
 
 // =============================================================================
-// Sub-components (pure UI, receive all data via props)
+// Helper Components
 // =============================================================================
 
-interface TableCardProps {
-    source: DatabaseTable;
-    isExpanded: boolean;
-    resources: Resource[];
-    loadingResources: boolean;
-    onToggleExpand: () => void;
-    onClone: () => void;
-    onDelete: () => void;
-    onDeleteResource: (id: number, name: string) => void;
-    router: { push: (href: string) => void };
-}
+const StatCard = ({ label, value, subtitle, icon: Icon }: any) => (
+    <Card className="bg-card/40 border-none shadow-sm hover:shadow-md transition-shadow duration-300">
+        <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+                <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">{label}</span>
+                <div className="size-8 rounded-xl bg-primary/5 flex items-center justify-center text-primary/60">
+                    <Icon className="w-4 h-4" />
+                </div>
+            </div>
+            <div className="space-y-1">
+                <div className="text-2xl font-bold tracking-tight text-foreground">{value}</div>
+                <p className="text-[11px] text-muted-foreground lowercase">{subtitle}</p>
+            </div>
+        </CardContent>
+    </Card>
+);
 
 const TableCard = ({
     source,
@@ -243,92 +221,98 @@ const TableCard = ({
     onClone,
     onDelete,
     onDeleteResource,
-    router,
-}: TableCardProps) => {
+    nodeId,
+}: any) => {
+    const router = useRouter();
+
     return (
-        <div
+        <Card 
             className={cn(
-                "group bg-card rounded-xl transition-all duration-200 overflow-hidden",
-                isExpanded
-                    ? 'ring-1 ring-primary/20'
-                    : 'border border-border hover:border-border'
+                "group border-none shadow-sm overflow-hidden transition-all duration-300",
+                isExpanded ? 'ring-1 ring-primary/20 bg-muted/5' : 'bg-card hover:bg-muted/10'
             )}
         >
-            {/* Card Header / Main Row */}
-            <div className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center gap-5 cursor-pointer" onClick={onToggleExpand}>
-                {/* Icon & Title */}
-                <Stack direction="row" align="center" gap={4} className="flex-1 min-w-0">
+            <div 
+                className="p-5 flex flex-col md:flex-row md:items-center gap-6 cursor-pointer" 
+                onClick={onToggleExpand}
+            >
+                {/* Visual ID & Icon */}
+                <div className="flex items-center gap-5 flex-1 min-w-0">
                     <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center transition-colors shrink-0",
-                        isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
+                        "size-12 rounded-2xl flex items-center justify-center transition-all duration-300 shrink-0",
+                        isExpanded ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-muted/40 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
                     )}>
-                        <Icons.database className="w-5 h-5" />
+                        <Icons.database className="w-6 h-6" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                        <Stack direction="row" align="center" gap={2} className="mb-0.5">
-                            <Heading level={5} className="truncate">{source.name}</Heading>
-                            {source.isSystem && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-auto">{L.labels.system}</Badge>
-                            )}
-                        </Stack>
-                        <Stack direction="row" wrap align="center" gap={2} className="text-xs text-muted-foreground">
-                            <span className="font-mono text-[10px] bg-muted border border-border px-1.5 rounded text-muted-foreground">{source.tableName}</span>
-                            <span className="text-muted-foreground">•</span>
-                            <span>{source.rowCount || 0} {L.labels.records.toLowerCase()}</span>
-                        </Stack>
-                    </div>
-                </Stack>
 
-                <Stack direction="row" align="center" gap={2} className="justify-end">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <TextHeading size="h5" className="text-base font-semibold truncate lowercase leading-none">
+                                {source.name}
+                            </TextHeading>
+                            {source.isSystem && (
+                                <Badge variant="secondary" className="text-[9px] px-1.5 h-4 uppercase font-bold tracking-tighter bg-muted/50 border-none">SYSTEM</Badge>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground lowercase font-medium">
+                            <span className="font-mono text-[10px] text-primary/70 bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">{source.tableName}</span>
+                            <span className="opacity-30">•</span>
+                            <span>{source.rowCount || 0} {L.labels.records.toLowerCase()}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 justify-end">
                     <Button
                         variant="ghost"
                         size="sm"
-                        className={isExpanded ? "bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20" : "text-muted-foreground hover:text-foreground"}
+                        className={cn(
+                            "h-9 rounded-xl px-4 text-xs font-medium lowercase transition-all",
+                            isExpanded ? "bg-primary/20 text-primary hover:bg-primary/30" : "text-muted-foreground hover:bg-muted"
+                        )}
                     >
                         {isExpanded ? L.buttons.hideResources : L.buttons.viewResources}
                     </Button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onClone(); }}
-                        className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
-                        title={L.buttons.cloneSchema}
-                    >
-                        <Icons.copy className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                        className="p-2 rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
-                        title={L.buttons.deleteSchema}
-                    >
-                        <Icons.delete className="w-4 h-4" />
-                    </button>
-                </Stack>
+                    
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={(e) => { e.stopPropagation(); onClone(); }}
+                            className="rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            title={L.buttons.cloneSchema}
+                        >
+                            <Icons.copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                            className="rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+                            title={L.buttons.deleteSchema}
+                        >
+                            <Icons.trash className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
             </div>
 
-            {/* Expanded Content (Resources) */}
+            {/* Resources Disclosure Panel */}
             {isExpanded && (
-                <ExpandedResourcesPanel
-                    sourceId={source.id}
-                    sourceName={source.name}
-                    resources={resources}
-                    loadingResources={loadingResources}
-                    onDeleteResource={onDeleteResource}
-                    router={router}
-                />
+                <CardContent className="p-0 border-t border-border/5">
+                    <ExpandedResourcesPanel
+                        sourceId={source.id}
+                        sourceName={source.name}
+                        resources={resources}
+                        loadingResources={loadingResources}
+                        onDeleteResource={onDeleteResource}
+                        nodeId={nodeId}
+                    />
+                </CardContent>
             )}
-        </div>
+        </Card>
     );
 };
-
-import { RelationBuilder } from './RelationBuilder'; // Add import
-
-interface ExpandedResourcesPanelProps {
-    sourceId: number;
-    sourceName: string;
-    resources: Resource[];
-    loadingResources: boolean;
-    onDeleteResource: (id: number, name: string) => void;
-    router: { push: (href: string) => void };
-}
 
 const ExpandedResourcesPanel = ({
     sourceId,
@@ -336,141 +320,120 @@ const ExpandedResourcesPanel = ({
     resources,
     loadingResources,
     onDeleteResource,
-    router,
-}: ExpandedResourcesPanelProps) => {
-    const { id: targetId } = useParams();
+    nodeId,
+}: any) => {
+    const router = useRouter();
     
     return (
-        <div className="bg-muted/30 border-t border-border p-4 sm:p-6 animate-in slide-in-from-top-2 duration-300">
-            <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <Stack direction="row" align="center" gap={3}>
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"><Icons.table className="w-5 h-5" /></div>
-                        <div>
-                            <Heading level={5}>{L.labels.tableData}</Heading>
-                            <Text variant="muted" className="text-xs">{L.labels.viewAndManageRecords}</Text>
-                        </div>
-                    </Stack>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="w-full sm:w-auto justify-center gap-2 text-primary hover:bg-primary/10"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(targetId ? `/target/${targetId}/database-schema/${sourceId}/data` : `/database-schema/${sourceId}/data`);
-                        }}
-                    >
-                        {L.buttons.viewData} <Icons.arrowRight className="w-3 h-3" />
-                    </Button>
-                </Card>
-
-                <Card  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <Stack direction="row" align="center" gap={3}>
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"><Icons.clipboardList className="w-5 h-5" /></div>
-                        <div>
-                            <Heading level={5}>{L.labels.schema}</Heading>
-                            <Text variant="muted" className="text-xs">{L.labels.editColumnsTypes}</Text>
-                        </div>
-                    </Stack>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="w-full sm:w-auto justify-center gap-2 text-primary hover:bg-primary/10"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(targetId ? `/target/${targetId}/database-schema/${sourceId}/schema` : `/database-schema/${sourceId}/schema`);
-                        }}
-                    >
-                        {L.buttons.editSchema} <Icons.arrowRight className="w-3 h-3" />
-                    </Button>
-                </Card>
-
-                {/* Relations Card */}
-                <Card  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:col-span-2 lg:col-span-1">
-                    <Stack direction="row" align="center" gap={3}>
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"><Icons.link className="w-5 h-5" /></div>
-                        <div>
-                            <Heading level={5}>{L.messages?.relations?.title || 'Relations'}</Heading>
-                            <Text variant="muted" className="text-xs">{L.messages?.relations?.addRelation || 'Connect tables'}</Text>
-                        </div>
-                    </Stack>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="w-full sm:w-auto justify-center gap-2 text-primary hover:bg-primary/10"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(targetId ? `/target/${targetId}/database-schema/${sourceId}/relations/create` : `/database-schema/${sourceId}/relations/create`);
-                        }}
-                    >
-                        <Icons.plus className="w-3 h-3" />
-                        {L.buttons?.addRelation || "Add"}
-                    </Button>
-                </Card>
+        <div className="p-6 md:p-8 bg-muted/20 space-y-10 animate-in fade-in zoom-in-95 duration-200">
+            {/* Quick Actions Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <ActionShortcut 
+                    title={L.labels.tableData} 
+                    desc={L.labels.viewAndManageRecords} 
+                    icon={Icons.table} 
+                    buttonText={L.buttons.viewData}
+                    onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/data` : `/database-schema/${sourceId}/data`)}
+                />
+                <ActionShortcut 
+                    title={L.labels.schema} 
+                    desc={L.labels.editColumnsTypes} 
+                    icon={Icons.clipboardList} 
+                    buttonText={L.buttons.editSchema}
+                    onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/schema` : `/database-schema/${sourceId}/schema`)}
+                />
+                <ActionShortcut 
+                    title={L.messages?.relations?.title || 'Relations'} 
+                    desc={L.messages?.relations?.addRelation || 'Connect tables'} 
+                    icon={Icons.link} 
+                    buttonText={L.buttons?.addRelation || "Add"}
+                    onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/relations/create` : `/database-schema/${sourceId}/relations/create`)}
+                />
             </div>
 
-            {/* Relations List Section */}
-            <div className="mb-8">
+            {/* Relations Section - Keeping the builder */}
+            <div className="px-1 pt-2">
                 <RelationBuilder
                     DatabaseTableId={sourceId}
                     DatabaseTableName={sourceName}
                 />
             </div>
 
-            <Stack direction="row" justify="between" align="center" className="mb-6">
-                <Stack direction="row" align="center" gap={2}>
-                    <span className="text-primary font-semibold bg-primary/10 px-3 py-1 rounded-lg text-sm">{L.labels.apiResources}</span>
-                    {loadingResources && <Icons.loading className="w-4 h-4 animate-spin text-primary/60" />}
-                </Stack>
-                <Button
-                    size="sm"
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(targetId ? `/target/${targetId}/database-schema/${sourceId}/resources/create` : `/database-schema/${sourceId}/resources/create`);
-                    }}
-                >
-                    + {L.buttons.createResource}
-                </Button>
-            </Stack>
+            {/* CMS Resources Section */}
+            <div className="space-y-6">
+                <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-3">
+                        <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <Icons.api className="w-4 h-4" />
+                        </div>
+                        <TextHeading size="h6" className="text-sm font-semibold lowercase">API Endpoints</TextHeading>
+                        {loadingResources && <Icons.loading className="w-3.5 h-3.5 animate-spin text-muted-foreground/40" />}
+                    </div>
+                    <Button
+                        size="sm"
+                        className="rounded-xl h-9 lowercase shadow-sm"
+                        onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/resources/create` : `/database-schema/${sourceId}/resources/create`)}
+                    >
+                        <Icons.plus className="w-3.5 h-3.5 mr-2" />
+                        {L.buttons.createResource}
+                    </Button>
+                </div>
 
-            {
-                loadingResources ? (
-                    <div className="h-20 bg-muted rounded-xl animate-pulse"></div>
+                {loadingResources && resources.length === 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[1, 2, 3].map(i => <div key={i} className="h-32 bg-muted/40 rounded-2xl animate-pulse" />)}
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {resources.length === 0 ? (
-                            <div className="col-span-full border-2 border-dashed border-border rounded-2xl p-8 text-center bg-card">
-                                <Text variant="muted" className="mb-2">{L.labels.noEndpointsConfigured}</Text>
-                                <span className="text-xs text-muted-foreground">{L.labels.createResourceToExpose}</span>
+                            <div className="col-span-full border border-dashed border-border/20 rounded-2xl py-12 flex flex-col items-center justify-center text-center bg-background/20">
+                                <p className="text-sm text-muted-foreground lowercase mb-1">{L.labels.noEndpointsConfigured.toLowerCase()}</p>
+                                <span className="text-[10px] text-muted-foreground/50 lowercase">{L.labels.createResourceToExpose.toLowerCase()}</span>
                             </div>
                         ) : (
-                            resources.map((r) => (
+                            resources.map((r: any) => (
                                 <ResourceCard
                                     key={r.id}
                                     resource={r}
                                     sourceId={sourceId}
                                     onDelete={() => onDeleteResource(r.id, r.name)}
-                                    router={router}
+                                    nodeId={nodeId}
                                 />
                             ))
                         )}
                     </div>
-                )
-            }
+                )}
+            </div>
         </div >
     );
 };
 
-interface ResourceCardProps {
-    resource: Resource;
-    sourceId: number;
-    onDelete: () => void;
-    router: { push: (href: string) => void };
-}
+const ActionShortcut = ({ title, desc, icon: Icon, buttonText, onClick }: any) => (
+    <Card className="bg-background/60 border-none shadow-sm hover:shadow-md transition-all duration-300 group">
+        <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors shrink-0">
+                    <Icon className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                    <TextHeading size="h6" className="text-sm font-semibold lowercase mb-0.5">{title}</TextHeading>
+                    <p className="text-[11px] text-muted-foreground line-clamp-1 lowercase">{desc}</p>
+                </div>
+            </div>
+            <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-lg px-3 text-[10px] font-bold lowercase text-primary hover:bg-primary/5 shrink-0"
+                onClick={onClick}
+            >
+                {buttonText} <Icons.chevronRight className="w-3 h-3 ml-1.5" />
+            </Button>
+        </CardContent>
+    </Card>
+);
 
-const ResourceCard = ({ resource: r, sourceId, onDelete, router }: ResourceCardProps) => {
-    const { id: targetId } = useParams();
+const ResourceCard = ({ resource: r, sourceId, onDelete, nodeId }: any) => {
+    const router = useRouter();
     const hasFilters = r.filtersJson
         ? (JSON.parse(r.filtersJson)?.filters?.length > 0 || (Array.isArray(JSON.parse(r.filtersJson)) && JSON.parse(r.filtersJson).length > 0))
         : false;
@@ -478,67 +441,77 @@ const ResourceCard = ({ resource: r, sourceId, onDelete, router }: ResourceCardP
 
     return (
         <Card
-            
-            className="p-4 cursor-pointer flex flex-col h-full"
+            className="group relative bg-background/80 border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer p-4 overflow-hidden"
             onClick={(e) => {
                 e.stopPropagation();
-                router.push(targetId ? `/target/${targetId}/database-schema/${sourceId}/resources/${r.id}/edit` : `/database-schema/${sourceId}/resources/${r.id}/edit`);
+                router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/resources/${r.id}/edit` : `/database-schema/${sourceId}/resources/${r.id}/edit`);
             }}
         >
-            <Stack direction="row" justify="between" align="start" className="mb-3">
-                <Stack direction="row" align="center" gap={2}>
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="h-5 px-1.5 rounded-md bg-emerald-500/10 text-emerald-600 text-[10px] font-black flex items-center justify-center">
                         GET
                     </div>
                     {hasJoins && (
-                        <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center" title={L.labels.hasJoins}><Icons.link className="w-3 h-3" /></div>
+                        <div className="size-5 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center" title={L.labels.hasJoins}>
+                            <Icons.link className="w-3 h-3" />
+                        </div>
                     )}
-                </Stack>
+                </div>
 
-                {/* Actions - Always Visible */}
-                <Stack direction="row" align="center" gap={1} className="opacity-0 group-hover/card:opacity-100 transition-opacity">
-                    <button
-                        className="p-1.5 hover:bg-primary/10 rounded-md text-muted-foreground hover:text-primary transition-colors"
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="rounded-md hover:bg-muted"
                         onClick={(e) => {
                             e.stopPropagation();
-                            router.push(targetId ? `/target/${targetId}/database-schema/${sourceId}/resources/${r.id}/edit` : `/database-schema/${sourceId}/resources/${r.id}/edit`);
+                            router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/resources/${r.id}/edit` : `/database-schema/${sourceId}/resources/${r.id}/edit`);
                         }}
                     >
-                        <Icons.edit className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                        className="p-1.5 hover:bg-red-50 rounded-md text-muted-foreground hover:text-red-500 transition-colors"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete();
-                        }}
+                        <Icons.edit className="w-3 h-3 text-muted-foreground" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="rounded-md hover:bg-rose-500/10 hover:text-rose-500"
+                        onClick={(e) => { e.stopPropagation(); onDelete(); }}
                     >
-                        <Icons.delete className="w-3.5 h-3.5" />
-                    </button>
-                </Stack>
-            </Stack>
-
-            <div className="flex-1 min-w-0">
-                <Heading level={5} className="mb-1 group-hover/card:text-primary transition-colors truncate" title={r.name}>
-                    {r.name}
-                </Heading>
-                <Stack direction="row" align="center" gap={2} className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded w-fit mb-3 border border-border">
-                    <span className="font-medium text-muted-foreground">/{r.slug}</span>
-                </Stack>
+                        <Icons.trash className="w-3 h-3 text-muted-foreground hover:text-inherit" />
+                    </Button>
+                </div>
             </div>
 
-            {/* Feature Badges & Status */}
-            <Stack direction="row" wrap gap={2} className="mt-auto pt-3 border-t border-border">
-                <Badge variant={r.isPublic ? 'warning' : 'success'} className="px-1.5 py-0 h-5 text-[10px]">
+            <div className="mb-4 space-y-1">
+                <TextHeading size="h6" className="text-sm font-semibold truncate lowercase group-hover:text-primary transition-colors">
+                    {r.name}
+                </TextHeading>
+                <div className="font-mono text-[9px] text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded w-fit uppercase tracking-tight">
+                    /{r.slug}
+                </div>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-border/5">
+                <Badge variant="outline" className={cn(
+                    "text-[9px] px-1.5 py-0 h-4 border-none uppercase font-bold",
+                    r.isPublic ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'
+                )}>
                     {r.isPublic ? L.labels.public : L.labels.protected}
                 </Badge>
 
-                {hasFilters && <span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center">{L.labels.filters}</span>}
+                {hasFilters && (
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-primary/5 text-primary border-none uppercase font-bold">
+                        {L.labels.filters}
+                    </Badge>
+                )}
 
-                <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center", r.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-muted text-muted-foreground')}>
+                <Badge variant="outline" className={cn(
+                    "text-[9px] px-1.5 py-0 h-4 border-none uppercase font-bold",
+                    r.isActive ? 'bg-indigo-500/10 text-indigo-600' : 'bg-muted/50 text-muted-foreground/60'
+                )}>
                     {r.isActive ? L.labels.active : L.labels.draft}
-                </span>
-            </Stack>
+                </Badge>
+            </div>
         </Card>
     );
 };

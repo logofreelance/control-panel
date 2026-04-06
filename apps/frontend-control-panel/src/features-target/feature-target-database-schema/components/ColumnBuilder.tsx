@@ -1,15 +1,20 @@
 'use client';
 
-// ColumnBuilder - Premium responsive column builder
-// Redesigned for better mobile experience and visual appeal
-// ✅ PURE DI: Uses useConfig() hook for all config, labels, icons
+/**
+ * ColumnBuilder - Flat Luxury UI Refactor
+ * Defined columns for database schema with consistent design system
+ */
 
 import { useState } from 'react';
-import { Button, Select, Heading, Text, Stack } from '@/components/ui';
+import { Button, Select, Badge } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { useConfig } from '@/modules/_core';
 import { cn } from '@/lib/utils';
-import { ColumnDefinition } from '../types';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { COLUMN_TYPES } from '../registry';
+import { ColumnDefinition } from '../types';
+
+const L = MODULE_LABELS.databaseSchema;
 
 interface ColumnBuilderProps {
     columns: ColumnDefinition[];
@@ -18,9 +23,8 @@ interface ColumnBuilderProps {
 }
 
 export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: ColumnBuilderProps) => {
-    // ✅ Pure DI: Get all dependencies from context
-    const { labels, icons: Icons } = useConfig();
-    const L = labels.mod.databaseSchema;
+    const { icons: Icons } = useConfig();
+    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
     const addColumn = () => {
         onChange([...columns, { name: '', type: 'string' }]);
@@ -30,7 +34,6 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
         const updated = [...columns];
         updated[index] = { ...updated[index], [field]: value };
 
-        // Clear relation-specific properties when type is changed away from 'relation'
         if (field === 'type' && value !== 'relation' && updated[index].target) {
             delete updated[index].target;
         }
@@ -53,38 +56,37 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
 
     const getTypeInfo = (type: string) => COLUMN_TYPES.find(t => t.value === type);
 
-    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-
     return (
-        <div className="space-y-4">
-            <Stack direction="row" justify="between" align="center" className="px-2">
-                <Stack direction="row" align="center" gap={3}>
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-3">
+                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xs ring-1 ring-primary/20">
                         {columns.length}
                     </div>
-                    <div>
-                        <Heading level={5}>{L.forms.definedColumns}</Heading>
-                        <Text variant="muted" className="text-xs hidden sm:block">{L.forms.configureSchemaStructure}</Text>
+                    <div className="space-y-0.5">
+                        <TextHeading size="h6" className="text-sm font-semibold lowercase">{L.forms.definedColumns}</TextHeading>
+                        <p className="text-[11px] text-muted-foreground lowercase hidden sm:block">{L.forms.configureSchemaStructure.toLowerCase()}</p>
                     </div>
-                </Stack>
+                </div>
                 <Button
                     type="button"
                     variant="ghost"
+                    size="sm"
                     onClick={addColumn}
-                    className="bg-primary/10 text-primary hover:bg-primary/20 border-transparent transition-colors"
+                    className="h-9 px-4 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 border-none transition-all lowercase font-bold"
                 >
-                    <span className="mr-2 text-lg font-bold">+</span> {L.forms.addColumn}
+                    <Icons.plus className="size-3.5 mr-2" /> {L.forms.addColumn}
                 </Button>
-            </Stack>
+            </div>
 
             {columns.length === 0 ? (
-                <div className="text-center py-12 bg-card border-2 border-dashed border-border rounded-3xl group hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer" onClick={addColumn}>
-                    <div className="w-16 h-16 rounded-2xl bg-primary/10 mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                        <Icons.sparkles className="w-8 h-8 text-primary" />
+                <div className="text-center py-16 bg-muted/20 border border-dashed border-border/40 rounded-3xl group hover:bg-primary/5 transition-all cursor-pointer" onClick={addColumn}>
+                    <div className="size-16 rounded-2xl bg-muted/40 mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <Icons.sparkles className="size-8 text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />
                     </div>
-                    <Heading level={5}>{L.forms.startBuildingSchema}</Heading>
-                    <Text variant="muted" className="mt-1 mb-4">{L.forms.addColumnsToDefine}</Text>
-                    <Button type="button" size="sm" className="bg-card text-primary border border-border">
+                    <TextHeading size="h6" className="mb-1 lowercase">{L.forms.startBuildingSchema}</TextHeading>
+                    <p className="text-xs text-muted-foreground lowercase mb-6">{L.forms.addColumnsToDefine}</p>
+                    <Button type="button" variant="outline" size="sm" className="h-9 rounded-xl border-border/40 lowercase">
                         {L.forms.addFirstColumn}
                     </Button>
                 </div>
@@ -98,10 +100,8 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                             <div
                                 key={index}
                                 className={cn(
-                                    "relative bg-card rounded-xl border transition-all duration-200 group",
-                                    isFocused
-                                        ? 'border-primary z-10'
-                                        : 'border-border hover:border-primary/50'
+                                    "relative bg-background/60 rounded-2xl transition-all duration-300 border-none ring-1 ring-border/5 group overflow-hidden",
+                                    isFocused ? 'ring-primary/40 bg-background shadow-xl scale-[1.01] z-20' : 'hover:ring-primary/10'
                                 )}
                                 onFocus={() => setFocusedIndex(index)}
                                 onBlur={(e) => {
@@ -110,159 +110,136 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                                     }
                                 }}
                             >
-                                {/* Drag Handle (Desktop) */}
-                                <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl bg-gradient-to-b from-primary/0 via-primary/0 to-primary/0 group-hover:via-primary/20 transition-all"></div>
-
-                                <div className="p-4 sm:p-5">
-                                    <div className="flex flex-col md:flex-row gap-5 items-start">
-
-                                        {/* Icon & Controls */}
-                                        <Stack direction="row" align="center" gap={3} className="w-full md:w-auto justify-between md:justify-start">
-                                            <Stack direction="row" align="center" gap={3}>
-                                                <div className={cn(
-                                                    "w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-300",
-                                                    isFocused
-                                                        ? 'bg-primary text-primary-foreground border-primary rotate-3'
-                                                        : 'bg-card text-muted-foreground border-border group-hover:border-primary/50 group-hover:text-primary'
-                                                )}>
-                                                    {typeInfo?.Icon ? <typeInfo.Icon className="w-5 h-5" /> : <Icons.fileText className="w-5 h-5" />}
-                                                </div>
-                                                <div className="md:hidden">
-                                                    <Heading level={5}>{col.name || L.forms.untitledColumn}</Heading>
-                                                    <Text variant="muted" className="text-xs">{typeInfo?.label || L.forms.unknownType}</Text>
-                                                </div>
-                                            </Stack>
-
-                                            {/* Mobile Actions */}
-                                            <div className="flex md:hidden items-center gap-1">
-                                                <button type="button" onClick={() => moveColumn(index, 'up')} disabled={index === 0} className="p-2 text-muted-foreground hover:text-primary"><Icons.chevronUp className="w-4 h-4" /></button>
-                                                <button type="button" onClick={() => moveColumn(index, 'down')} disabled={index === columns.length - 1} className="p-2 text-muted-foreground hover:text-primary"><Icons.chevronDown className="w-4 h-4" /></button>
-                                                <button type="button" onClick={() => removeColumn(index)} className="p-2 text-red-400 hover:text-red-600">
-                                                    <Icons.delete className="w-4 h-4" />
-                                                </button>
+                                <div className="p-4 md:p-5">
+                                    <div className="flex flex-col md:flex-row gap-6 md:items-center">
+                                        {/* Type Icon & Mobile Header */}
+                                        <div className="flex border-b border-border/5 items-center justify-between pb-px md:justify-start gap-4">
+                                            <div className={cn(
+                                                "size-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                                                isFocused
+                                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 rotate-12'
+                                                    : 'bg-muted/40 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:rotate-6'
+                                            )}>
+                                                {typeInfo?.Icon ? <typeInfo.Icon className="size-6" /> : <Icons.fileText className="size-6" />}
                                             </div>
-                                        </Stack>
+                                            
+                                            <div className="md:hidden flex-1 min-w-0">
+                                                <TextHeading size="h6" className={cn(
+                                                    "text-sm font-bold truncate lowercase",
+                                                    isFocused ? "text-primary" : ""
+                                                )}>
+                                                    {col.name || L.forms.untitledColumn}
+                                                </TextHeading>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{typeInfo?.label || L.forms.unknownType}</p>
+                                            </div>
+
+                                            <div className="flex md:hidden items-center gap-1">
+                                                <Button size="icon-xs" variant="ghost" className="rounded-lg h-8 w-8" onClick={(e) => { e.stopPropagation(); moveColumn(index, 'up'); }} disabled={index === 0}>
+                                                    <Icons.chevronUp className="size-3.5" />
+                                                </Button>
+                                                <Button size="icon-xs" variant="ghost" className="rounded-lg h-8 w-8" onClick={(e) => { e.stopPropagation(); moveColumn(index, 'down'); }} disabled={index === columns.length - 1}>
+                                                    <Icons.chevronDown className="size-3.5" />
+                                                </Button>
+                                            </div>
+                                        </div>
 
                                         {/* Inputs Grid */}
-                                        <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-4">
-
+                                        <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4">
                                             {/* Column Name */}
-                                            <div className="md:col-span-4 self-center">
-                                                <div className="relative">
-                                                    <input
-                                                        type="text"
-                                                        value={col.name}
-                                                        onChange={(e) => updateColumn(index, 'name', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                                                        placeholder={L.forms.columnName}
-                                                        className="w-full pl-3 pr-3 py-2.5 rounded-xl border border-border bg-muted/50 font-mono text-sm font-medium focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-muted-foreground"
-                                                    />
-                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-muted-foreground">
-                                                        {L.forms.sqlLabel}
-                                                    </div>
-                                                </div>
+                                            <div className="md:col-span-4 space-y-1">
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">name (sql)</label>
+                                                <input
+                                                    type="text"
+                                                    value={col.name}
+                                                    onChange={(e) => updateColumn(index, 'name', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                                                    placeholder={L.forms.columnName}
+                                                    className="w-full h-10 px-4 rounded-xl bg-muted/20 border-none font-mono text-xs focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/30 lowercase"
+                                                />
                                             </div>
 
                                             {/* Type Selector */}
-                                            <div className="md:col-span-4 self-center">
-                                                <div className="relative">
-                                                    <Select
-                                                        value={col.type}
-                                                        onChange={(e) => updateColumn(index, 'type', e.target.value)}
-                                                        size="sm"
-                                                        fullWidth={true}
-                                                        options={COLUMN_TYPES.map(t => ({ label: t.label, value: t.value }))}
-                                                        className={typeInfo?.Icon ? "pl-9" : ""}
-                                                    />
-                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                        {typeInfo?.Icon && <typeInfo.Icon className="w-4 h-4 text-muted-foreground" />}
-                                                    </div>
-                                                </div>
+                                            <div className="md:col-span-4 space-y-1">
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">data type</label>
+                                                <Select
+                                                    value={col.type}
+                                                    onChange={(e) => updateColumn(index, 'type', e.target.value)}
+                                                    size="sm"
+                                                    fullWidth
+                                                    className="h-10 text-xs font-bold lowercase"
+                                                    options={COLUMN_TYPES.map(t => ({ label: t.label, value: t.value }))}
+                                                />
                                             </div>
 
                                             {/* Toggles */}
-                                            <div className="md:col-span-4 flex items-center justify-start md:justify-end gap-3 self-center">
-                                                <label className={cn(
-                                                    "flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer text-xs font-bold uppercase tracking-wider select-none",
-                                                    col.required
-                                                        ? 'bg-amber-50 border-amber-200 text-amber-700'
-                                                        : 'bg-card border-border text-muted-foreground hover:border-border'
-                                                )}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={col.required || false}
-                                                        onChange={(e) => updateColumn(index, 'required', e.target.checked)}
-                                                        className="hidden"
-                                                    />
-                                                    <span>{L.forms.required}</span>
-                                                </label>
-
-                                                <label className={cn(
-                                                    "flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer text-xs font-bold uppercase tracking-wider select-none",
-                                                    col.unique
-                                                        ? 'bg-purple-50 border-purple-200 text-purple-700'
-                                                        : 'bg-card border-border text-muted-foreground hover:border-border'
-                                                )}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={col.unique || false}
-                                                        onChange={(e) => updateColumn(index, 'unique', e.target.checked)}
-                                                        className="hidden"
-                                                    />
-                                                    <span>{L.forms.unique}</span>
-                                                </label>
+                                            <div className="md:col-span-4 flex items-end gap-3 pb-px">
+                                                <CheckboxToggle
+                                                    label="REQUIRED"
+                                                    checked={!!col.required}
+                                                    onChange={(val) => updateColumn(index, 'required', val)}
+                                                    activeClass="bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20"
+                                                />
+                                                <CheckboxToggle
+                                                    label="UNIQUE"
+                                                    checked={!!col.unique}
+                                                    onChange={(val) => updateColumn(index, 'unique', val)}
+                                                    activeClass="bg-indigo-500/10 text-indigo-600 ring-1 ring-indigo-500/20"
+                                                />
                                             </div>
                                         </div>
 
-                                        {/* Desktop Actions */}
-                                        <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity self-center">
+                                        {/* Actions (Desktop) */}
+                                        <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="flex flex-col">
-                                                <button type="button" onClick={() => moveColumn(index, 'up')} disabled={index === 0} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary rounded-lg hover:bg-muted disabled:opacity-30"><Icons.chevronUp className="w-4 h-4" /></button>
-                                                <button type="button" onClick={() => moveColumn(index, 'down')} disabled={index === columns.length - 1} className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary rounded-lg hover:bg-muted disabled:opacity-30"><Icons.chevronDown className="w-4 h-4" /></button>
+                                                <Button size="icon-xs" variant="ghost" className="h-6 w-6 rounded-md" onClick={() => moveColumn(index, 'up')} disabled={index === 0}>
+                                                    <Icons.chevronUp className="size-3" />
+                                                </Button>
+                                                <Button size="icon-xs" variant="ghost" className="h-6 w-6 rounded-md" onClick={() => moveColumn(index, 'down')} disabled={index === columns.length - 1}>
+                                                    <Icons.chevronDown className="size-3" />
+                                                </Button>
                                             </div>
-                                            <div className="w-px h-8 bg-border mx-1"></div>
-                                            <button
-                                                type="button"
+                                            <div className="w-px h-10 bg-border/40 mx-2" />
+                                            <Button
+                                                size="icon-sm"
+                                                variant="ghost"
                                                 onClick={() => removeColumn(index)}
-                                                className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                                className="h-10 w-10 rounded-xl hover:bg-rose-500/10 hover:text-rose-600 text-muted-foreground/30 transition-all"
                                             >
-                                                <Icons.delete className="w-4 h-4" />
-                                            </button>
+                                                <Icons.trash className="size-4" />
+                                            </Button>
                                         </div>
                                     </div>
 
-                                    {/* Expanded Configuration Area */}
+                                    {/* Advanced Options */}
                                     {(typeInfo?.requiresValues || typeInfo?.requiresTarget || col.type === 'string' || col.type === 'slug') && (
-                                        <div className="mt-4 pt-4 border-t border-border pl-0 md:pl-[4.25rem]">
-                                            <div className="flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-1">
-                                                {/* Arrow Pointer */}
-                                                <div className="hidden md:block absolute left-[3.5rem] top-[5.5rem] w-4 h-4 border-l border-b border-border -rotate-45 bg-card"></div>
-
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:pl-18 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="flex flex-wrap items-end gap-6 md:pl-18">
                                                 {/* Enum Values */}
                                                 {typeInfo?.requiresValues && (
-                                                    <div className="flex-1 min-w-[200px]">
-                                                        <Text variant="detail" className="mb-1.5 block">{L.forms.allowedValues}</Text>
+                                                    <div className="flex-1 min-w-[240px] space-y-1.5">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">{L.forms.allowedValues}</label>
                                                         <input
                                                             type="text"
                                                             value={(col.values || []).join(', ')}
                                                             onChange={(e) => updateColumn(index, 'values', e.target.value.split(',').map(v => v.trim()).filter(Boolean))}
                                                             placeholder="pending, active, suspended"
-                                                            className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                                            className="w-full h-10 px-4 rounded-xl bg-muted/20 border-none text-xs focus:ring-1 focus:ring-primary/20 outline-none transition-all lowercase"
                                                         />
                                                     </div>
                                                 )}
 
                                                 {/* Relation Target */}
                                                 {typeInfo?.requiresTarget && (
-                                                    <div className="flex-1 min-w-[200px]">
-                                                        <Text variant="detail" className="mb-1.5 block">{L.forms.targetTable}</Text>
+                                                    <div className="flex-1 min-w-[240px] space-y-1.5">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">{L.forms.targetTable}</label>
                                                         <Select
                                                             value={col.target || ''}
                                                             onChange={(e) => updateColumn(index, 'target', e.target.value)}
                                                             size="sm"
-                                                            fullWidth={true}
+                                                            fullWidth
+                                                            className="h-10 text-xs lowercase"
                                                             options={[
-                                                                { label: L.forms.selectTable || 'Select Table', value: '' },
-                                                                ...availableSources.map(s => ({ label: s.label, value: s.value }))
+                                                                { label: L.forms.selectTable.toLowerCase() || 'select table', value: '' },
+                                                                ...availableSources.map(s => ({ label: s.label.toLowerCase(), value: s.value }))
                                                             ]}
                                                         />
                                                     </div>
@@ -270,23 +247,23 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
 
                                                 {/* String Length */}
                                                 {col.type === 'string' && (
-                                                    <div className="w-[120px]">
-                                                        <Text variant="detail" className="mb-1.5 block">{L.forms.maxLength}</Text>
+                                                    <div className="w-[100px] space-y-1.5">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">LENGTH</label>
                                                         <input
                                                             type="number"
                                                             value={col.length || 255}
                                                             onChange={(e) => updateColumn(index, 'length', parseInt(e.target.value) || 255)}
-                                                            className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                                            className="w-full h-10 px-4 rounded-xl bg-muted/20 border-none text-xs focus:ring-1 focus:ring-primary/20 outline-none transition-all text-center"
                                                         />
                                                     </div>
                                                 )}
 
-                                                {/* Generic Hints */}
-                                                <Text variant="muted" className="text-xs italic">
-                                                    {col.type === 'slug' && L.forms.slugHint}
-                                                    {col.type === 'string' && L.forms.stringHint}
-                                                    {col.type === 'relation' && L.forms.relationHint}
-                                                </Text>
+                                                {/* Hints */}
+                                                <p className="text-[10px] text-muted-foreground/40 italic lowercase pb-3">
+                                                    {col.type === 'slug' && L.forms.slugHint.toLowerCase()}
+                                                    {col.type === 'string' && L.forms.stringHint.toLowerCase()}
+                                                    {col.type === 'relation' && L.forms.relationHint.toLowerCase()}
+                                                </p>
                                             </div>
                                         </div>
                                     )}
@@ -299,3 +276,22 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
         </div>
     );
 };
+
+const CheckboxToggle = ({ label, checked, onChange, activeClass }: { label: string, checked: boolean, onChange: (val: boolean) => void, activeClass: string }) => (
+    <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={cn(
+            "h-10 flex-1 flex items-center justify-center gap-2 rounded-xl border-none transition-all text-[10px] font-black tracking-widest",
+            checked ? activeClass : "bg-muted/10 text-muted-foreground/30 hover:bg-muted/20"
+        )}
+    >
+        <div className={cn(
+            "size-3.5 rounded border transition-all flex items-center justify-center",
+            checked ? "bg-white/20 border-transparent" : "bg-muted border-transparent"
+        )}>
+            {checked && <Icons.check className="size-2.5 stroke-4" />}
+        </div>
+        {label}
+    </button>
+);

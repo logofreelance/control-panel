@@ -1,13 +1,22 @@
 'use client';
 
+/**
+ * CreateRelationForm - Flat Luxury UI Refactor
+ * Form for creating table relations with consistent design system and TargetLayout integration
+ */
+
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Heading, Text, Stack, Card } from '@/components/ui';
+import { Button, Card, CardContent, Badge } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
 import { useConfig } from '@/modules/_core';
+import { TargetLayout } from '@/components/layout/TargetLayout';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { useRelations, type Relation, type AddRelationPayload } from '../composables';
 import { RELATION_TYPES } from '../registry';
-import { Icons } from '../config/icons';
+
+const L = MODULE_LABELS.databaseSchema;
 
 interface CreateRelationFormProps {
     DatabaseTableId: number;
@@ -15,9 +24,10 @@ interface CreateRelationFormProps {
 
 export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps) => {
     const router = useRouter();
-    const { id: targetId } = useParams();
-    const { labels } = useConfig();
-    const L = labels.mod.databaseSchema;
+    const params = useParams();
+    const nodeId = params.id as string;
+    
+    const { labels, icons: Icons } = useConfig();
     const C = labels.common;
 
     const {
@@ -28,17 +38,13 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
 
     const [submitting, setSubmitting] = useState(false);
     const [newRelation, setNewRelation] = useState<AddRelationPayload>({
-        targetId: 0,
+        targetId: -1, // Use -1 as unselected
         type: 'belongs_to',
         alias: '',
     });
 
-
-
-    // Handle Selection
     const handleSelectTarget = (id: number) => {
         setNewRelation(prev => {
-            // If selecting system table (users, id=0), auto-reset to belongs_to
             if (id === 0 && ['has_one', 'has_many'].includes(prev.type)) {
                 return { ...prev, targetId: id, type: 'belongs_to' };
             }
@@ -46,197 +52,212 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
         });
     };
 
-    // Submit
     const handleSubmit = async () => {
+        if (newRelation.targetId === -1) return;
         setSubmitting(true);
         const success = await addRelation(newRelation);
         setSubmitting(false);
 
         if (success) {
-            router.push(targetId ? `/target/${targetId}/database-schema` : `/database-schema`); // Go back to list
+            const path = nodeId ? `/target/${nodeId}/database-schema` : `/database-schema`;
+            router.push(path);
             router.refresh();
         }
     };
 
     if (loading) {
-        return <div className="p-12 text-center animate-pulse">{L.messages.relations.loadingRelations}</div>;
+        return (
+             <TargetLayout>
+                <div className="flex flex-col items-center justify-center py-32 gap-6 opacity-40 animate-pulse">
+                    <Icons.loading className="size-10 animate-spin" />
+                    <p className="text-xs font-black uppercase tracking-widest">{L.messages.relations.loadingRelations.toLowerCase()}</p>
+                </div>
+            </TargetLayout>
+        );
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header */}
-            <Card  className="p-8">
-                <Stack direction="row" align="center" gap={4}>
-                    <div className="w-14 h-14 rounded-4xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <Icons.link className="w-7 h-7" />
+        <TargetLayout>
+            <div className="flex flex-col gap-10 animate-page-enter max-w-5xl mx-auto pb-32">
+                {/* Page Header */}
+                <header className="px-1 space-y-4">
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.back()}
+                        className="h-9 px-0 hover:bg-transparent -ml-1 text-muted-foreground/40 hover:text-foreground transition-colors group lowercase text-xs font-bold"
+                    >
+                        <Icons.arrowLeft className="size-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        back to database
+                    </Button>
+                    <div className="flex items-center gap-4">
+                         <div className="size-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-sm shadow-indigo-500/5">
+                            <Icons.link className="size-6" />
+                         </div>
+                         <div className="space-y-0.5">
+                            <TextHeading as="h1" size="h4" className="font-bold lowercase leading-tight">{L.messages.relations.addRelation}</TextHeading>
+                            <p className="text-xs text-muted-foreground lowercase opacity-60 font-medium">{L.messages.relations.createRelationship.toLowerCase()}</p>
+                         </div>
                     </div>
-                    <div>
-                        <Heading level={2}>{L.messages.relations.addRelation}</Heading>
-                        <Text variant="muted" className="mt-1 text-lg">{L.messages.relations.createRelationship}</Text>
-                    </div>
-                </Stack>
-            </Card>
+                </header>
 
-            <div className="grid md:grid-cols-2 gap-6">
-                {/* Left Column: Target Selection */}
-                <Card  className="p-8 h-fit">
-                    <Stack direction="row" align="center" gap={3} className="mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0"><Icons.database className="w-5 h-5" /></div>
-                        <div>
-                            <Heading level={5}>{L.messages.relations.targetTable}</Heading>
-                            <Text variant="muted" className="text-sm">{L.messages.relations.targetTableDesc || "Select the table to connect to"}</Text>
-                        </div>
-                    </Stack>
-
-                    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                        {targets.length === 0 && (
-                            <div className="p-8 text-center bg-muted rounded-2xl border-2 border-dashed border-border">
-                                <Text variant="muted" className="font-medium">{L.messages.relations.noTargets || "No available targets found."}</Text>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* Left: Target Selection */}
+                    <Card className="lg:col-span-12 border-none shadow-sm bg-card/40">
+                        <CardContent className="p-8 space-y-10">
+                            <div className="flex items-center gap-3 border-b border-border/5 pb-6 mb-2">
+                                <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0"><Icons.database className="size-5" /></div>
+                                <div className="space-y-0.5">
+                                    <TextHeading size="h5" className="text-base font-semibold lowercase leading-none">{L.messages.relations.targetTable}</TextHeading>
+                                    <p className="text-[11px] text-muted-foreground lowercase mt-1.5 opacity-60">select which table you want to establish a link with.</p>
+                                </div>
                             </div>
-                        )}
-                        {targets.map(t => (
-                            <button
-                                key={t.id}
-                                type="button"
-                                onClick={() => handleSelectTarget(t.id)}
-                                className={cn(
-                                    "w-full group relative p-4 rounded-xl border-2 text-left transition-all duration-200",
-                                    newRelation.targetId === t.id
-                                        ? 'bg-primary/5 border-primary'
-                                        : 'bg-card border-border hover:border-primary/30 hover:bg-muted'
-                                )}
-                            >
-                                <Stack direction="row" align="center" gap={4}>
-                                    <div className={cn(
-                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
-                                        newRelation.targetId === t.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-card group-hover:text-primary'
-                                    )}>
-                                        <Icons.table className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <div className={cn("font-bold text-lg", newRelation.targetId === t.id ? 'text-primary' : 'text-foreground')}>
-                                            {t.name}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded w-fit mt-1">
-                                            {t.tableName}
-                                        </div>
-                                    </div>
-                                    {newRelation.targetId === t.id && (
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-primary bg-card rounded-full p-1">
-                                            <Icons.check className="w-5 h-5" />
-                                        </div>
-                                    )}
-                                </Stack>
-                            </button>
-                        ))}
-                    </div>
-                </Card>
 
-                {/* Right Column: Configuration */}
-                <div className="space-y-6">
-                    {/* Relation Type */}
-                    <Card  className="p-8">
-                        <Stack direction="row" align="center" gap={3} className="mb-6">
-                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><Icons.settings className="w-5 h-5" /></div>
-                            <div>
-                                <Heading level={5}>{L.messages.relations.relationType}</Heading>
-                                <Text variant="muted" className="text-sm">{L.messages.relations.relationTypeDesc || "Define how the tables relate"}</Text>
-                            </div>
-                        </Stack>
-
-                        <div className="grid grid-cols-1 gap-3">
-                            {RELATION_TYPES.map(type => {
-                                // Disable Has One and Has Many when target is users (id=0)
-                                const isSystemTarget = newRelation.targetId === 0;
-                                const isDisabled = isSystemTarget && ['has_one', 'has_many'].includes(type.value);
-
-                                return (
-                                    <button
-                                        key={type.value}
-                                        type="button"
-                                        onClick={() => !isDisabled && setNewRelation(prev => ({ ...prev, type: type.value as Relation['type'] }))}
-                                        disabled={isDisabled}
-                                        className={cn(
-                                            "p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden flex items-start gap-4",
-                                            isDisabled
-                                                ? 'opacity-50 cursor-not-allowed bg-muted border-border'
-                                                : newRelation.type === type.value
-                                                    ? 'border-primary bg-primary/5'
-                                                    : 'border-border hover:border-border bg-card'
-                                        )}
-                                    >
-                                        <div className={cn("text-2xl p-2 rounded-lg", newRelation.type === type.value && !isDisabled ? 'bg-primary/15' : 'bg-muted')}>
-                                            {type.icon}
-                                        </div>
-                                        <div className="flex-1">
-                                            <span className={cn("font-bold block", newRelation.type === type.value && !isDisabled ? 'text-primary' : 'text-foreground')}>
-                                                {type.label}
-                                            </span>
-                                            <Text variant="muted" className="text-xs leading-tight mt-1 block">{type.desc}</Text>
-                                            {isDisabled && (
-                                                <span className="text-xs text-amber-600 mt-2 flex items-center gap-1">
-                                                    <Icons.alertTriangle className="w-3 h-3" />
-                                                    {C.validation?.systemTableRestriction || "Not available for System Tables - use 'Belongs To'"}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {newRelation.type === type.value && !isDisabled && <div className="ml-auto text-primary"><Icons.check className="w-5 h-5" /></div>}
-                                    </button>
-                                );
-                            })}
-                        </div>
+                            {targets.length === 0 ? (
+                                <div className="py-20 text-center bg-muted/20 rounded-3xl border border-dashed border-border/40">
+                                    <Icons.lock className="size-10 text-muted-foreground/20 mx-auto mb-4" />
+                                    <p className="text-sm font-medium lowercase italic text-muted-foreground/40">{L.messages.relations.noTargets || "No targets found."}</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {targets.map(t => {
+                                        const isSelected = newRelation.targetId === t.id;
+                                        return (
+                                            <button
+                                                key={t.id}
+                                                onClick={() => handleSelectTarget(t.id)}
+                                                className={cn(
+                                                    "group relative p-6 rounded-3xl transition-all duration-300 ring-1 text-left",
+                                                    isSelected 
+                                                        ? 'bg-primary/5 ring-primary/40 shadow-xl shadow-primary/5 scale-[1.02]' 
+                                                        : 'bg-muted/10 ring-border/5 hover:ring-primary/20 hover:bg-muted/20'
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn(
+                                                        "size-10 rounded-xl flex items-center justify-center transition-all duration-500",
+                                                        isSelected ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-background text-muted-foreground/30 group-hover:text-primary group-hover:bg-primary/5'
+                                                    )}>
+                                                        <Icons.table className="size-5" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <TextHeading size="h6" className={cn(
+                                                            "text-sm font-bold truncate lowercase leading-none",
+                                                            isSelected ? "text-primary" : "text-muted-foreground/60"
+                                                        )}>{t.name}</TextHeading>
+                                                        <p className="text-[10px] font-mono text-muted-foreground/30 mt-1.5">{t.tableName}</p>
+                                                    </div>
+                                                    {isSelected && (
+                                                        <div className="absolute top-4 right-4 bg-primary text-white size-5 rounded-full flex items-center justify-center animate-in zoom-in-75 duration-300">
+                                                            <Icons.check className="size-3 stroke-4" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </CardContent>
                     </Card>
 
-                    {/* Alias Config */}
-                    <Card  className="p-8">
-                        <Stack direction="row" align="center" gap={3} className="mb-6">
-                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><Icons.edit className="w-5 h-5" /></div>
-                            <div>
-                                <Heading level={5}>{L.messages.relations.aliasOptional}</Heading>
-                                <Text variant="muted" className="text-sm">{L.messages.relations.aliasOptionalDesc || "Custom name for API responses"}</Text>
-                            </div>
-                        </Stack>
+                    {/* Configure Relation Type */}
+                    <Card className="lg:col-span-12 border-none shadow-sm bg-card/40">
+                         <CardContent className="p-8 space-y-10">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/5 pb-6 mb-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0"><Icons.settings className="size-5" /></div>
+                                    <div className="space-y-0.5">
+                                        <TextHeading size="h5" className="text-base font-semibold lowercase leading-none">{L.messages.relations.relationType}</TextHeading>
+                                        <p className="text-[11px] text-muted-foreground lowercase mt-1.5 opacity-60">define the nature of the relationship.</p>
+                                    </div>
+                                </div>
 
-                        <div>
-                            <input
-                                type="text"
-                                value={newRelation.alias}
-                                onChange={(e) => setNewRelation(prev => ({ ...prev, alias: e.target.value }))}
-                                placeholder={L.messages.relations.aliasPlaceholder}
-                                className="w-full px-4 py-3.5 rounded-xl border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium"
-                            />
-                            <Stack direction="row" align="center" gap={2} className="text-xs text-muted-foreground mt-3">
-                                <Icons.info className="w-4 h-4" />
-                                {L.messages.relations.aliasDescription}
-                            </Stack>
-                        </div>
+                                <div className="max-w-md w-full">
+                                    <input
+                                        type="text"
+                                        value={newRelation.alias}
+                                        onChange={(e) => setNewRelation(prev => ({ ...prev, alias: e.target.value }))}
+                                        placeholder="optional: custom alias name (e.g. author_profile)"
+                                        className="w-full h-10 px-5 rounded-xl bg-muted/20 border-none focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/30 lowercase text-xs font-medium"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {RELATION_TYPES.map(type => {
+                                    const isSystemTarget = newRelation.targetId === 0;
+                                    const isDisabled = isSystemTarget && ['has_one', 'has_many'].includes(type.value);
+                                    const isSelected = newRelation.type === type.value;
+
+                                    return (
+                                        <button
+                                            key={type.value}
+                                            disabled={isDisabled}
+                                            onClick={() => !isDisabled && setNewRelation(prev => ({ ...prev, type: type.value as any }))}
+                                            className={cn(
+                                                "p-6 rounded-3xl transition-all duration-300 ring-1 text-left flex items-start gap-6 relative overflow-hidden group",
+                                                isDisabled ? 'opacity-30 cursor-not-allowed bg-muted/5 ring-border/5' :
+                                                isSelected 
+                                                    ? 'bg-primary/5 ring-primary/40 shadow-xl shadow-primary/5' 
+                                                    : 'bg-muted/10 ring-border/5 hover:ring-primary/10 hover:bg-muted/20'
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "size-14 rounded-2xl flex items-center justify-center text-2xl transition-all duration-500 shrink-0 shadow-lg",
+                                                isDisabled ? 'bg-muted-foreground/10 text-muted-foreground/20' :
+                                                isSelected ? 'bg-primary text-white shadow-primary/20 scale-110 rotate-6' : 'bg-background text-muted-foreground/20 group-hover:text-primary group-hover:bg-primary/5'
+                                            )}>
+                                                {type.icon}
+                                            </div>
+                                            <div className="space-y-1.5 flex-1 pr-4">
+                                                <TextHeading size="h6" className={cn(
+                                                    "text-sm font-bold lowercase leading-none",
+                                                    isSelected ? "text-primary" : "text-muted-foreground/60"
+                                                )}>{type.label}</TextHeading>
+                                                <p className="text-[11px] text-muted-foreground/40 lowercase leading-relaxed">{type.desc.toLowerCase()}</p>
+                                                
+                                                {isDisabled && (
+                                                    <div className="mt-3 flex items-center gap-1.5 text-[9px] font-black uppercase text-amber-600/60 tracking-wider">
+                                                        <Icons.alertTriangle className="size-3" />
+                                                        restricted for system tables
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {isSelected && !isDisabled && (
+                                                <div className="absolute top-6 right-6 text-primary flex items-center justify-center animate-in zoom-in-75 duration-300">
+                                                    <Icons.check className="size-5 stroke-4" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </CardContent>
                     </Card>
                 </div>
-            </div>
 
-            {/* Sticky Actions Footer */}
-            <div className="sticky bottom-4 z-10">
-                <div className="bg-card border border-border p-4 rounded-2xl flex items-center justify-between max-w-4xl mx-auto">
-                    <Button variant="ghost" onClick={() => router.back()} className="text-muted-foreground hover:text-foreground">
-                        {C.actions.cancel}
-                    </Button>
-                    <Stack direction="row" align="center" gap={4}>
-                        <Text variant="muted" className="text-sm hidden sm:block">
-                            {newRelation.targetId ? <span className="text-emerald-500 font-bold flex items-center gap-1"><Icons.check className="w-4 h-4" /> {C.status?.readyToLink || "Ready to link"}</span> : (L.messages.relations.selectTarget || "Select a target")}
-                        </Text>
+                {/* Floating Footer Actions */}
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-50">
+                    <div className="bg-background/80 backdrop-blur-xl border border-border/40 p-4 rounded-3xl shadow-2xl flex items-center justify-between gap-4">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => router.back()}
+                            className="h-11 rounded-xl px-8 lowercase font-bold text-muted-foreground hover:bg-muted"
+                        >
+                            {C.actions.cancel}
+                        </Button>
                         <Button
                             onClick={handleSubmit}
                             isLoading={submitting}
-                            disabled={!newRelation.targetId && newRelation.targetId !== 0} // Allow 0
-                            size="lg"
-                            className="px-8"
+                            disabled={newRelation.targetId === -1}
+                            className="h-11 min-w-[200px] rounded-xl lowercase shadow-lg shadow-primary/20 font-bold"
                         >
-                            {L.messages.relations.addRelation}
+                            {L.messages.relations.addRelation.toLowerCase()}
                         </Button>
-                    </Stack>
+                    </div>
                 </div>
             </div>
-            <div className="h-8"></div>
-        </div>
+        </TargetLayout>
     );
 };

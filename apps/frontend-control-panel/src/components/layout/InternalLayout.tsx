@@ -1,6 +1,18 @@
 'use client';
 
+/**
+ * InternalLayout - Refactor following Elite Minimalist Rules
+ * 
+ * STICKING TO RULES:
+ * - No tracking-* (Strictly using default spacing)
+ * - No text size < text-xs
+ * - No text color opacity (Removed /60, opacity-*)
+ * - Standard Button usage only (Removed manual className styling where possible)
+ * - Lowercase Consistency: Enforced lowercase across all navigation and profile labels.
+ */
+
 import { useState, useCallback, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Button,
@@ -26,6 +38,7 @@ export function InternalLayout({
   hideRightActions = false 
 }: InternalLayoutProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const router = useRouter();
 
   const handleLogout = useCallback(async () => {
     try {
@@ -46,8 +59,8 @@ export function InternalLayout({
                    <Icons.rocket className="size-4 md:size-5" />
                 </div>
                 <div className="flex flex-col">
-                   <TextHeading as="h5" size="h5" weight="semibold" className="text-lg md:text-xl leading-none">
-                      Backend Engine
+                   <TextHeading as="h5" size="h5" weight="semibold" className="text-lg md:text-xl leading-none lowercase">
+                      backend engine
                    </TextHeading>
                 </div>
              </Link>
@@ -60,50 +73,60 @@ export function InternalLayout({
           <div className="flex items-center gap-2 md:gap-4">
             {!hideRightActions && (
               <div className="flex items-center gap-2 md:gap-4">
-                <Button variant="ghost" size="icon" className="size-9 md:size-11 rounded-xl hover:bg-muted text-muted-foreground/60 transition-all">
-                  <Icons.bell className="size-4 md:size-5" />
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-xl transition-all"
+                >
+                  <Icons.bell className="size-4 md:size-5 text-muted-foreground" />
                 </Button>
 
                 <DropdownMenu open={showProfileMenu} onOpenChange={setShowProfileMenu}>
                   <DropdownMenuTrigger render={
-                    <Button variant="ghost" className="h-10 md:h-12 px-3 md:px-4 rounded-xl hover:bg-muted transition-all flex items-center gap-4 outline-none group bg-transparent border-none p-0">
-                        <div className="size-8 md:size-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center transition-transform group-hover:scale-105 duration-300 border-none shadow-none">
+                    <Button 
+                        variant="ghost" 
+                        size="default" 
+                        className="rounded-xl flex items-center gap-4 bg-transparent border-none p-0 h-auto"
+                    >
+                        <div className="size-8 md:size-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
                            <Icons.shield className="size-4 md:size-5" />
                         </div>
                         <div className="flex-col items-start hidden sm:flex text-left gap-1">
-                          <span className="text-sm md:text-base font-medium text-foreground leading-none">Master Operator</span>
-                          <span className="text-xs md:text-sm font-normal text-muted-foreground leading-none opacity-50">Access protocol</span>
+                          <span className="text-sm md:text-base font-medium text-foreground leading-none lowercase">master operator</span>
+                          <span className="text-xs md:text-sm font-normal text-muted-foreground leading-none lowercase">access protocol</span>
                         </div>
                     </Button>
                   } />
                   <DropdownMenuContent align="end" className="w-64 mt-3 rounded-xl border border-border/40 p-2 animate-in fade-in slide-in-from-top-2 bg-background shadow-2xl font-instrument flex flex-col gap-1">
-                    <div className="p-3 mb-1 bg-muted/40 rounded-lg border border-border/10">
-                      <p className="text-xs text-muted-foreground font-normal mb-1 opacity-50">Authentication status</p>
-                      <p className="text-base font-normal text-foreground leading-none">Root operator active</p>
+                    <div className="p-4 mb-1 bg-muted/40 rounded-lg border border-border/10">
+                      <p className="text-xs text-muted-foreground font-normal mb-2 lowercase">authentication status</p>
+                      <p className="text-base font-normal text-foreground leading-none lowercase">root operator active</p>
                     </div>
                     
-                    <DropdownMenuItem className="p-0">
-                      <Link href="/settings/profile" className="flex items-center gap-3 w-full rounded-lg py-3 px-3 cursor-pointer hover:bg-muted/60 transition-all text-muted-foreground hover:text-foreground group/item">
-                        <Icons.user className="size-4 opacity-50 group-hover/item:opacity-100" />
-                        <span className="text-base font-normal">Edit Profile</span>
-                      </Link>
+                    <DropdownMenuItem 
+                        className="rounded-lg py-3 px-3 cursor-pointer text-muted-foreground hover:text-foreground font-normal text-base lowercase gap-3 transition-colors"
+                        onClick={() => router.push('/settings/profile')}
+                    >
+                        <Icons.user className="size-4" />
+                        <span>edit profile</span>
                     </DropdownMenuItem>
                     
-                    <DropdownMenuItem className="p-0">
-                      <Link href="/settings" className="flex items-center gap-3 w-full rounded-lg py-3 px-3 cursor-pointer hover:bg-muted/60 transition-all text-muted-foreground hover:text-foreground group/item">
-                        <Icons.settings className="size-4 opacity-50 group-hover/item:opacity-100" />
-                        <span className="text-base font-normal">Preferences</span>
-                      </Link>
+                    <DropdownMenuItem 
+                        className="rounded-lg py-3 px-3 cursor-pointer text-muted-foreground hover:text-foreground font-normal text-base lowercase gap-3 transition-colors"
+                        onClick={() => router.push('/settings')}
+                    >
+                        <Icons.settings className="size-4" />
+                        <span>preferences</span>
                     </DropdownMenuItem>
                     
                     <div className="h-px bg-border/40 my-1 mx-1" />
                     
                     <DropdownMenuItem
                       onClick={handleLogout}
-                      className="rounded-lg flex items-center gap-3 py-3 px-3 text-destructive cursor-pointer hover:bg-destructive/10 transition-colors font-normal text-base"
+                      className="rounded-lg flex items-center gap-3 py-3 px-3 text-destructive cursor-pointer hover:bg-destructive/10 transition-colors font-medium text-base lowercase"
                     >
-                      <Icons.logout className="size-4 opacity-70" />
-                      <span>Logout Account</span>
+                      <Icons.logout className="size-4" />
+                      <span>logout account</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

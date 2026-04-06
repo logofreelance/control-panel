@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Button, Badge } from '@/components/ui';
+import { Button, Badge, Card } from '@/components/ui';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import type { TableStat } from '../types';
 import { cn } from '@/lib/utils';
@@ -61,7 +61,7 @@ const TableCard = ({ table, onDelete, dropping, isSystem }: { table: TableStat; 
     const Icon = getTableIcon(table.name);
 
     return (
-        <div className="bg-card rounded-xl border border-border p-4 relative overflow-hidden transition-all hover:bg-muted/5">
+        <Card className="p-4 relative overflow-hidden transition-all hover:bg-muted/5">
             <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
                     <div className={cn(
@@ -71,7 +71,7 @@ const TableCard = ({ table, onDelete, dropping, isSystem }: { table: TableStat; 
                         <Icon className="size-4" />
                     </div>
                     <div>
-                        <h4 className="font-semibold text-foreground text-sm lowercase">{table.name}</h4>
+                        <h4 className="font-medium text-foreground text-sm lowercase">{table.name}</h4>
                         <div className="flex items-center gap-2 mt-0.5">
                             {isSystem && (
                                 <span className="text-xs font-normal text-amber-600 flex items-center gap-1">
@@ -98,18 +98,18 @@ const TableCard = ({ table, onDelete, dropping, isSystem }: { table: TableStat; 
             <div className="grid grid-cols-3 gap-2 py-3 border-t border-border">
                 <div className="text-center">
                     <p className="text-xs text-muted-foreground font-normal mb-1 lowercase">{L.data || 'data'}</p>
-                    <p className="text-xs font-semibold text-foreground lowercase">{table.sizeMb} {L.mb || 'mb'}</p>
+                    <p className="text-xs font-medium text-foreground lowercase">{table.sizeMb} {L.mb || 'mb'}</p>
                 </div>
                 <div className="text-center">
                     <p className="text-xs text-muted-foreground font-normal mb-1 lowercase">{L.index || 'index'}</p>
-                    <p className="text-xs font-semibold text-chart-1 lowercase">{table.indexSizeMb} {L.mb || 'mb'}</p>
+                    <p className="text-xs font-medium text-chart-1 lowercase">{table.indexSizeMb} {L.mb || 'mb'}</p>
                 </div>
                 <div className="text-center">
                     <p className="text-xs text-muted-foreground font-normal mb-1 lowercase">{L.overhead || 'overhead'}</p>
-                    <p className="text-xs font-semibold text-chart-2 lowercase">{table.overheadMb} {L.mb || 'mb'}</p>
+                    <p className="text-xs font-medium text-chart-2 lowercase">{table.overheadMb} {L.mb || 'mb'}</p>
                 </div>
             </div>
-        </div>
+        </Card>
     );
 };
 
@@ -141,7 +141,7 @@ const TableSection = ({
                 ) : (
                     <Icons.table className="size-4 text-primary" />
                 )}
-                <h4 className={cn("text-sm font-semibold lowercase", isSystem ? "text-amber-700" : "text-foreground")}>{title}</h4>
+                <h4 className={cn("text-sm font-medium lowercase", isSystem ? "text-amber-700" : "text-foreground")}>{title}</h4>
                 <span className="text-xs text-muted-foreground ml-auto lowercase">{tables.length} tables</span>
             </div>
 
@@ -174,16 +174,16 @@ const TableSection = ({
                                             <p className="font-normal text-sm text-foreground truncate lowercase">{table.name}</p>
                                         </div>
                                     </td>
-                                    <td className="py-2.5 px-5 text-sm font-semibold text-foreground text-center tabular-nums">
+                                    <td className="py-2.5 px-5 text-sm font-medium text-foreground text-center tabular-nums">
                                         {table.rows.toLocaleString()}
                                     </td>
                                     <td className="py-2.5 px-5 text-sm font-normal text-foreground text-right lowercase">
                                         {table.sizeMb} {L.mb || 'mb'}
                                     </td>
-                                    <td className="py-2.5 px-5 text-sm text-chart-1 font-semibold text-right lowercase">
+                                    <td className="py-2.5 px-5 text-sm text-chart-1 font-medium text-right lowercase">
                                         {table.indexSizeMb} {L.mb || 'mb'}
                                     </td>
-                                    <td className="py-2.5 px-5 text-sm text-chart-2 font-semibold text-right lowercase">
+                                    <td className="py-2.5 px-5 text-sm text-chart-2 font-medium text-right lowercase">
                                         {table.overheadMb} {L.mb || 'mb'}
                                     </td>
                                     {!isSystem && (
@@ -246,11 +246,11 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
 
     if (!tables.length) {
         return (
-            <div className="bg-card rounded-2xl border border-border p-12 text-center">
+            <Card className="p-12 text-center">
                 <Icons.database className="size-10 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-foreground font-semibold text-sm lowercase">{L.noTablesFound || 'no database tables found'}</p>
+                <p className="text-foreground font-medium text-sm lowercase">{L.noTablesFound || 'no database tables found'}</p>
                 <p className="text-xs text-muted-foreground mt-1 lowercase">try refreshing the database state</p>
-            </div>
+            </Card>
         );
     }
 
@@ -259,14 +259,14 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
             {/* Header */}
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-3">
-                    <h3 className="font-bold text-foreground lowercase tracking-normal">{L.databaseTables || 'database tables'}</h3>
+                    <h3 className="font-semibold text-foreground lowercase tracking-normal">{L.databaseTables || 'database tables'}</h3>
                     <div className="size-1.5 rounded-full bg-primary animate-pulse"></div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/10 rounded-lg font-semibold text-xs lowercase px-2 py-0.5">
+                    <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/10 rounded-lg font-medium text-xs lowercase px-2 py-0.5">
                         {systemTables.length} system
                     </Badge>
-                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 rounded-lg font-semibold text-xs lowercase px-2 py-0.5">
+                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 rounded-lg font-medium text-xs lowercase px-2 py-0.5">
                         {userTables.length} custom
                     </Badge>
                 </div>
@@ -279,7 +279,7 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
                     <div className="space-y-3">
                         <div className="flex items-center gap-2 px-1">
                             <Icons.table className="w-4 h-4 text-teal-600" />
-                            <h4 className="text-sm font-semibold text-slate-700">{L.userTables || 'User Tables'}</h4>
+                            <h4 className="text-sm font-medium text-slate-700">{L.userTables || 'User Tables'}</h4>
                             <span className="text-xs text-slate-400">({userTables.length})</span>
                         </div>
                         <div className="grid grid-cols-1 gap-3">
@@ -301,7 +301,7 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
                     <div className="space-y-3">
                         <div className="flex items-center gap-2 px-1">
                             <Icons.lock className="w-4 h-4 text-amber-600" />
-                            <h4 className="text-sm font-semibold text-amber-700">{L.systemTables || 'System Tables'}</h4>
+                            <h4 className="text-sm font-medium text-amber-700">{L.systemTables || 'System Tables'}</h4>
                             <span className="text-xs text-slate-400">({systemTables.length})</span>
                         </div>
                         <div className="grid grid-cols-1 gap-3">
@@ -344,14 +344,14 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
             {confirmDelete && typeof document !== 'undefined' && createPortal(
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => !deleting && setConfirmDelete(null)} />
-                    <div className="relative bg-card rounded-2xl border border-border shadow-none max-w-sm w-full p-8 animate-in zoom-in-95 duration-200">
+                    <Card className="relative p-8 max-w-sm w-full animate-in zoom-in-95 duration-200">
                         <div className="text-center mb-8">
                             <div className="size-14 rounded-2xl bg-destructive/10 mx-auto flex items-center justify-center mb-6">
                                 <Icons.alertTriangle className="size-7 text-destructive" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground mb-3 lowercase">{MSG.confirmDelete || 'confirm deletion'}</h3>
+                            <h3 className="text-xl font-semibold text-foreground mb-3 lowercase">{MSG.confirmDelete || 'confirm deletion'}</h3>
                             <p className="text-sm text-muted-foreground lowercase">
-                                are you sure you want to delete <span className="font-semibold text-destructive">{confirmDelete}</span>? {MSG.deleteWarning || 'this action cannot be undone.'}
+                                are you sure you want to delete <span className="font-medium text-destructive">{confirmDelete}</span>? {MSG.deleteWarning || 'this action cannot be undone.'}
                             </p>
                         </div>
                         <div className="flex gap-4">
@@ -372,7 +372,7 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
                                 {BTN.delete || 'delete'}
                             </Button>
                         </div>
-                    </div>
+                    </Card>
                 </div>,
                 document.body
             )}

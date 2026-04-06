@@ -27,14 +27,14 @@ export function Modal({
 }: ModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={cn("sm:max-w-md", className)} showCloseButton>
+      <DialogContent className={cn("sm:max-w-md px-8 py-16", className)} showCloseButton>
         {(title || description) && (
           <DialogHeader>
             {title && <DialogTitle>{title}</DialogTitle>}
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
         )}
-        <div className="py-2">
+        <div className="flex-1 overflow-y-auto pr-1 -mr-1 max-h-[70vh] scrollbar-thin">
           {children}
         </div>
       </DialogContent>

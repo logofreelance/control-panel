@@ -140,7 +140,7 @@ export const MonitorAnalyticsView = () => {
                 addToast(L.messages.refreshed.toLowerCase(), 'success');
               }}
               disabled={loading}
-              className="rounded-full shadow-none"
+              className="shadow-none"
             >
               <Icons.refresh className={cn('size-4', loading && 'animate-spin')} />
             </Button>
@@ -152,11 +152,11 @@ export const MonitorAnalyticsView = () => {
               <Card
                 key={m.id}
                 className={cn(
-                  'group relative bg-card border-2 rounded-2xl overflow-hidden shadow-none transition-all duration-300',
-                  m.id === 'total' && 'border-chart-1/30 hover:border-chart-1',
-                  m.id === 'success' && 'border-chart-2/30 hover:border-chart-2',
-                  m.id === 'failed' && 'border-destructive/30 hover:border-destructive',
-                  m.id === 'latency' && 'border-chart-3/30 hover:border-chart-3',
+                  'group relative bg-card overflow-hidden transition-all duration-300',
+                  m.id === 'total' && 'ring-1 ring-chart-1/30 hover:ring-chart-1',
+                  m.id === 'success' && 'ring-1 ring-chart-2/30 hover:ring-chart-2',
+                  m.id === 'failed' && 'ring-1 ring-destructive/30 hover:ring-destructive',
+                  m.id === 'latency' && 'ring-1 ring-chart-3/30 hover:ring-chart-3',
                 )}
               >
                 {/* BOLD SILHOUETTE */}

@@ -27,32 +27,34 @@ export const MultiSelect = ({ label, options, value, onChange, placeholder }: Mu
     };
 
     return (
-        <div className="space-y-3">
-            <label className="block text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest px-1">{label}</label>
-            <div className="flex flex-wrap gap-1.5 min-h-[36px] p-2 rounded-2xl bg-muted/10 border-2 border-border/5">
+        <div className="space-y-2">
+            <label className="block text-[11px] font-medium text-muted-foreground/60 lowercase px-1">{label}</label>
+            <div className="flex flex-wrap gap-2 min-h-[44px] p-3 rounded-xl bg-muted/40 border-none items-center">
                 {selected.map(item => (
-                    <Badge key={item} variant="default" className="pl-3 pr-1 py-1 flex items-center gap-1 rounded-xl bg-foreground text-background shadow-none border-none text-[10px] lowercase">
+                    <Badge key={item} variant="secondary" className="pl-3 pr-1.5 py-1.5 flex items-center gap-1.5 rounded-lg bg-background text-foreground shadow-none border-none text-xs lowercase font-medium">
                         {item}
                         <button
                             type="button"
                             onClick={() => handleRemove(item)}
-                            className="w-5 h-5 rounded-lg hover:bg-background/20 flex items-center justify-center transition-colors"
+                            className="size-5 rounded-md hover:bg-muted flex items-center justify-center transition-colors shrink-0"
                         >
-                            <Icons.close className="w-3 h-3" />
+                            <Icons.close className="size-3 text-muted-foreground" />
                         </button>
                     </Badge>
                 ))}
                 {selected.length === 0 && (
-                    <p className="text-[10px] text-muted-foreground/30 italic lowercase px-2 py-1.5">
-                        {L.misc?.noneSelected || "no items selected"}
-                    </p>
+                    <span className="text-xs text-muted-foreground/30 italic lowercase px-2">
+                        {L.misc?.noneSelected || "none selected"}
+                    </span>
                 )}
             </div>
             <Select
                 value=""
                 onChange={(e) => handleAdd(e.target.value)}
+                size="lg"
+                className="w-full rounded-xl bg-muted border-none"
                 options={[
-                    { label: placeholder || L.misc?.selectToAdd || 'select an item...', value: '' },
+                    { label: placeholder || L.misc?.selectToAdd || 'select to add...', value: '' },
                     ...options.filter(o => !selected.includes(o)).map(o => ({ label: o.toLowerCase(), value: o }))
                 ]}
             />

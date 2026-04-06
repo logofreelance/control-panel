@@ -61,7 +61,7 @@ export function TargetLayout({
     <div className="flex flex-col gap-8 pb-12 pt-6">
       {navigation.map((group) => (
         <div key={group.group} className="flex flex-col gap-2">
-          <p className="text-xs text-muted-foreground/30 font-normal px-4 mb-2">
+          <p className="text-xs text-muted-foreground font-normal px-4 mb-2">
             {group.group}
           </p>
           <nav className="flex flex-col gap-1">
@@ -73,13 +73,13 @@ export function TargetLayout({
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-base",
+                    "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 font-normal text-base",
                     isActive 
-                      ? "bg-primary text-primary-foreground shadow-md" 
-                      : "text-muted-foreground/50 hover:text-foreground hover:bg-muted/50"
+                      ? "bg-muted text-foreground font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
-                  <item.icon className="size-5" />
+                  <item.icon className={cn("size-5 transition-colors", isActive ? "text-primary" : "")} />
                   {item.label}
                 </Link>
               )
@@ -130,7 +130,7 @@ export function TargetLayout({
 
           <div className="flex items-center gap-2 md:gap-4">
             {/* NOTIFICATION */}
-            <Button variant="ghost" size="icon" className="size-9 md:size-11 rounded-xl text-muted-foreground/60 hover:bg-muted transition-all border-none">
+            <Button variant="ghost" size="icon" className="size-9 md:size-11 rounded-xl text-muted-foreground hover:bg-muted transition-all border-none">
               <Icons.bell className="size-4 md:size-5" />
             </Button>
 

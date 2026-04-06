@@ -151,7 +151,7 @@ export const EndpointDetailView = ({
       </div>
 
       {/* Quick Copy URL - Premium Flat */}
-      <Card className="rounded-2xl border-none shadow-none bg-muted">
+      <Card className="bg-muted">
         <CardContent className="py-4 px-6">
           <div className="flex flex-row items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -183,7 +183,7 @@ export const EndpointDetailView = ({
         {/* Left Column */}
         <div className="space-y-6">
           {/* Request Info */}
-          <Card className="rounded-2xl border-none shadow-none bg-card overflow-hidden">
+          <Card className="bg-card overflow-hidden">
             <CardContent className="py-5 px-6">
               <div className="flex flex-row items-center gap-3 mb-6">
                 <div className="size-10 rounded-xl bg-chart-1/10 flex items-center justify-center">
@@ -235,7 +235,7 @@ export const EndpointDetailView = ({
           </Card>
 
           {/* Security */}
-          <Card className="rounded-2xl border-none shadow-none bg-card overflow-hidden">
+          <Card className="bg-card overflow-hidden">
             <CardContent className="py-5 px-6">
               <div className="flex flex-row items-center gap-3 mb-6">
                 <div className="size-10 rounded-xl bg-chart-4/10 flex items-center justify-center">
@@ -298,7 +298,7 @@ export const EndpointDetailView = ({
         {/* Right Column */}
         <div className="space-y-6">
           {/* Code Examples */}
-          <Card className="rounded-2xl border-none shadow-none bg-card overflow-hidden">
+          <Card className="bg-card overflow-hidden">
             <CardContent className="py-5 px-6">
               <div className="flex flex-row items-center gap-3 mb-6">
                 <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center">
@@ -356,7 +356,7 @@ export const EndpointDetailView = ({
 
           {/* Response Template */}
           {endpoint.responseData && (
-            <Card className="rounded-2xl border-none shadow-none bg-card overflow-hidden">
+            <Card className="bg-card overflow-hidden">
               <CardContent className="py-5 px-6">
                 <div className="flex flex-row items-center gap-3 mb-6">
                   <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center">

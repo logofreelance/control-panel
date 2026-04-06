@@ -77,7 +77,7 @@ export function TargetDashboardView() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="border border-border/40 bg-card/50 backdrop-blur-sm">
+              <Card key={i} className="bg-card/50 backdrop-blur-sm">
                 <CardContent className="p-10 flex flex-col gap-8">
                   <div className="flex justify-between">
                     <Skeleton className="h-3 w-20" />
@@ -106,11 +106,11 @@ export function TargetDashboardView() {
             <div className="flex items-start gap-4">
               <Icons.alertTriangle className="size-6 text-destructive mt-1" />
               <div className="flex flex-col gap-2">
-                <AlertTitle className="text-xl font-medium text-destructive leading-none">
-                  Connection failure detected
+                <AlertTitle className="text-xl font-medium text-destructive leading-none lowercase">
+                  connection failure detected
                 </AlertTitle>
-                <AlertDescription className="text-destructive/80 leading-relaxed font-instrument">
-                  The requested instance node could not be synchronized. This might be due to
+                <AlertDescription className="text-destructive/80 leading-relaxed font-instrument lowercase">
+                  the requested instance node could not be synchronized. this might be due to
                   network latency or an invalid reference key.
                 </AlertDescription>
                 <Button
@@ -119,7 +119,7 @@ export function TargetDashboardView() {
                   onClick={() => window.location.reload()}
                 >
                   <Icons.refresh className="size-4 mr-2" />
-                  Attempt reconnect
+                  attempt reconnect
                 </Button>
               </div>
             </div>
@@ -138,7 +138,7 @@ export function TargetDashboardView() {
               variant="outline"
               onClick={handleCheckHealth}
               disabled={checkingHealth}
-              className="group h-10 sm:h-12 px-3 sm:px-4 rounded-xl sm:rounded-2xl font-medium border-border bg-background/50 backdrop-blur-sm transition-all active:scale-95 text-foreground/80 hover:text-foreground flex items-center gap-0 hover:gap-2 shadow-none"
+              className="group h-10 sm:h-12 px-3 sm:px-4 rounded-xl font-medium border-border bg-background/50 backdrop-blur-sm transition-all active:scale-95 text-foreground/80 hover:text-foreground flex items-center gap-0 hover:gap-2 shadow-none"
             >
               <Icons.refresh
                 className={cn('size-4 text-primary', checkingHealth && 'animate-spin')}
@@ -149,7 +149,7 @@ export function TargetDashboardView() {
                   'group-hover:max-w-xs group-hover:opacity-100',
                 )}
               >
-                {checkingHealth ? 'Synchronizing' : 'Sync node'}
+                {checkingHealth ? 'synchronizing' : 'sync node'}
               </span>
             </Button>
           </header>
@@ -159,7 +159,7 @@ export function TargetDashboardView() {
             {summaryCards.map((metric) => (
               <Card
                 key={metric.key}
-                className="bg-card rounded-2xl p-0 transition-all duration-300 hover:bg-muted/5 shadow-none border-none"
+                className="bg-card p-0 transition-all duration-300 hover:bg-muted/5 shadow-none"
               >
                 <CardContent className="p-6 flex flex-col gap-5">
                   <div className="flex items-start justify-between">

@@ -16,16 +16,21 @@ export function useAuth() {
         setStatus({ loading: true });
 
         try {
+            console.log("[USE_AUTH] Calling authApi.login...");
             const data = await authApi.login(formData);
+            console.log("[USE_AUTH] Login result received:", data);
+
             if (data.success) {
-                router.push(AUTH_ROUTES.dashboard);
-                router.refresh();
+                console.log("[USE_AUTH] Success! Redirecting to dashboard...");
+                router.replace(AUTH_ROUTES.dashboard); // Gunakan replace agar tidak numpuk di history
+                setTimeout(() => window.location.reload(), 500); // Paksa reload jika router.push gantung
             } else {
+                console.log("[USE_AUTH] Login failed (success: false)");
                 const message = data.error?.message || data.message || AUTH_UI_LABELS.login.failedToConnect;
                 setStatus({ message: `LOGIN FAILED: ${message}`, status: 'error', loading: false });
             }
         } catch (err: any) {
-            console.error('[AUTH HOOK ERROR]', err);
+            console.error('[USE_AUTH EXCEPTION]', err);
             const message = err.message || AUTH_UI_LABELS.login.failedToConnect;
             setStatus({ message: `NETWORK ERROR: ${message}`, status: 'error', loading: false });
         }

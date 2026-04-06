@@ -100,7 +100,7 @@ export const AppUserManagementView = () => {
         {
             id: 'active',
             label: L.filter.active,
-            value: users.filter(u => u.isActive).length || Math.floor(totalUsers * 0.8),
+            value: users.filter(u => u.isActive).length,
             icon: Icons.activity,
             color: 'text-chart-2',
             ring: 'ring-chart-2/20 hover:ring-chart-2',
@@ -118,13 +118,19 @@ export const AppUserManagementView = () => {
         {
             id: 'recent',
             label: 'Recently Active',
-            value: `+${Math.floor(Math.random() * 5) + 1}`,
+            value: `+${users.filter(u => {
+                if (!u.updatedAt) return false;
+                const updatedDate = new Date(u.updatedAt).getTime();
+                const sevenDaysAgo = new Date().getTime() - (7 * 24 * 60 * 60 * 1000);
+                return updatedDate > sevenDaysAgo;
+            }).length}`,
             icon: Icons.clock,
             color: 'text-chart-4',
             ring: 'ring-chart-4/20 hover:ring-chart-4',
             bg: 'bg-chart-4',
         },
     ];
+
 
     return (
         <TargetLayout>

@@ -8,6 +8,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { MODULE_LABELS } from '@/lib/config';
 import { useToast } from '@/modules/_core';
 import { API } from '../api';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 import type { Role, RoleForm, Permission, GroupedPermissions, ApiResponse } from '../types';
 
 const L = MODULE_LABELS.rolesPermissions.roles;
@@ -27,6 +29,8 @@ export function useRoleModal(
     role: Role | null,
     onSuccess: () => void
 ) {
+    const params = useParams();
+    const nodeId = params?.id as string;
     const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -34,17 +38,18 @@ export function useRoleModal(
 
     // Fetch available permissions
     useEffect(() => {
-        if (isOpen) {
-            fetch(API.permissions.list)
-                .then(res => res.json())
-                .then((data: ApiResponse<Permission[]>) => {
-                    if (data.status === 'success') {
-                        setPermissions(data.data || []);
-                    }
-                })
-                .catch(() => { });
+        if (isOpen && nodeId) {
+            apiClient.get<ApiResponse<Permission[]>>('/permissions', {
+                headers: { 'x-target-id': nodeId }
+            })
+            .then((data) => {
+                if (data.status === 'success') {
+                    setPermissions(data.data || []);
+                }
+            })
+            .catch(() => { });
         }
-    }, [isOpen]);
+    }, [isOpen, nodeId]);
 
     // Reset form when role changes
     useEffect(() => {
@@ -73,6 +78,7 @@ export function useRoleModal(
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!nodeId) return;
         setLoading(true);
 
         const payload = {
@@ -85,16 +91,13 @@ export function useRoleModal(
         };
 
         try {
-            const url = role ? `${API.roles.list}/${role.id}` : API.roles.list;
-            const method = role ? 'PUT' : 'POST';
+            const endpoint = role ? `/roles/${role.id}` : '/roles';
+            const method = role ? 'put' : 'post';
 
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            const data = await (apiClient as any)[method](endpoint, payload, {
+                headers: { 'x-target-id': nodeId }
             });
 
-            const data: ApiResponse<null> = await res.json();
             if (data.status === 'success') {
                 addToast(role ? MSG.updated : MSG.created, 'success');
                 onSuccess();
@@ -106,7 +109,8 @@ export function useRoleModal(
         }
 
         setLoading(false);
-    }, [form, role, onSuccess, addToast]);
+    }, [form, role, onSuccess, addToast, nodeId]);
+
 
     const togglePermission = useCallback((permName: string) => {
         setForm(prev => ({

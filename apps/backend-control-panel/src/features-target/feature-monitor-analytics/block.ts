@@ -20,37 +20,76 @@ export function createFeatureMonitorAnalytics() {
     // === DASHBOARD STATS: Aggregates & Recent Logs ===
     router.get('/', async (c) => {
         try {
-            // Get aggregates
-            const aggRes: any = await getDb(c).execute(`
-                SELECT 
-                    COUNT(*) as total,
-                    SUM(CASE WHEN status_code >= 200 AND status_code < 400 THEN 1 ELSE 0 END) as success,
-                    AVG(duration_ms) as avg_latency
-                FROM route_logs
-                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-            `);
-            const aggRows = Array.isArray(aggRes) ? aggRes : (aggRes.rows || []);
-            const aggregates = aggRows[0] || { total: 0, success: 0, avg_latency: 0 };
+            const targetDb = getDb(c);
+            const targetId = c.get('targetId');
+            console.log(`[MONITOR-ANALYTICS] Fetching dashboard stats for target: ${targetId}`);
 
-            // Get recent logs
-            const logsRes: any = await getDb(c).execute(`
-                SELECT * FROM route_logs 
-                ORDER BY created_at DESC LIMIT 50
-            `);
-            const recentLogs = Array.isArray(logsRes) ? logsRes : (logsRes.rows || []);
+            // 1. Performance Aggregates (24h) - Isolated to prevent failure if logs table missing
+            let aggregates = { total: 0, success: 0, avg_latency: 0 };
+            try {
+                const aggRes: any = await targetDb.execute(`
+                    SELECT 
+                        COUNT(*) as total,
+                        SUM(CASE WHEN status_code >= 200 AND status_code < 400 THEN 1 ELSE 0 END) as success,
+                        AVG(duration_ms) as avg_latency
+                    FROM route_logs
+                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+                `);
+                const aggRows = Array.isArray(aggRes) ? aggRes : (aggRes.rows || []);
+                if (aggRows[0]) {
+                    aggregates = {
+                        total: Number(aggRows[0].total || 0),
+                        success: Number(aggRows[0].success || 0),
+                        avg_latency: Math.round(Number(aggRows[0].avg_latency) || 0)
+                    };
+                }
+            } catch (e: any) {
+                console.warn(`[MONITOR-ANALYTICS] Stats query failed (possibly missing route_logs): ${e.message}`);
+            }
+
+            // 2. Inventory Counts (REAL DATA)
+            const inventoryQueries = {
+                users: 'SELECT COUNT(*) as count FROM users',
+                routes: 'SELECT COUNT(*) as count FROM route_dynamic',
+                api_keys: 'SELECT COUNT(*) as count FROM api_keys',
+                entities: 'SELECT COUNT(DISTINCT table_name) as count FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name NOT LIKE "route_%" AND table_name NOT LIKE "api_%" AND table_name NOT LIKE "auth_%" AND table_name NOT LIKE "node_%"'
+            };
+
+            const inventoryResults: any = {};
+            for (const [key, sql] of Object.entries(inventoryQueries)) {
+                try {
+                    const res: any = await targetDb.execute(sql);
+                    const rows = Array.isArray(res) ? res : (res.rows || []);
+                    // Robust parsing for different possible column names
+                    const countVal = rows[0]?.count ?? rows[0]?.cnt ?? rows[0]?.['COUNT(*)'] ?? 0;
+                    inventoryResults[key] = Number(countVal);
+                    console.log(`[MONITOR-ANALYTICS] ${key} count: ${inventoryResults[key]}`);
+                } catch (e: any) {
+                    console.warn(`[MONITOR-ANALYTICS] Table ${key} not found or query failed: ${e.message}`);
+                    inventoryResults[key] = 0;
+                }
+            }
+
+            // 3. Recent Logs - Isolated
+            let recentLogs: any[] = [];
+            try {
+                const logsRes: any = await targetDb.execute(`
+                    SELECT * FROM route_logs 
+                    ORDER BY created_at DESC LIMIT 50
+                `);
+                recentLogs = Array.isArray(logsRes) ? logsRes : (logsRes.rows || []);
+            } catch (e) {}
 
             return c.json({
                 status: 'success',
                 data: {
-                    aggregates: {
-                        total: Number(aggregates.total || 0),
-                        success: Number(aggregates.success || 0),
-                        avg_latency: Math.round(Number(aggregates.avg_latency) || 0)
-                    },
+                    aggregates,
+                    inventory: inventoryResults,
                     recentLogs
                 }
             });
         } catch (err: any) {
+            console.error("[MONITOR-ANALYTICS] Critical endpoint error:", err);
             return c.json({ status: 'error', message: err.message }, 500);
         }
     });

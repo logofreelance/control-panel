@@ -8,12 +8,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MODULE_LABELS } from '@/lib/config/client';
 import { useToast, usePageLoading } from '@/modules/_core';
-import { API } from '../api';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 import type { MonitorDatabaseStats, ApiResponse } from '../types';
 
-const MSG = MODULE_LABELS.monitorDatabase?.messages || {};
-
 export function useMonitorDatabase() {
+    const params = useParams();
+    const nodeId = params?.id as string;
     const { addToast } = useToast();
     const { setPageLoading } = usePageLoading();
     const [stats, setStats] = useState<MonitorDatabaseStats>({
@@ -39,12 +40,14 @@ export function useMonitorDatabase() {
     }, [loading, setPageLoading]);
 
     const fetchStats = useCallback(async () => {
+        if (!nodeId) return;
         setLoading(true);
         setError(null);
 
         try {
-            const res = await fetch(API.stats);
-            const data: ApiResponse<MonitorDatabaseStats> = await res.json();
+            const data = await apiClient.get<ApiResponse<MonitorDatabaseStats>>('/monitor-database/stats', {
+                headers: { 'x-target-id': nodeId }
+            });
 
             if (data.status === 'success' && data.data) {
                 setStats(data.data);
@@ -59,19 +62,18 @@ export function useMonitorDatabase() {
         }
 
         setLoading(false);
-    }, [addToast]);
+    }, [addToast, nodeId]);
 
     const dropTable = useCallback(async (tableName: string): Promise<boolean> => {
+        if (!nodeId) return false;
         setDropping(true);
         try {
-            const res = await fetch(API.dropTable(tableName), {
-                method: 'DELETE',
+            const data = await apiClient.delete<ApiResponse<{ tableName: string }>>(`/monitor-database/tables/${tableName}`, {
+                headers: { 'x-target-id': nodeId }
             });
-            const data: ApiResponse<{ tableName: string }> = await res.json();
 
             if (data.status === 'success') {
                 addToast('Table deleted successfully', 'success');
-                // Refresh stats after deletion
                 await fetchStats();
                 return true;
             } else {
@@ -85,17 +87,19 @@ export function useMonitorDatabase() {
         } finally {
             setDropping(false);
         }
-    }, [addToast, fetchStats]);
+    }, [addToast, fetchStats, nodeId]);
 
     const cleanupOrphaned = useCallback(async (): Promise<{ orphanedDataSources: number; orphanedResources: number; invalidRelations: number; details: string[] } | null> => {
+        if (!nodeId) return null;
         try {
-            const res = await fetch(API.cleanup, { method: 'POST' });
-            const data: ApiResponse<{
+            const data = await apiClient.post<ApiResponse<{
                 orphanedDataSources: number;
                 orphanedResources: number;
                 invalidRelations: number;
                 details: string[];
-            }> = await res.json();
+            }>>('/monitor-database/cleanup', {}, {
+                headers: { 'x-target-id': nodeId }
+            });
 
             if (data.status === 'success' && data.data) {
                 const total = data.data.orphanedDataSources + data.data.orphanedResources + data.data.invalidRelations;
@@ -115,7 +119,8 @@ export function useMonitorDatabase() {
             addToast(errMsg, 'error');
             return null;
         }
-    }, [addToast, fetchStats]);
+    }, [addToast, fetchStats, nodeId]);
+
 
     useEffect(() => {
         fetchStats();

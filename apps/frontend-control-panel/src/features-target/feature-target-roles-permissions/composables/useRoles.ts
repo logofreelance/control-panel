@@ -8,6 +8,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { MODULE_LABELS } from '@/lib/config';
 import { useToast } from '@/modules/_core';
 import { API } from '../api';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 import type { Role, ApiResponse } from '../types';
 import { SYSTEM_ROLES } from '../types';
 
@@ -15,6 +17,8 @@ const L = MODULE_LABELS.rolesPermissions.roles;
 const MSG = L.messages;
 
 export function useRoles() {
+    const params = useParams();
+    const nodeId = params?.id as string;
     const { addToast } = useToast();
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
@@ -22,10 +26,12 @@ export function useRoles() {
     const [editingRole, setEditingRole] = useState<Role | null>(null);
 
     const fetchRoles = useCallback(async () => {
+        if (!nodeId) return;
         setLoading(true);
         try {
-            const res = await fetch(API.roles.list);
-            const data: ApiResponse<Role[]> = await res.json();
+            const data = await apiClient.get<ApiResponse<Role[]>>('/roles', {
+                headers: { 'x-target-id': nodeId }
+            });
             if (data.status === 'success') {
                 setRoles(data.data || []);
             }
@@ -33,13 +39,14 @@ export function useRoles() {
             addToast(MSG.fetchFailed, 'error');
         }
         setLoading(false);
-    }, [addToast]);
+    }, [addToast, nodeId]);
 
     useEffect(() => {
         fetchRoles();
     }, [fetchRoles]);
 
     const deleteRole = useCallback(async (role: Role) => {
+        if (!nodeId) return;
         if ((SYSTEM_ROLES as readonly string[]).includes(role.name)) {
             addToast(MSG.createFailed, 'error'); // Better error message for system roles if available
             return;
@@ -47,8 +54,9 @@ export function useRoles() {
         if (!confirm(`${MSG.confirmDelete}`)) return;
 
         try {
-            const res = await fetch(`${API.roles.list}/${role.id}`, { method: 'DELETE' });
-            const data: ApiResponse<null> = await res.json();
+            const data = await apiClient.delete<ApiResponse<null>>(`/roles/${role.id}`, {
+                headers: { 'x-target-id': nodeId }
+            });
             if (data.status === 'success') {
                 addToast(MSG.deleted, 'success');
                 fetchRoles();
@@ -58,7 +66,8 @@ export function useRoles() {
         } catch {
             addToast(MSG.connectionError, 'error');
         }
-    }, [fetchRoles, addToast]);
+    }, [fetchRoles, addToast, nodeId]);
+
 
     const handleEdit = useCallback((role: Role) => {
         setEditingRole(role);

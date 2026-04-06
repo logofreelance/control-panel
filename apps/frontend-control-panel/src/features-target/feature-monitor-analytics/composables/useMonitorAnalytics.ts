@@ -7,13 +7,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { MODULE_LABELS } from '@/lib/config';
 import { useToast, usePageLoading } from '@/modules/_core';
-import { API } from '../api';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 import type { MonitorAnalyticsStats, ApiResponse } from '../types';
 
 const MSG = MODULE_LABELS.monitorAnalytics.messages;
 const REFRESH_INTERVAL = 30000; // 30 seconds
 
 export function useMonitorAnalytics() {
+    const params = useParams();
+    const nodeId = params?.id as string;
     const { addToast } = useToast();
     const { setPageLoading } = usePageLoading();
     const [stats, setStats] = useState<MonitorAnalyticsStats | null>(null);
@@ -26,9 +29,11 @@ export function useMonitorAnalytics() {
     }, [loading, setPageLoading]);
 
     const fetchStats = useCallback(async () => {
+        if (!nodeId) return;
         try {
-            const res = await fetch(API.stats);
-            const data: ApiResponse<MonitorAnalyticsStats> = await res.json();
+            const data = await apiClient.get<ApiResponse<MonitorAnalyticsStats>>('/monitor-analytics', {
+                headers: { 'x-target-id': nodeId }
+            });
             if (data.status === 'success' && data.data) {
                 setStats(data.data);
             } else {
@@ -39,7 +44,8 @@ export function useMonitorAnalytics() {
         } finally {
             setLoading(false);
         }
-    }, [addToast]);
+    }, [addToast, nodeId]);
+
 
     useEffect(() => {
         fetchStats();

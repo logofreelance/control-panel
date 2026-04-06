@@ -52,11 +52,16 @@ async function buildAppInstance(env: EnvironmentConfig) {
     // --- SAAS TARGET MIDDLEWARE ---
     instance.use(`${apiPrefix}/*`, async (ctx, next) => {
         const targetId = ctx.req.header('x-target-id');
+        const path = ctx.req.path;
         const isTargetFeature = [
             '/api/monitor-database', '/api/database-schema', '/api/route-builder', 
             '/api/api-keys', '/api/cors', '/api/roles', '/api/permissions', 
             '/api/app-users', '/api/monitor-analytics'
-        ].some(path => ctx.req.path.startsWith(path));
+        ].some(p => path.startsWith(p));
+
+        if (isTargetFeature) {
+            console.log(`[MIDDLEWARE] Path: ${path}, TargetID: ${targetId || 'MISSING'}`);
+        }
 
         if (isTargetFeature && targetId) {
             try {

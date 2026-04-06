@@ -26,7 +26,7 @@ export function TargetDashboardView() {
   const params = useParams();
   const nodeId = (params?.id as string) || '';
 
-  const { target, loading, handleCheckHealth, checkingHealth, metrics, isOnline } =
+  const { target, loading, handleCheckHealth, checkingHealth, metrics, isOnline, realStats } =
     useTargetDashboard(nodeId);
 
   // CLEAN MONOCHROME METRICS WITH CURATED GLOBAL COLORS
@@ -199,7 +199,7 @@ export function TargetDashboardView() {
                   system uptime
                 </span>
                 <span className="text-base text-foreground font-normal lowercase">
-                  99.98% availability
+                  {realStats.uptime} availability
                 </span>
               </div>
             </div>
@@ -211,7 +211,9 @@ export function TargetDashboardView() {
                 <span className="text-sm text-muted-foreground font-normal lowercase">
                   latency
                 </span>
-                <span className="text-base text-foreground font-normal lowercase">24ms average</span>
+                <span className="text-base text-foreground font-normal lowercase">
+                  {realStats.latency} average
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-3">

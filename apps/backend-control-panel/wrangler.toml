@@ -1,7 +1,7 @@
 # ============================================
-# Backend-Orange Cloudflare Worker Configuration
+# Backend Control Panel Configuration
 # ============================================
-name = "backend-orange"
+name = "backend-control-panel"
 main = "src/worker.ts"
 compatibility_date = "2024-09-23"
 

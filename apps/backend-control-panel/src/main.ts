@@ -24,7 +24,7 @@ import { serve } from '@hono/node-server';
 async function main() {
     const { default: app } = await import('./index');
 
-    const port = Number(process.env.ORANGE_PORT) || Number(process.env.PORT) || 3001;
+    const port = Number(process.env.BACKEND_CONTROL_PANEL_PORT) || Number(process.env.PORT) || 3001;
     
     console.log(`[CP-SYSTEM] Control Panel API running on port ${port}`);
     serve({

@@ -41,6 +41,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
 
     // Middlewares dasar
     instance.use("*", logger());
+    instance.use("*", timeout(25000)); // 25 detik max sebelum timeout
     instance.use("*", cors({
         origin: (origin) => origin, // Izinkan origin yang memanggil
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],

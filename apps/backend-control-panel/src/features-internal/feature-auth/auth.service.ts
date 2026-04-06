@@ -11,17 +11,24 @@ export async function loginAdminUser(
     username: string,
     passwordRaw: string
 ): Promise<AuthPanelLoginResult> {
+    console.log("[AUTH-SERVICE] Starting login for user:", username);
     const user = await findAdminUserByUsername(db, username);
     if (!user) {
+        console.log("[AUTH-SERVICE] User not found");
         throw new Error(AUTH_PANEL_ERROR_CODES.AUTH_INVALID_CREDENTIALS);
     }
     
+    console.log("[AUTH-SERVICE] User found, comparing password...");
     const validPassword = await bcrypt.compare(passwordRaw, user.password_hash);
     if (!validPassword) {
+        console.log("[AUTH-SERVICE] Invalid password");
         throw new Error(AUTH_PANEL_ERROR_CODES.AUTH_INVALID_CREDENTIALS);
     }
     
+    console.log("[AUTH-SERVICE] Password valid, creating session...");
     const session = await lucia.createSession(user.id, {});
+    console.log("[AUTH-SERVICE] Session created successfully:", session.id);
+    
     return {
         token: session.id,
         user: { id: user.id, username, role: user.role }

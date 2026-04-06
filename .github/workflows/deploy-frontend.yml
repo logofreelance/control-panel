@@ -14,7 +14,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    name: Deploy Nuxt to Cloudflare Pages
+    name: Deploy Nuxt to Cloudflare Workers
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,10 +30,13 @@ jobs:
 
       - name: Build Frontend
         run: npx turbo run build:cloudflare --filter=dashboard
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/frontend-control-panel/.open-next --project-name=lfengine
+          workingDirectory: 'apps/frontend-control-panel'
+          command: deploy

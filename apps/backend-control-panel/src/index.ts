@@ -91,11 +91,33 @@ async function buildAppInstance(env: EnvironmentConfig) {
     instance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
     instance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
     
-    instance.get(`${apiPrefix}/system-status`, ctx => ctx.json({ 
-        status: 'ok', 
-        service: 'backend-control-panel',
-        version: '1.0.0'
-    }));
+    instance.get(`${apiPrefix}/system-status`, async (ctx) => {
+        const hasDbUrl = !!env.DATABASE_URL_INTERNAL_CONTROL_PANEL;
+        let isDbConnected = false;
+        let isAdminCreated = false;
+
+        if (hasDbUrl) {
+            try {
+                const db = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
+                await db.execute("SELECT 1"); // Test connection
+                isDbConnected = true;
+
+                const res: any = await db.execute("SELECT id FROM admin_users LIMIT 1");
+                const rows = Array.isArray(res) ? res : (res.rows || []);
+                isAdminCreated = rows.length > 0;
+            } catch (err) {
+                console.error("[SYSTEM-STATUS] DB Check Failed:", err);
+            }
+        }
+
+        return ctx.json({ 
+            status: 'ok', 
+            hasDbUrl,
+            isDbConnected,
+            isAdminCreated,
+            version: '1.0.1' 
+        });
+    });
     
     instance.get("/health", ctx => ctx.json({ status: 'ok', service: 'backend-control-panel' }));
 

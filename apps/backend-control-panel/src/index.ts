@@ -26,96 +26,100 @@ const SECURITY_LIMITS = {
     MAX_BODY_SIZE: 1024 * 1024, // 1MB
 };
 
+let appInstance: Hono<{ Variables: { targetDb: any, targetId: string } }> | null = null;
 const app = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
 
-// Global error handler
-app.onError((err, c) => {
-    console.error("[HONO APP ERROR]", err);
-    return c.json({ status: APP_LABELS.STATUS.ERROR, message: err.message || APP_LABELS.ERRORS.INTERNAL_SERVER_ERROR }, 500);
-});
+app.all('*', async (c) => {
+    if (!appInstance) {
+        appInstance = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
 
-// Middlewares
-app.use("*", timeout(SECURITY_LIMITS.REQUEST_TIMEOUT_MS));
-app.use("*", bodyLimit({
-    maxSize: SECURITY_LIMITS.MAX_BODY_SIZE,
-    onError: c => c.json({ status: APP_LABELS.STATUS.ERROR, code: 413, message: APP_LABELS.ERRORS.REQUEST_BODY_TOO_LARGE }, 413),
-}));
-app.use("*", logger());
-app.use("*", cors({
-    origin: '*',
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowHeaders: ["Content-Type", "Authorization", "x-api-key", "x-target-id"],
-    credentials: true,
-}));
+        // Global error handler
+        appInstance.onError((err, ctx) => {
+            console.error("[HONO APP ERROR]", err);
+            return ctx.json({ status: APP_LABELS.STATUS.ERROR, message: err.message || APP_LABELS.ERRORS.INTERNAL_SERVER_ERROR }, 500);
+        });
 
-const envConfig = loadEnvironmentConfig();
-const apiPrefix = "/api";
+        // Middlewares
+        appInstance.use("*", timeout(SECURITY_LIMITS.REQUEST_TIMEOUT_MS));
+        appInstance.use("*", bodyLimit({
+            maxSize: SECURITY_LIMITS.MAX_BODY_SIZE,
+            onError: ctx => ctx.json({ status: APP_LABELS.STATUS.ERROR, code: 413, message: APP_LABELS.ERRORS.REQUEST_BODY_TOO_LARGE }, 413),
+        }));
+        appInstance.use("*", logger());
+        appInstance.use("*", cors({
+            origin: '*',
+            allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+            allowHeaders: ["Content-Type", "Authorization", "x-api-key", "x-target-id"],
+            credentials: true,
+        }));
 
-// --- SAAS TARGET MIDDLEWARE ---
-// Mendiagnosa target database secara dinamis berdasarkan x-target-id
-app.use(`${apiPrefix}/*`, async (c, next) => {
-    const targetId = c.req.header('x-target-id');
-    
-    // Lewati jika ini fitur internal (registry, auth, dsb) atau jika target_id tidak ada
-    const isTargetFeature = [
-        '/api/monitor-database', '/api/database-schema', '/api/route-builder', 
-        '/api/api-keys', '/api/cors', '/api/roles', '/api/permissions', 
-        '/api/app-users', '/api/monitor-analytics'
-    ].some(path => c.req.path.startsWith(path));
+        const envConfig = loadEnvironmentConfig(c.env as any);
+        const apiPrefix = "/api";
 
-    if (isTargetFeature && targetId) {
-        try {
-            const internalDb = buildInternalDatabaseConnection(envConfig.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-            const target = await findTargetSystemById(internalDb, targetId);
-            
-            if (!target) {
-                return c.json({ status: 'error', message: 'Target system not found' }, 404);
+        // --- SAAS TARGET MIDDLEWARE ---
+        appInstance.use(`${apiPrefix}/*`, async (ctx, next) => {
+            const targetId = ctx.req.header('x-target-id');
+            const isTargetFeature = [
+                '/api/monitor-database', '/api/database-schema', '/api/route-builder', 
+                '/api/api-keys', '/api/cors', '/api/roles', '/api/permissions', 
+                '/api/app-users', '/api/monitor-analytics'
+            ].some(path => ctx.req.path.startsWith(path));
+
+            if (isTargetFeature && targetId) {
+                try {
+                    const internalDb = buildInternalDatabaseConnection(envConfig.DATABASE_URL_INTERNAL_CONTROL_PANEL);
+                    const target = await findTargetSystemById(internalDb, targetId);
+                    
+                    if (!target) {
+                        return ctx.json({ status: 'error', message: 'Target system not found' }, 404);
+                    }
+
+                    const targetDb = buildTargetDatabaseConnection(target.database_url);
+                    ctx.set('targetDb', targetDb);
+                    ctx.set('targetId', targetId);
+                } catch (err: any) {
+                    console.error("[TARGET-MIDDLEWARE-ERROR]", err);
+                    return ctx.json({ status: 'error', message: 'Failed to connect to target database' }, 500);
+                }
             }
+            await next();
+        });
 
-            // Injek koneksi database target ke context
-            const targetDb = buildTargetDatabaseConnection(target.database_url);
-            c.set('targetDb', targetDb);
-            c.set('targetId', targetId);
-        } catch (err: any) {
-            console.error("[TARGET-MIDDLEWARE-ERROR]", err);
-            return c.json({ status: 'error', message: 'Failed to connect to target database' }, 500);
-        }
+        // --- ROUTES ---
+        const { createFeaturePanelAuth } = await import('./features-internal/feature-auth/auth.block');
+        const { createFeatureAdminUsers } = await import('./features-internal/feature-admin-users/block');
+        const { createFeatureSettings } = await import('./features-internal/feature-settings/settings.block');
+        const { createFeatureTargetRegistry } = await import('./features-internal/feature-target-registry/target-registry.block');
+
+        appInstance.route('/api', createFeaturePanelAuth(envConfig));
+        appInstance.route(`${apiPrefix}/users`, createFeatureAdminUsers(envConfig));
+        appInstance.route(`${apiPrefix}/settings`, createFeatureSettings(envConfig));
+        appInstance.route(`${apiPrefix}/target-systems`, createFeatureTargetRegistry(envConfig));
+
+        // --- TARGET FEATURES ---
+        const { setupDynamicRoutesRouter } = await import('./features-target/feature-dynamic-routes/router');
+        const { createFeatureTargetDatabaseSchema } = await import('./features-target/feature-target-database-schema/block');
+        const { setupClientApiKeysRouter } = await import('./features-target/feature-client-api-keys/router');
+        const { setupTargetCorsRouter } = await import('./features-target/feature-target-cors/router');
+        const { createFeatureRbacRoles } = await import('./features-target/feature-rbac-roles/block');
+        const { createFeatureRbacPermissions } = await import('./features-target/feature-rbac-permissions/block');
+        const { createFeatureTargetAppUsers } = await import('./features-target/feature-target-app-users/block');
+        const { createFeatureMonitorAnalytics } = await import('./features-target/feature-monitor-analytics/block');
+        const { createFeatureMonitorDatabase } = await import('./features-target/feature-monitor-database/block');
+        appInstance.route(`${apiPrefix}/route-builder`, setupDynamicRoutesRouter());
+        appInstance.route(`${apiPrefix}/database-schema`, createFeatureTargetDatabaseSchema());
+        appInstance.route(`${apiPrefix}/api-keys`, setupClientApiKeysRouter());
+        appInstance.route(`${apiPrefix}/cors`, setupTargetCorsRouter());
+        appInstance.route(`${apiPrefix}/roles`, createFeatureRbacRoles());
+        appInstance.route(`${apiPrefix}/permissions`, createFeatureRbacPermissions());
+        appInstance.route(`${apiPrefix}/app-users`, createFeatureTargetAppUsers());
+        appInstance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
+        appInstance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
+
+        appInstance.get("/health", ctx => ctx.json({ status: 'ok', service: 'backend-control-panel' }));
     }
-    await next();
+
+    return appInstance.fetch(c.req.raw, c.env, c.executionCtx);
 });
-
-// --- ROUTES ---
-import { createFeaturePanelAuth } from './features-internal/feature-auth/auth.block';
-import { createFeatureAdminUsers } from './features-internal/feature-admin-users/block';
-import { createFeatureSettings } from './features-internal/feature-settings/settings.block';
-import { createFeatureTargetRegistry } from './features-internal/feature-target-registry/target-registry.block';
-
-app.route('/api', createFeaturePanelAuth(envConfig));
-app.route(`${apiPrefix}/users`, createFeatureAdminUsers(envConfig));
-app.route(`${apiPrefix}/settings`, createFeatureSettings(envConfig));
-app.route(`${apiPrefix}/target-systems`, createFeatureTargetRegistry(envConfig));
-
-// --- TARGET FEATURES (DYNAMICALLY POWERED BY MIDDLEWARE) ---
-import { setupDynamicRoutesRouter } from './features-target/feature-dynamic-routes/router';
-import { createFeatureTargetDatabaseSchema } from './features-target/feature-target-database-schema/block';
-import { setupClientApiKeysRouter } from './features-target/feature-client-api-keys/router';
-import { setupTargetCorsRouter } from './features-target/feature-target-cors/router';
-import { createFeatureRbacRoles } from './features-target/feature-rbac-roles/block';
-import { createFeatureRbacPermissions } from './features-target/feature-rbac-permissions/block';
-import { createFeatureMonitorAnalytics } from './features-target/feature-monitor-analytics/block';
-import { createFeatureTargetAppUsers } from './features-target/feature-target-app-users/block';
-import { createFeatureMonitorDatabase } from './features-target/feature-monitor-database/block';
-
-app.route(`${apiPrefix}/route-builder`, setupDynamicRoutesRouter());
-app.route(`${apiPrefix}/database-schema`, createFeatureTargetDatabaseSchema());
-app.route(`${apiPrefix}/api-keys`, setupClientApiKeysRouter());
-app.route(`${apiPrefix}/cors`, setupTargetCorsRouter());
-app.route(`${apiPrefix}/roles`, createFeatureRbacRoles());
-app.route(`${apiPrefix}/permissions`, createFeatureRbacPermissions());
-app.route(`${apiPrefix}/app-users`, createFeatureTargetAppUsers());
-app.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
-app.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
-
-app.get("/health", c => c.json({ status: 'ok', service: 'backend-control-panel' }));
 
 export default app;

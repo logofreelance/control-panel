@@ -63,7 +63,8 @@ export function buildAuthPanelLucia(db: InternalDatabaseConnection): AuthPanelLu
     return new Lucia(adapter, {
         sessionCookie: {
             attributes: {
-                secure: process.env.NODE_ENV === "production"
+                secure: true, // Wajib TRUE untuk SameSite=None
+                sameSite: "none" // Izinkan cookie lintas subdomain/cross-site
             }
         },
         getUserAttributes: (attributes: any) => {

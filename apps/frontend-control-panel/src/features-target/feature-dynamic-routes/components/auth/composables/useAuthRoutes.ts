@@ -7,6 +7,7 @@ import { DYNAMIC_ROUTES_LABELS } from '../../../constants/ui-labels';
 import { useToast, usePageLoading } from '@/modules/_core';
 import { env } from '@/lib/env';
 import { DYNAMIC_ROUTES_API } from '../../../api';
+import { useTargetRegistry } from '@/features-internal/feature-target-registry/hooks/useTargetRegistry';
 
 const L = DYNAMIC_ROUTES_LABELS.authRoutes;
 
@@ -81,6 +82,20 @@ export const useAuthRoutes = (targetId?: string): UseAuthRoutesReturn => {
     const [authRoutes, setAuthRoutes] = useState<AuthCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { targets } = useTargetRegistry();
+    const currentTarget = targets.find(t => t.id === targetId);
+    
+    // Determine target API URL
+    const rawTargetApiUrl = currentTarget?.apiEndpoint || (() => {
+        let url = env.API_URL || 'http://localhost:3001/api';
+        url = url.replace(':3001', ':3002');
+        url = url.replace('backend-control-panel', 'backend-system');
+        return url;
+    })();
+    
+    // Pick the primary one and append /api if missing
+    const primaryUrlRaw = rawTargetApiUrl.split(',')[0].trim();
+    const targetApiUrl = primaryUrlRaw.endsWith('/api') ? primaryUrlRaw : `${primaryUrlRaw.replace(/\/$/, '')}/api`;
 
     // Sync loading state with global page loading
     useEffect(() => {
@@ -209,10 +224,10 @@ export const useAuthRoutes = (targetId?: string): UseAuthRoutesReturn => {
     }, [fetchRoutes, targetId]);
 
     const copyToClipboard = useCallback((path: string) => {
-        const fullUrl = `${env.API_URL}${path}`;
+        const fullUrl = `${targetApiUrl}${path}`;
         navigator.clipboard.writeText(fullUrl);
         addToast(L.messages.urlCopied, 'success');
-    }, [addToast]);
+    }, [addToast, targetApiUrl]);
 
     const openInTester = useCallback((method: string, path: string, body?: string) => {
         // Assume path is full path like /green/auth/login

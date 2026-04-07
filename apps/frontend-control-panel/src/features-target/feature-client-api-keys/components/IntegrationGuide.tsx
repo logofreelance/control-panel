@@ -20,6 +20,7 @@ const L = API_KEYS_LABELS;
 
 interface IntegrationGuideProps {
   copyToClipboard: (text: string, message?: string) => void;
+  targetApiUrl: string;
 }
 
 // ── Method Badge ──────────────────────────────────
@@ -40,6 +41,7 @@ const MethodBadge = ({ method }: { method: string }) => {
 
 export const IntegrationGuide = ({
   copyToClipboard,
+  targetApiUrl,
 }: IntegrationGuideProps) => {
   const [activeTab, setActiveTab] = React.useState<
     "js" | "flutter" | "reactNative"
@@ -47,7 +49,7 @@ export const IntegrationGuide = ({
   const [expandedSection, setExpandedSection] = React.useState<string | null>(
     null,
   );
-  const apiUrl = env.API_URL || "http://localhost:3001";
+  const apiUrl = targetApiUrl;
   const G = GUIDE_CONTENT;
 
   const tabs = [
@@ -145,12 +147,12 @@ export const IntegrationGuide = ({
             </p>
             <div className="flex items-center gap-3 bg-muted p-3 rounded-xl min-w-0">
               <div className="text-sm text-primary truncate flex-1 min-w-0 font-sans">
-                {env.API_URL}/green
+                {targetApiUrl}
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => copyToClipboard(`${env.API_URL}/green`, L.messages.urlCopied)}
+                onClick={() => copyToClipboard(targetApiUrl, L.messages.urlCopied)}
                 className="size-8 p-0 rounded-lg"
               >
                 <Icons.copy className="size-4" />

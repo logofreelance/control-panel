@@ -35,7 +35,7 @@ export const INTERNAL_TABLES = {
 
 export const SYSTEM_AUTH_ROUTES = [
     { 
-        id: '1', path: '/auth/login', method: 'POST', handler: 'handleLoginRequest', 
+        id: '1', path: '/api/auth/login', method: 'POST', handler: 'handleLoginRequest', 
         description: 'User login with credentials',
         metadata: JSON.stringify({
             auth: 'none',
@@ -64,7 +64,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '2', path: '/auth/register', method: 'POST', handler: 'handleRegisterRequest', 
+        id: '2', path: '/api/auth/register', method: 'POST', handler: 'handleRegisterRequest', 
         description: 'Create new user account',
         metadata: JSON.stringify({
             auth: 'none',
@@ -92,7 +92,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '3', path: '/auth/me', method: 'GET', handler: 'handleGetCurrentUser', 
+        id: '3', path: '/api/auth/me', method: 'GET', handler: 'handleGetCurrentUser', 
         description: 'Get currently authenticated user',
         metadata: JSON.stringify({
             auth: 'required',
@@ -112,7 +112,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '4', path: '/auth/verify', method: 'GET', handler: 'handleVerifySession', 
+        id: '4', path: '/api/auth/verify', method: 'GET', handler: 'handleVerifySession', 
         description: 'Verify if session is still active',
         metadata: JSON.stringify({
             auth: 'required',
@@ -124,7 +124,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '5', path: '/auth/logout', method: 'POST', handler: 'handleLogoutRequest', 
+        id: '5', path: '/api/auth/logout', method: 'POST', handler: 'handleLogoutRequest', 
         description: 'Terminate user session',
         metadata: JSON.stringify({ 
             auth: 'required',
@@ -135,7 +135,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '6', path: '/auth/user/data', method: 'GET', handler: 'handleGetUserData', 
+        id: '6', path: '/api/auth/user/data', method: 'GET', handler: 'handleGetUserData', 
         description: 'Get extended user profile data',
         metadata: JSON.stringify({ 
             auth: 'required',
@@ -152,7 +152,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '7', path: '/auth/user/profile', method: 'PUT', handler: 'handleUpdateProfile', 
+        id: '7', path: '/api/auth/user/profile', method: 'PUT', handler: 'handleUpdateProfile', 
         description: 'Update user profile information',
         metadata: JSON.stringify({
             auth: 'required',
@@ -170,7 +170,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '8', path: '/auth/user/change-password', method: 'POST', handler: 'handleChangePassword', 
+        id: '8', path: '/api/auth/user/change-password', method: 'POST', handler: 'handleChangePassword', 
         description: 'Change user account password',
         metadata: JSON.stringify({
             auth: 'required',
@@ -188,7 +188,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '9', path: '/auth/user/account', method: 'DELETE', handler: 'handleDeleteAccount', 
+        id: '9', path: '/api/auth/user/account', method: 'DELETE', handler: 'handleDeleteAccount', 
         description: 'Delete user account and data',
         metadata: JSON.stringify({
             auth: 'required',
@@ -205,7 +205,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '10', path: '/auth/login/google', method: 'GET', handler: 'handleGoogleLoginRedirect', 
+        id: '10', path: '/api/auth/login/google', method: 'GET', handler: 'handleGoogleLoginRedirect', 
         description: 'Initiate Google OAuth flow',
         metadata: JSON.stringify({
             auth: 'none',
@@ -214,7 +214,7 @@ export const SYSTEM_AUTH_ROUTES = [
         })
     },
     { 
-        id: '11', path: '/auth/login/google/callback', method: 'GET', handler: 'handleGoogleCallbackRequest', 
+        id: '11', path: '/api/auth/login/google/callback', method: 'GET', handler: 'handleGoogleCallbackRequest', 
         description: 'Handle Google OAuth callback',
         metadata: JSON.stringify({
             auth: 'none',

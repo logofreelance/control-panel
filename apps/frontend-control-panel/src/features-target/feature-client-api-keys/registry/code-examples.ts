@@ -7,7 +7,7 @@ export const CODE_EXAMPLES = {
   ) => `// ============================================
 // lib/api.js — API Client Setup
 // ============================================
-const API_URL = '${apiUrl}/green';
+const API_URL = '${apiUrl}/api';
 const API_KEY = 'pk_your_api_key_here'; // dari Dashboard > API & Security
 
 // ── Base Fetch Helper ────────────────────────
@@ -70,20 +70,20 @@ async function logout() {
 // Endpoint ditentukan di Dashboard > API Management
 async function getProducts(page = 1, limit = 10) {
     const res = await fetchAPI(
-        \`/products?page=\${page}&limit=\${limit}\`
+        \`/v1/products?page=\${page}&limit=\${limit}\`
     );
     return res.data; // Array of products
 }
 
 // ── Data: Fetch Single Item ──────────────────
 async function getProduct(id) {
-    const res = await fetchAPI(\`/products/\${id}\`);
+    const res = await fetchAPI(\`/v1/products/\${id}\`);
     return res.data;
 }
 
 // ── Data: Create Item ────────────────────────
 async function createProduct(product) {
-    const res = await fetchAPI('/products', {
+    const res = await fetchAPI('/v1/products', {
         method: 'POST',
         body: JSON.stringify(product),
     });
@@ -92,7 +92,7 @@ async function createProduct(product) {
 
 // ── Data: Update Item ────────────────────────
 async function updateProduct(id, updates) {
-    const res = await fetchAPI(\`/products/\${id}\`, {
+    const res = await fetchAPI(\`/v1/products/\${id}\`, {
         method: 'PUT',
         body: JSON.stringify(updates),
     });
@@ -101,7 +101,7 @@ async function updateProduct(id, updates) {
 
 // ── Data: Delete Item ────────────────────────
 async function deleteProduct(id) {
-    await fetchAPI(\`/products/\${id}\`, { method: 'DELETE' });
+    await fetchAPI(\`/v1/products/\${id}\`, { method: 'DELETE' });
 }`,
 
   flutter: (apiUrl: string) => `// ============================================
@@ -112,7 +112,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = '${apiUrl}/green';
+  static const String baseUrl = '${apiUrl}/api';
   static const String apiKey = 'pk_your_api_key_here';
 
   // ── Base Request Helper ──────────────────────
@@ -183,13 +183,13 @@ class ApiService {
 
   // ── Data Resources ───────────────────────────
   static Future<List> getProducts({int page = 1, int limit = 10}) async {
-    final res = await request('/products?page=\$page&limit=\$limit');
+    final res = await request('/v1/products?page=\$page&limit=\$limit');
     return res['data'] as List;
   }
 
   static Future<Map<String, dynamic>> createProduct(
       Map<String, dynamic> product) async {
-    final res = await request('/products', method: 'POST', body: product);
+    final res = await request('/v1/products', method: 'POST', body: product);
     return res['data'];
   }
 }`,
@@ -201,7 +201,7 @@ class ApiService {
 // ============================================
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = '${apiUrl}/green';
+const API_URL = '${apiUrl}/api';
 const API_KEY = 'pk_your_api_key_here';
 
 // ── Base Request Helper ────────────────────────
@@ -257,18 +257,18 @@ export async function logout() {
 // ── Data Resources (CRUD) ───────────────────────
 export async function getList(resource, page = 1, limit = 10) {
     const res = await fetchAPI(
-        \`/\${resource}?page=\${page}&limit=\${limit}\`
+        \`/v1/\${resource}?page=\${page}&limit=\${limit}\`
     );
     return res.data;
 }
 
 export async function getById(resource, id) {
-    const res = await fetchAPI(\`/\${resource}/\${id}\`);
+    const res = await fetchAPI(\`/v1/\${resource}/\${id}\`);
     return res.data;
 }
 
 export async function create(resource, body) {
-    const res = await fetchAPI(\`/\${resource}\`, {
+    const res = await fetchAPI(\`/v1/\${resource}\`, {
         method: 'POST',
         body: JSON.stringify(body),
     });
@@ -276,7 +276,7 @@ export async function create(resource, body) {
 }
 
 export async function update(resource, id, body) {
-    const res = await fetchAPI(\`/\${resource}/\${id}\`, {
+    const res = await fetchAPI(\`/v1/\${resource}/\${id}\`, {
         method: 'PUT',
         body: JSON.stringify(body),
     });
@@ -284,7 +284,7 @@ export async function update(resource, id, body) {
 }
 
 export async function remove(resource, id) {
-    await fetchAPI(\`/\${resource}/\${id}\`, { method: 'DELETE' });
+    await fetchAPI(\`/v1/\${resource}/\${id}\`, { method: 'DELETE' });
 }`,
 };
 
@@ -346,11 +346,11 @@ export const GUIDE_CONTENT = {
     description:
       "Endpoint data resource dibuat otomatis dari Dashboard > API Management. Pola URL-nya:",
     endpoints: [
-      { method: "GET", path: "/{resource}", desc: "Ambil semua data (list)" },
-      { method: "GET", path: "/{resource}/{id}", desc: "Ambil data by ID" },
-      { method: "POST", path: "/{resource}", desc: "Buat data baru" },
-      { method: "PUT", path: "/{resource}/{id}", desc: "Update data" },
-      { method: "DELETE", path: "/{resource}/{id}", desc: "Hapus data" },
+      { method: "GET", path: "/v1/{resource}", desc: "Ambil semua data (list)" },
+      { method: "GET", path: "/v1/{resource}/{id}", desc: "Ambil data by ID" },
+      { method: "POST", path: "/v1/{resource}", desc: "Buat data baru" },
+      { method: "PUT", path: "/v1/{resource}/{id}", desc: "Update data" },
+      { method: "DELETE", path: "/v1/{resource}/{id}", desc: "Hapus data" },
     ],
     note: "Ganti {resource} dengan nama endpoint yang sudah dibuat di API Management (contoh: products, orders, articles).",
   },

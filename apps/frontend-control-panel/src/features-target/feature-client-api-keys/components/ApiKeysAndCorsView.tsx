@@ -26,9 +26,23 @@ import { useClientApiKeys } from '../composables/useClientApiKeys';
 import { useCorsDomains } from '../composables/useCorsDomains';
 import { IntegrationGuide } from './IntegrationGuide';
 import { TargetLayout } from '@/components/layout/TargetLayout';
+import { useTargetRegistry } from '@/features-internal/feature-target-registry/hooks/useTargetRegistry';
 import type { ClientApiKey, CorsDomain } from '../types';
 
 const L = API_KEYS_LABELS;
+
+// Helper to determine the Engine's URL based on Control Panel's URL
+const getTargetApiUrl = () => {
+  let url = env.API_URL || 'http://localhost:3001/api';
+  
+  // Convert local port 3001 (Control Panel) to 3002 (Engine)
+  url = url.replace(':3001', ':3002');
+  
+  // Convert production worker name
+  url = url.replace('backend-control-panel', 'backend-system');
+  
+  return url;
+};
 
 interface ConfirmDialogState {
   type: 'api-key' | 'cors';
@@ -60,6 +74,9 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
     toggleDomain,
   } = useCorsDomains(targetId);
 
+  const { targets } = useTargetRegistry();
+  const currentTarget = targets.find(t => t.id === targetId);
+
   // Form states
   const [newKeyName, setNewKeyName] = useState('');
   const [newDomain, setNewDomain] = useState('');
@@ -70,6 +87,19 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
 
   const loading = keysLoading || domainsLoading;
   const submitting = keysSubmitting || domainsSubmitting;
+  
+  // Prefer database api_endpoint if available, fallback to environment heuristic
+  const rawTargetApiUrl = currentTarget?.apiEndpoint || getTargetApiUrl();
+  
+  // Handle multiple endpoints (comma-separated) and ensure they have /api
+  const targetApiUrls = rawTargetApiUrl.split(',').map(url => {
+    const trimmed = url.trim();
+    // If it already ends with /api, leave it. Otherwise append /api.
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed.replace(/\/$/, '')}/api`;
+  });
+  
+  // Use the primary one for the examples/guide
+  const primaryApiUrl = targetApiUrls[0];
 
   // Handlers
   const handleCreateKey = async (e: React.FormEvent) => {
@@ -310,11 +340,13 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
                 <Icons.rocket className="size-5" />
               </div>
             </div>
-            <div>
-              <p className="text-base font-medium text-primary truncate lowercase mb-1" title={env.API_URL}>
-                {env.API_URL}
-              </p>
-              <p className="text-sm text-muted-foreground lowercase">
+            <div className="space-y-1">
+              {targetApiUrls.map((url, i) => (
+                <p key={i} className="text-base font-medium text-primary truncate lowercase" title={url}>
+                  {url}
+                </p>
+              ))}
+              <p className="text-sm text-muted-foreground lowercase mt-1">
                 {L.stats.apiEndpoint}
               </p>
             </div>
@@ -472,7 +504,7 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
         </Card>
       </div>
 
-      <IntegrationGuide copyToClipboard={copyToClipboard} />
+      <IntegrationGuide copyToClipboard={copyToClipboard} targetApiUrl={primaryApiUrl} />
 
       <ConfirmDialog
         isOpen={!!confirmDialog}

@@ -10,6 +10,7 @@ export const API_KEYS_LABELS = {
         valid: 'Valid',
         allowed: 'Allowed',
         apiEndpoint: 'API Endpoint',
+        activeNodes: 'Active Nodes',
     },
     sections: {
         apiAccessKeys: 'API Access Keys',
@@ -61,6 +62,8 @@ export const API_KEYS_LABELS = {
         createKeyError: 'Error creating key',
         addDomainError: 'Error adding domain',
         deleteFailed: 'Delete failed',
+        syncSuccess: 'Endpoints synced successfully',
+        syncFailed: 'Sync failed, please try again',
     },
     confirm: {
         deleteApiKey: 'Delete API Key',

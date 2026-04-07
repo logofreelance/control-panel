@@ -15,6 +15,7 @@ import {
   Card,
   CardContent,
   Modal,
+  Select,
 } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ import { IntegrationGuide } from './IntegrationGuide';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { useTargetRegistry } from '@/features-internal/feature-target-registry/hooks/useTargetRegistry';
 import type { ClientApiKey, CorsDomain } from '../types';
+import { useEffect } from 'react';
 
 const L = API_KEYS_LABELS;
 
@@ -74,8 +76,10 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
     toggleDomain,
   } = useCorsDomains(targetId);
 
-  const { targets } = useTargetRegistry();
+  const { targets, checkHealth } = useTargetRegistry();
   const currentTarget = targets.find(t => t.id === targetId);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [selectedApiUrl, setSelectedApiUrl] = useState<string>('');
 
   // Form states
   const [newKeyName, setNewKeyName] = useState('');
@@ -97,6 +101,16 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
     // If it already ends with /api, leave it. Otherwise append /api.
     return trimmed.endsWith('/api') ? trimmed : `${trimmed.replace(/\/$/, '')}/api`;
   });
+
+  // Effect to sync selectedApiUrl with discovered endpoints
+  useEffect(() => {
+    if (!selectedApiUrl && targetApiUrls.length > 0) {
+      setSelectedApiUrl(targetApiUrls[0]);
+    } else if (selectedApiUrl && !targetApiUrls.includes(selectedApiUrl)) {
+      // If current selected is no longer in the list (after sync), reset to first
+      setSelectedApiUrl(targetApiUrls[0] || '');
+    }
+  }, [rawTargetApiUrl]); // Re-run when raw data from DB changes
   
   // Use the primary one for the examples/guide
   const primaryApiUrl = targetApiUrls[0];
@@ -134,7 +148,20 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
       await deleteDomain(confirmDialog.id);
     }
 
-    setConfirmDialog(null);
+    setCreatedKey(null);
+  };
+
+  const handleSync = async () => {
+    if (isSyncing || !targetId) return;
+    setIsSyncing(true);
+    try {
+      await checkHealth(targetId);
+      addToast(L.messages.syncSuccess, 'success');
+    } catch {
+      addToast(L.messages.syncFailed, 'error');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const copyToClipboard = (
@@ -259,9 +286,33 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
             {L.subtitle}
           </p>
         </div>
-        <Badge variant="secondary" className="w-fit gap-2 lowercase py-1.5 px-3">
-          <Icons.lock className="size-3.5" /> {L.labels.protected}
-        </Badge>
+        
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-hidden">
+          {targetApiUrls.length > 1 && (
+            <Select
+              value={selectedApiUrl}
+              onChange={(e) => setSelectedApiUrl(e.target.value)}
+              className="flex-1 min-w-0 sm:min-w-[220px] max-w-[calc(100vw-70px)] sm:max-w-[400px] h-9 rounded-xl lowercase"
+              options={targetApiUrls.map(url => ({ label: url, value: url }))}
+            />
+          )}
+          {targetApiUrls.length <= 1 && (
+             <Badge variant="secondary" className="w-fit gap-2 lowercase py-1.5 px-3">
+                <Icons.lock className="size-3.5" /> {L.labels.protected}
+             </Badge>
+          )}
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="size-9 rounded-xl hover:bg-muted/80 text-muted-foreground transition-all"
+            title="Sync Endpoints"
+          >
+            <Icons.refreshCw className={`size-4 ${isSyncing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </header>
 
       {/* Stats Cards */}
@@ -334,27 +385,32 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
           <CardContent className="p-5">
             <div className="flex flex-row justify-between items-start mb-6">
               <p className="text-sm font-medium text-muted-foreground lowercase">
-                {L.stats.baseUrl}
+                {L.stats.activeNodes}
               </p>
               <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
                 <Icons.rocket className="size-5" />
               </div>
             </div>
-            <div className="space-y-1">
-              {targetApiUrls.map((url, i) => (
-                <p key={i} className="text-base font-medium text-primary truncate lowercase" title={url}>
-                  {url}
+            <div className="flex flex-row justify-between items-end">
+              <div>
+                <TextHeading size="h3" className="text-3xl font-bold lowercase">
+                  {targetApiUrls.length}
+                </TextHeading>
+                <p className="text-sm text-muted-foreground mt-1 lowercase">
+                  {L.stats.apiEndpoint}
                 </p>
-              ))}
-              <p className="text-sm text-muted-foreground lowercase mt-1">
-                {L.stats.apiEndpoint}
-              </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </section>
 
-      {/* API Keys & CORS Domains */}
+      <section className="space-y-6">
+        <IntegrationGuide 
+          targetApiUrl={selectedApiUrl || targetApiUrls[0]} 
+          copyToClipboard={copyToClipboard}
+        />
+      </section>{/* API Keys & CORS Domains */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* API Keys Section */}
         <Card className="bg-card min-h-[400px] relative">

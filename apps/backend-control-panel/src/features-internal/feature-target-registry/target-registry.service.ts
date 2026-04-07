@@ -134,14 +134,15 @@ export async function performHealthCheck(db: InternalDatabaseConnection, targetI
         }
 
         // Auto-detect active API endpoint from node_health_metrics
-        let detectedApiEndpoint = null;
+        let detectedApiEndpoint = '';
         try {
-            // Find ALL online nodes that reported a heartbeat within the last 2 minutes
+            // Find ALL online nodes that reported a heartbeat within the last 10 minutes
+            // 10 minutes is more resilient for serverless (lazy) heartbeats
             const nodeRes: any = await targetDb.execute(`
                 SELECT DISTINCT endpoint_url 
                 FROM node_health_metrics 
                 WHERE status = 'online' 
-                  AND last_heartbeat >= DATE_SUB(NOW(), INTERVAL 2 MINUTE)
+                  AND last_heartbeat >= DATE_SUB(NOW(), INTERVAL 10 MINUTE)
             `);
             const rows = Array.isArray(nodeRes) ? nodeRes : (nodeRes.rows || []);
             const validEndpoints = rows
@@ -158,10 +159,9 @@ export async function performHealthCheck(db: InternalDatabaseConnection, targetI
 
         const latencyMs = Date.now() - start;
 
-        // Update API endpoint in Internal DB if detected
-        if (detectedApiEndpoint) {
-            await repo.updateTargetSystem(db, targetId, { api_endpoint: detectedApiEndpoint });
-        }
+        // ALWAYS update API endpoint in Internal DB to reflect current "live" state
+        // If detectedApiEndpoint is empty, it means all nodes are offline.
+        await repo.updateTargetSystem(db, targetId, { api_endpoint: detectedApiEndpoint });
 
         // Update status in Internal DB
         await repo.updateTargetSystemHealth(db, targetId, TARGET_SYSTEM_STATUS.ONLINE, routeCount);

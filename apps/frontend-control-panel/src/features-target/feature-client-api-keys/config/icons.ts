@@ -1,7 +1,7 @@
 import {
     CheckCircle, Lock, Key, Globe, Rocket, Plus, Copy,
     ToggleLeft, ToggleRight, Trash2, Smartphone, Code,
-    AlertTriangle, ChevronRight, Info,
+    AlertTriangle, ChevronRight, Info, RefreshCw
 } from 'lucide-react';
 
 export const Icons = {
@@ -20,4 +20,5 @@ export const Icons = {
     alertTriangle: AlertTriangle,
     chevronRight: ChevronRight,
     info: Info,
+    refreshCw: RefreshCw,
 } as const;

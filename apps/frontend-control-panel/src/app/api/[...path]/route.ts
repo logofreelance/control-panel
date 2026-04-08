@@ -34,7 +34,7 @@ export async function GET(
         return NextResponse.json({ 
             status: 'error', 
             message: 'Backend unreachable' 
-        }, 502);
+        }, { status: 502 });
     }
 }
 
@@ -70,7 +70,7 @@ export async function POST(
         return NextResponse.json({ 
             status: 'error', 
             message: 'Backend unreachable' 
-        }, 502);
+        }, { status: 502 });
     }
 }
 
@@ -106,7 +106,7 @@ export async function PUT(
         return NextResponse.json({ 
             status: 'error', 
             message: 'Backend unreachable' 
-        }, 502);
+        }, { status: 502 });
     }
 }
 
@@ -140,7 +140,7 @@ export async function DELETE(
         return NextResponse.json({ 
             status: 'error', 
             message: 'Backend unreachable' 
-        }, 502);
+        }, { status: 502 });
     }
 }
 
@@ -176,6 +176,6 @@ export async function PATCH(
         return NextResponse.json({ 
             status: 'error', 
             message: 'Backend unreachable' 
-        }, 502);
+        }, { status: 502 });
     }
 }

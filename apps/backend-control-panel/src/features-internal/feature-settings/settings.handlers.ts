@@ -8,6 +8,7 @@
 import type { Context } from 'hono';
 import type { InternalDatabaseConnection } from '../internal.db';
 import { getSettingsMap, updateSettings } from './settings.service';
+import { requireAuthOrRespond } from '../feature-auth/auth.middleware';
 
 function respondSuccess(c: Context, data: any, message: string, statusCode = 200) {
     return c.json({ success: true, data, message }, statusCode as any);
@@ -18,6 +19,9 @@ function respondError(c: Context, errorCode: string, message: string, statusCode
 }
 
 export async function handleGetSettings(c: Context, db: InternalDatabaseConnection) {
+    const authError = requireAuthOrRespond(c);
+    if (authError) return authError;
+    
     try {
         const settings = await getSettingsMap(db);
         return respondSuccess(c, settings, 'Settings retrieved');
@@ -27,6 +31,9 @@ export async function handleGetSettings(c: Context, db: InternalDatabaseConnecti
 }
 
 export async function handleUpdateSettings(c: Context, db: InternalDatabaseConnection) {
+    const authError = requireAuthOrRespond(c);
+    if (authError) return authError;
+    
     try {
         const body = await c.req.json();
         const updated = await updateSettings(db, body);

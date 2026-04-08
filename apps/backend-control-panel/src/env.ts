@@ -39,12 +39,14 @@ export function loadEnvironmentConfig(cloudflareBindings?: any): EnvironmentConf
 
     const source: any = isCloudflare ? cloudflareBindings : process.env;
 
-    // Direct extraction dengan Fallback Hardcoded (Hanya untuk jaga-jaga di Lokal)
+    // Direct extraction dari environment variables
     const dbUrl = (source['DATABASE_URL_INTERNAL_CONTROL_PANEL'] || process.env['DATABASE_URL_INTERNAL_CONTROL_PANEL'] || '').toString();
-    const finalDbUrl = dbUrl || 'mysql://4JnU6pSVxwRM5LU.root:nde9tTv5hnlcYT6n@gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/test';
+    if (!dbUrl) {
+        throw new Error('DATABASE_URL_INTERNAL_CONTROL_PANEL environment variable is required');
+    }
 
     return {
-        DATABASE_URL_INTERNAL_CONTROL_PANEL: finalDbUrl,
+        DATABASE_URL_INTERNAL_CONTROL_PANEL: dbUrl,
         JWT_SECRET: (source['JWT_SECRET'] || 'dev-secret-key-123').toString(),
         NODE_ENV: (source['NODE_ENV'] || 'development').toString(),
         BACKEND_CONTROL_PANEL_PORT: parseInt((source['BACKEND_CONTROL_PANEL_PORT'] || source['PORT'] || '3001').toString(), 10),

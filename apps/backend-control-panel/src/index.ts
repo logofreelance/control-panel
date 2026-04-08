@@ -139,14 +139,6 @@ rootApp.all('*', async (c) => {
         // 1. Ambil env (dari .env lokal atau Cloudflare Bindings)
         const env = loadEnvironmentConfig(c.env);
 
-        /**
-         * FORCE FALLBACK JIKA KOSONG (Shield Lokal)
-         * Ini memastikan saat TSX macet me-load env.ts terbaru, aplikasi tetap hidup.
-         */
-        if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL || env.DATABASE_URL_INTERNAL_CONTROL_PANEL === '') {
-            (env as any).DATABASE_URL_INTERNAL_CONTROL_PANEL = 'mysql://4JnU6pSVxwRM5LU.root:nde9tTv5hnlcYT6n@gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/test';
-        }
-
         // 2. Inisialisasi app hanya sekali
         if (!cachedApp) {
             console.log("[ROOT] Initializing App Instance (Lazy Build with Shield)...");

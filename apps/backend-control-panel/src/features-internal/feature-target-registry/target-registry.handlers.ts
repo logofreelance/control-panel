@@ -8,6 +8,7 @@
 import type { Context } from 'hono';
 import type { InternalDatabaseConnection } from '../internal.db';
 import * as service from './target-registry.service';
+import { requireAuthOrRespond } from '../feature-auth/auth.middleware';
 
 function respondSuccess(c: Context, data: any, message: string, statusCode = 200) {
     return c.json({ success: true, data, message }, statusCode as any);
@@ -18,6 +19,9 @@ function respondError(c: Context, errorCode: string, message: string, statusCode
 }
 
 export async function handleListTargetSystems(c: Context, db: InternalDatabaseConnection) {
+    const authError = requireAuthOrRespond(c);
+    if (authError) return authError;
+    
     try {
         const list = await service.listTargetSystems(db);
         return respondSuccess(c, list, 'Target systems retrieved');
@@ -27,6 +31,9 @@ export async function handleListTargetSystems(c: Context, db: InternalDatabaseCo
 }
 
 export async function handleCreateTargetSystem(c: Context, db: InternalDatabaseConnection) {
+    const authError = requireAuthOrRespond(c);
+    if (authError) return authError;
+    
     try {
         const body = await c.req.json();
         const created = await service.createTargetSystem(db, body);
@@ -37,6 +44,9 @@ export async function handleCreateTargetSystem(c: Context, db: InternalDatabaseC
 }
 
 export async function handleUpdateTargetSystem(c: Context, db: InternalDatabaseConnection) {
+    const authError = requireAuthOrRespond(c);
+    if (authError) return authError;
+    
     try {
         const id = c.req.param('id')!;
         const body = await c.req.json();
@@ -49,6 +59,9 @@ export async function handleUpdateTargetSystem(c: Context, db: InternalDatabaseC
 }
 
 export async function handleDeleteTargetSystem(c: Context, db: InternalDatabaseConnection) {
+    const authError = requireAuthOrRespond(c);
+    if (authError) return authError;
+    
     try {
         const id = c.req.param('id')!;
         await service.removeTargetSystem(db, id);
@@ -60,6 +73,9 @@ export async function handleDeleteTargetSystem(c: Context, db: InternalDatabaseC
 }
 
 export async function handleTestConnection(c: Context) {
+    const authError = requireAuthOrRespond(c);
+    if (authError) return authError;
+    
     try {
         const { databaseUrl } = await c.req.json();
         if (!databaseUrl) {
@@ -73,6 +89,9 @@ export async function handleTestConnection(c: Context) {
 }
 
 export async function handleHealthCheck(c: Context, db: InternalDatabaseConnection) {
+    const authError = requireAuthOrRespond(c);
+    if (authError) return authError;
+    
     try {
         const id = c.req.param('id')!;
         const result = await service.performHealthCheck(db, id);

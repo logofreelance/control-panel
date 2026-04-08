@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icons, LABELS as L } from '@/lib/config/client';
 import { LoginForm } from './LoginForm';
+import { apiClient } from '@/lib/api-client';
 import {
   Card,
   CardHeader,
@@ -134,10 +135,29 @@ export function LoginView({ initialSystem, initialBranding }: LoginViewProps) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // REMOVED: checkSystem() — was fetching env.API_URL/system-status client-side
-  // REMOVED: fetchBranding() — was fetching env.API_URL/settings client-side
-  // REMOVED: useEffect(() => { checkSystem(); }, [checkSystem]);
-  // Data sekarang datang dari Server Component via props (auth.server.ts)
+  // Client-side fallback jika SSR gagal (initialSystem undefined)
+  const checkSystem = async () => {
+    try {
+      const data = await apiClient.get<any>('/system-status');
+      if (!data.hasDbUrl || !data.isDbConnected) {
+        setSystemState('db_error');
+        setSystemError('database not available');
+      } else if (!data.isAdminCreated) {
+        setSystemState('need_install');
+      } else {
+        setSystemState('ready');
+      }
+    } catch (err) {
+      setSystemState('db_error');
+      setSystemError('backend unreachable');
+    }
+  };
+
+  useEffect(() => {
+    if (systemState === 'loading') {
+      checkSystem();
+    }
+  }, [systemState]);
 
   if (systemState === 'loading') return <LoadingScreen />;
   if (systemState === 'no_database') return <ErrorScreen error={systemError} onRetry={() => window.location.reload()} />;

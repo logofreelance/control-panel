@@ -12,12 +12,9 @@ export function middleware(request: NextRequest) {
     const sessionCookie = request.cookies.get('auth_session');
     const hasSession = !!(sessionCookie && sessionCookie.value);
 
-    console.log(`[MIDDLEWARE] Path: ${pathname} | HasSession: ${hasSession}`);
-
     // LOGIC: If on login/install page
     if (pathname === '/login' || pathname === '/install') {
         if (hasSession) {
-            console.log(`[MIDDLEWARE] Redirecting from ${pathname} to dashboard (/) because session exists`);
             return NextResponse.redirect(new URL('/', request.url));
         }
         return NextResponse.next();
@@ -25,7 +22,6 @@ export function middleware(request: NextRequest) {
 
     // LOGIC: Protect everything else (Dashboard)
     if (!hasSession) {
-        console.log(`[MIDDLEWARE] Unauthorized access to ${pathname} | Redirecting to /login`);
         return NextResponse.redirect(new URL('/login', request.url));
     }
 

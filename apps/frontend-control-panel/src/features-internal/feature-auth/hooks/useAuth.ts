@@ -16,13 +16,9 @@ export function useAuth() {
         setStatus({ loading: true });
 
         try {
-            console.log("[USE_AUTH] Calling authApi.login...");
             const data = await authApi.login(formData);
-            console.log("[USE_AUTH] Login result received:", data);
 
             if (data.success) {
-                console.log("[USE_AUTH] Success! Syncing cookie and redirecting...");
-                
                 // MANUALLY SET COOKIE ON FRONTEND DOMAIN
                 // Ini penting karena domain backend & frontend berbeda di workers.dev
                 const SESSION_ID = data.data?.token || (data as any).token;
@@ -33,7 +29,6 @@ export function useAuth() {
                 router.replace(AUTH_ROUTES.dashboard);
                 setTimeout(() => window.location.reload(), 300);
             } else {
-                console.log("[USE_AUTH] Login failed (success: false)");
                 const message = data.error?.message || data.message || AUTH_UI_LABELS.login.failedToConnect;
                 setStatus({ message: `LOGIN FAILED: ${message}`, status: 'error', loading: false });
             }

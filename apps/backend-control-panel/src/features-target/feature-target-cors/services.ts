@@ -41,11 +41,10 @@ async function queryHelper(db: any, sql: string, params: any[] = []) {
     }
 
     try {
-        console.log(`[QUERY HELPER] Executing: ${finalSql}`);
         const res: any = await db.execute(finalSql);
         return Array.isArray(res) ? res : (res.rows || []);
     } catch (e: any) {
-        console.error(`[QUERY HELPER ERROR] SQL: ${finalSql}`, e.message);
+        console.error(`[QUERY HELPER ERROR]`, e.message);
         throw e;
     }
 }
@@ -68,7 +67,6 @@ async function ensureTableExists(db: any) {
             if (hasDomainUrl) return true;
 
             // Missing domain_url - need to recreate or alter. Recreate is safer for this module.
-            console.log(`[CORS SERVICE] Table ${tableName} missing domain_url column. Recreating...`);
             await queryHelper(db, `DROP TABLE \`${tableName}\``);
         }
 
@@ -83,7 +81,6 @@ async function ensureTableExists(db: any) {
             )
         `;
         await queryHelper(db, createSql);
-        console.log(`[CORS SERVICE] Created/Recreated table ${tableName}`);
         return true;
     } catch (e: any) {
         console.error(`[CORS SERVICE] Failed to ensure table ${tableName}:`, e.message);

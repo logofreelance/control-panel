@@ -80,9 +80,6 @@ export function useRouteBuilder(targetId: string) {
                 ? { ...categoryForm, id: editingCategory.id }
                 : categoryForm;
                 
-            console.log("Editing Category state:", editingCategory);
-            console.log("Payload being sent:", payload);
-
             const res = await fetch(DYNAMIC_ROUTES_API.categories.save, {
                 method: 'POST',
                 headers: getJsonHeaders(),

@@ -155,7 +155,6 @@ export const MiscController = {
   getApiRoutes: async (c: Context<{ Variables: { targetDb: any, targetId: string } }>) => {
     try {
       const routes = await CoreRouteService.getAll(c.get("targetDb"));
-      console.log(`[CONTROLLER] getApiRoutes returning ${routes.length} routes`);
       return c.json({
         status: API_STATUS.SUCCESS,
         data: { routes },

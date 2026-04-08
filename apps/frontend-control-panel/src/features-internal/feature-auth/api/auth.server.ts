@@ -46,7 +46,6 @@ export interface BrandingResult {
 export async function checkSystemServer(): Promise<SystemCheckResult> {
     try {
         const url = `${getBackendUrl()}/api/system-status`;
-        console.log(`[AUTH_SERVER] Checking system status: ${url}`);
         const res = await fetch(url, { cache: 'no-store' });
         const data = await res.json();
 
@@ -71,7 +70,6 @@ export async function checkSystemServer(): Promise<SystemCheckResult> {
 export async function fetchBrandingServer(): Promise<BrandingResult | null> {
     try {
         const url = `${getBackendUrl()}/api/settings`;
-        console.log(`[AUTH_SERVER] Fetching branding: ${url}`);
         const res = await fetch(url, { cache: 'no-store' });
         const data = await res.json();
         if ((data.status === 'success' || data.success) && data.data) {

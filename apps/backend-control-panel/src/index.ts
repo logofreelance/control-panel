@@ -59,10 +59,6 @@ async function buildAppInstance(env: EnvironmentConfig) {
             '/api/app-users', '/api/monitor-analytics'
         ].some(p => path.startsWith(p));
 
-        if (isTargetFeature) {
-            console.log(`[MIDDLEWARE] Path: ${path}, TargetID: ${targetId || 'MISSING'}`);
-        }
-
         if (isTargetFeature && targetId) {
             try {
                 if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL) throw new Error("INTERNAL DB URL MISSING");
@@ -141,7 +137,6 @@ rootApp.all('*', async (c) => {
 
         // 2. Inisialisasi app hanya sekali
         if (!cachedApp) {
-            console.log("[ROOT] Initializing App Instance (Lazy Build with Shield)...");
             cachedApp = await buildAppInstance(env);
         }
 

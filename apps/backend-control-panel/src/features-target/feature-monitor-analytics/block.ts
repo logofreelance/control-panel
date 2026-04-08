@@ -22,7 +22,6 @@ export function createFeatureMonitorAnalytics() {
         try {
             const targetDb = getDb(c);
             const targetId = c.get('targetId');
-            console.log(`[MONITOR-ANALYTICS] Fetching dashboard stats for target: ${targetId}`);
 
             // 1. Performance Aggregates (24h) - Isolated to prevent failure if logs table missing
             let aggregates = { total: 0, success: 0, avg_latency: 0 };
@@ -63,7 +62,6 @@ export function createFeatureMonitorAnalytics() {
                     // Robust parsing for different possible column names
                     const countVal = rows[0]?.count ?? rows[0]?.cnt ?? rows[0]?.['COUNT(*)'] ?? 0;
                     inventoryResults[key] = Number(countVal);
-                    console.log(`[MONITOR-ANALYTICS] ${key} count: ${inventoryResults[key]}`);
                 } catch (e: any) {
                     console.warn(`[MONITOR-ANALYTICS] Table ${key} not found or query failed: ${e.message}`);
                     inventoryResults[key] = 0;

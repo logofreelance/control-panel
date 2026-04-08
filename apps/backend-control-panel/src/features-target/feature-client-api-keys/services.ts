@@ -41,11 +41,10 @@ async function queryHelper(db: any, sql: string, params: any[] = []) {
     }
 
     try {
-        console.log(`[QUERY HELPER] Executing: ${finalSql}`);
         const res: any = await db.execute(finalSql);
         return Array.isArray(res) ? res : (res.rows || []);
     } catch (e: any) {
-        console.error(`[QUERY HELPER ERROR] SQL: ${finalSql}`, e.message);
+        console.error(`[QUERY HELPER ERROR]`, e.message);
         throw e;
     }
 }
@@ -77,7 +76,6 @@ async function ensureTableExists(db: any) {
             )
         `;
         await queryHelper(db, createSql);
-        console.log(`[API KEYS SERVICE] Created/Recreated table ${tableName}`);
         return true;
     } catch (e: any) {
         console.error(`[API KEYS SERVICE] Failed to ensure table ${tableName}:`, e.message);

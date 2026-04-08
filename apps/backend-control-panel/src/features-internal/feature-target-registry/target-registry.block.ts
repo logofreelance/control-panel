@@ -21,7 +21,6 @@ async function ensureTable(db: any) {
             await db.execute('ALTER TABLE target_systems ADD COLUMN route_count INT DEFAULT 0');
         } catch { /* Column already exists — ignore */ }
 
-        console.log('[TARGET-REGISTRY] ✅ target_systems table ready');
         return true;
     } catch (err: any) {
         console.error('[TARGET-REGISTRY] ❌ Migration failed:', err?.message || String(err));

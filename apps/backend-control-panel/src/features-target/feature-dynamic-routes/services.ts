@@ -52,8 +52,6 @@ export const queryHelper = async (db: any, sql: string, params: any[] = []) => {
   }
 
   try {
-    console.log("[QUERY HELPER] Final SQL:", finalSql);
-
     // Execute WITHOUT params — no ? reaches TiDB server
     const res: any = await db.execute(finalSql);
 
@@ -62,12 +60,7 @@ export const queryHelper = async (db: any, sql: string, params: any[] = []) => {
     }
     return res.rows || [];
   } catch (error: any) {
-    console.error(
-      "[QUERY HELPER ERROR]",
-      error.message,
-      "Final SQL:",
-      finalSql,
-    );
+    console.error("[QUERY HELPER ERROR]", error.message);
     throw error;
   }
 };
@@ -82,7 +75,6 @@ async function checkAndCreateTableIfNotExists(
       // Verify schema: check if 'id' column is VARCHAR(36)
       const idCol = columns.find((c: any) => (c.Field || c.column_name) === "id");
       if (idCol && idCol.Type && !idCol.Type.toLowerCase().includes("varchar")) {
-        console.log(`[DB] Table ${tableName} has wrong id type: ${idCol.Type}, recreating...`);
         await queryHelper(db, `DROP TABLE \`${tableName}\``);
         // Fall through to create
       } else {
@@ -162,11 +154,9 @@ async function checkAndCreateTableIfNotExists(
     }
 
     await queryHelper(db, createSql);
-    console.log(`[DB] Created table ${tableName}`);
 
     // SEEDING: If this is CORE_ROUTES, insert default system routes
     if (tableName === TARGET_TABLES.CORE_ROUTES) {
-      console.log(`[DB] Seeding ${tableName} with default auth routes...`);
       for (const route of SYSTEM_AUTH_ROUTES) {
         await queryHelper(
           db,
@@ -341,23 +331,19 @@ export const EndpointService = {
 
 export const CoreRouteService = {
   getAll: async (db: any) => {
-    console.log("[CORE ROUTE SERVICE] getAll called");
     const tableOk = await checkAndCreateTableIfNotExists(db, TARGET_TABLES.CORE_ROUTES);
     if (!tableOk) {
-      console.error("[CORE ROUTE SERVICE] Failed to ensure table exists");
       throw new Error(`Table ${TARGET_TABLES.CORE_ROUTES} could not be verified`);
     }
 
     // Secondary check: if table is empty, seed it
     const existing = await queryHelper(db, `SELECT COUNT(*) as cnt FROM \`${TARGET_TABLES.CORE_ROUTES}\``);
     const count = Number(existing[0]?.cnt || 0);
-    console.log(`[CORE ROUTE SERVICE] Table ${TARGET_TABLES.CORE_ROUTES} has ${count} records`);
     
     // Proactive schema check: ensure metadata column exists
     await queryHelper(db, `ALTER TABLE \`${TARGET_TABLES.CORE_ROUTES}\` ADD COLUMN IF NOT EXISTS \`metadata\` TEXT`).catch(() => {});
 
     // ALWAYS ensure system routes are up to date with latest metadata
-    console.log("[CORE ROUTE SERVICE] Syncing system routes metadata...");
     for (const route of SYSTEM_AUTH_ROUTES) {
         await queryHelper(
             db,
@@ -377,7 +363,6 @@ export const CoreRouteService = {
       db,
       `SELECT id, route_path as path, method, handler, description, metadata, created_at FROM \`${TARGET_TABLES.CORE_ROUTES}\``,
     );
-    console.log(`[CORE ROUTE SERVICE] Returning ${routes.length} routes`);
     return routes;
   },
 };

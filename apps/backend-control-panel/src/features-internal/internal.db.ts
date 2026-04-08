@@ -12,7 +12,6 @@ export type InternalDatabaseConnection = ReturnType<typeof connect>;
 
 export function buildInternalDatabaseConnection(databaseUrl: string): InternalDatabaseConnection {
     if (!databaseUrl) throw new Error("INTERNAL DB URL MISSING");
-    console.log("[DB] Connecting to INTERNAL_CONTROL_PANEL Database...");
     
     // Konversi mysql:// ke https:// untuk TiDB Serverless HTTP driver
     const httpUrl = databaseUrl.replace('mysql://', 'https://').replace(':4000', '');

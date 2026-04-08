@@ -23,13 +23,11 @@ export function createFeatureTargetDatabaseSchema() {
             const oldExists: any = await db.execute("SHOW TABLES LIKE 'data_sources'");
             const oldExistsRows = Array.isArray(oldExists) ? oldExists : (oldExists.rows || []);
             if (oldExistsRows.length > 0) {
-                console.log("[SCHEMA] Migrating data_sources to database_tables...");
                 await db.execute("RENAME TABLE data_sources TO database_tables");
                 return true;
             }
 
             // Create new table
-            console.log("[SCHEMA] Creating database_tables...");
             await db.execute(`
                 CREATE TABLE database_tables (
                     id VARCHAR(36) PRIMARY KEY,

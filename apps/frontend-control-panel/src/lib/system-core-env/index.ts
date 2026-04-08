@@ -79,7 +79,6 @@ export class EnvCore {
     registerDriver(driver: IEnvDriver): void {
         this.drivers.push(driver);
         this.drivers.sort((a, b) => a.priority - b.priority);
-        console.log(`[ENV-CORE] Driver registered: ${driver.name} (priority: ${driver.priority})`);
     }
 
     /**

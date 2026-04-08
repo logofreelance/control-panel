@@ -37,12 +37,9 @@ class ApiClient {
             credentials: 'include', // Automatically send and receive cookies from backend
         };
 
-        console.log(`[API_CLIENT] Fetching: ${url.toString()} with credentials: include`);
         const response = await fetch(url.toString(), fetchOptions);
-        console.log(`[API_CLIENT] Received Status: ${response.status}`);
 
         if (response.status === 401) {
-            console.log(`[API_CLIENT] 401 Detected. Logic: Check redirect or return JSON.`);
             // Only redirect if we are NOT already on the login page
             if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
                 window.location.href = '/login';
@@ -50,14 +47,12 @@ class ApiClient {
             // If we ARE on login page, let the caller handle it (show error message)
             if (response.headers.get('Content-Type')?.includes('application/json')) {
                 const data = await response.json();
-                console.log(`[API_CLIENT] 401 JSON Response:`, data);
                 return data;
             }
             throw new Error('Unauthorized');
         }
 
         const data = await response.json();
-        console.log(`[API_CLIENT] Success Data Response:`, data);
         return data as T;
     }
 

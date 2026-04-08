@@ -15,7 +15,6 @@ import { setupSettingsRoutes } from './settings.routes';
 async function ensureTable(db: any) {
     try {
         await db.execute('CREATE TABLE IF NOT EXISTS site_settings (id VARCHAR(36) PRIMARY KEY, setting_key VARCHAR(100) NOT NULL UNIQUE, setting_value TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)');
-        console.log('[SETTINGS] ✅ site_settings table ready');
         return true;
     } catch (err: any) {
         console.error('[SETTINGS] ❌ Migration failed:', err?.message || String(err));

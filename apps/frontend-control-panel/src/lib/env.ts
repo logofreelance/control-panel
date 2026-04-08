@@ -57,14 +57,28 @@ if (envCore.getStatus().drivers.length === 0) {
 export const env = {
     /**
      * API URL untuk CLIENT-SIDE (browser).
-     * SELALU return '/api' (relative path) agar request melewati
-     * Next.js Rewrite di next.config.ts → backend tersembunyi.
-     *
-     * ⚠️ JANGAN return URL absolut di sini.
-     * ⚠️ JANGAN hardcode localhost atau workers.dev di sini.
+     * 
+     * Di Local (localhost): Pakai '/api' (Next.js Route Handler)
+     * Di Production (Cloudflare): Pakai URL backend langsung
+     * 
+     * Note: OpenNext tidak support Next.js API Routes, jadi di production
+     * kita harus直接 call backend URL.
      */
     get API_URL(): string {
-        return '/api';
+        if (typeof window === 'undefined') {
+            return '/api';
+        }
+        
+        const isLocalhost = window.location.hostname === 'localhost' 
+            || window.location.hostname === '127.0.0.1';
+        
+        if (isLocalhost) {
+            return '/api';
+        }
+        
+        // Di production Cloudflare, gunakan backend URL langsung
+        // karena OpenNext tidak support API Routes
+        return process.env.NEXT_PUBLIC_API_URL || '/api';
     }
 };
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Icons, LABELS as L } from '@/lib/config/client';
 import { LoginForm } from './LoginForm';
 import { apiClient } from '@/lib/api-client';
+import { env } from '@/lib/env';
 import {
   Card,
   CardHeader,
@@ -137,8 +138,10 @@ export function LoginView({ initialSystem, initialBranding }: LoginViewProps) {
 
   // Client-side fallback jika SSR gagal (initialSystem undefined)
   const checkSystem = async () => {
+    console.log('[LOGIN_VIEW] Starting client-side check, apiClient baseUrl:', env.API_URL);
     try {
       const data = await apiClient.get<any>('/system-status');
+      console.log('[LOGIN_VIEW] system-status response:', data);
       if (!data.hasDbUrl || !data.isDbConnected) {
         setSystemState('db_error');
         setSystemError('database not available');
@@ -147,9 +150,10 @@ export function LoginView({ initialSystem, initialBranding }: LoginViewProps) {
       } else {
         setSystemState('ready');
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error('[LOGIN_VIEW] System check error:', err);
       setSystemState('db_error');
-      setSystemError('backend unreachable');
+      setSystemError(err?.message || 'backend unreachable');
     }
   };
 

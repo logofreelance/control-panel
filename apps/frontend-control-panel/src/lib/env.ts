@@ -58,11 +58,9 @@ export const env = {
     /**
      * API URL untuk CLIENT-SIDE (browser).
      * 
-     * Di Local (localhost): Pakai '/api' (Next.js Route Handler)
-     * Di Production (Cloudflare): Pakai URL backend langsung
-     * 
-     * Note: OpenNext tidak support Next.js API Routes, jadi di production
-     * kita harus直接 call backend URL.
+     * Di Local (localhost): Pakai '/api' (Route Handler)
+     * Di Vercel production: Pakai '/api' (Route Handler - work natively!)
+     * Di Cloudflare production: Pakai URL backend langsung
      */
     get API_URL(): string {
         if (typeof window === 'undefined') {
@@ -76,9 +74,16 @@ export const env = {
             return '/api';
         }
         
-        // Di production Cloudflare, gunakan backend URL langsung
-        // karena OpenNext tidak support API Routes
-        return process.env.NEXT_PUBLIC_API_URL || '/api';
+        // Detect Cloudflare Workers by worker name in hostname
+        const isCloudflare = window.location.hostname.includes('.workers.dev');
+        
+        if (isCloudflare) {
+            // Cloudflare Workers - use direct backend URL (no API routes support)
+            return process.env.NEXT_PUBLIC_API_URL || '/api';
+        }
+        
+        // Vercel или lain - use local route handler
+        return '/api';
     }
 };
 

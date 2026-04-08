@@ -11,7 +11,11 @@ class ApiClient {
     }
 
     private async request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-        const url = new URL(`${this.baseUrl}${endpoint}`);
+        const urlStr = `${this.baseUrl}${endpoint}`;
+        // Jika urlStr adalah path relatif (misal '/api/login'), kita harus menyediakan base URL 
+        // agar 'new URL()' tidak melempar error "Invalid URL".
+        const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+        const url = urlStr.startsWith('http') ? new URL(urlStr) : new URL(urlStr, base);
         
         if (options.params) {
             Object.entries(options.params).forEach(([key, value]) => {

@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { env } from '@/lib/env';
 import { Icons, LABELS as L } from '@/lib/config/client';
 import { LoginForm } from './LoginForm';
 import {
@@ -19,6 +18,12 @@ import { TextHeading } from '@/components/ui/text-heading';
 import { BRAND } from '@/lib/config';
 
 type SystemState = 'loading' | 'no_database' | 'db_error' | 'need_install' | 'ready';
+
+// Props dari Server Component (login/page.tsx)
+interface LoginViewProps {
+  initialSystem?: { ready: boolean; needInstall: boolean; error: string | null };
+  initialBranding?: { siteName: string; primaryColor: string } | null;
+}
 
 const DecorativeBackground = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -89,74 +94,54 @@ const InstallRedirectScreen = () => (
   </div>
 );
 
-export function LoginView() {
-  const [systemState, setSystemState] = useState<SystemState>('loading');
-  const [systemError, setSystemError] = useState<string>('');
+export function LoginView({ initialSystem, initialBranding }: LoginViewProps) {
+  // Derive initial state dari server props (bukan client-side fetch)
+  const [systemState, setSystemState] = useState<SystemState>(() => {
+    if (!initialSystem) return 'loading'; // Fallback jika SSR gagal
+    if (initialSystem.error) return 'db_error';
+    if (initialSystem.needInstall) return 'need_install';
+    return 'ready';
+  });
+  const [systemError, setSystemError] = useState<string>(
+    initialSystem?.error || ''
+  );
   const [branding, setBranding] = useState<{ siteName: string; primaryColor: string }>({
-    siteName: BRAND.NAME,
-    primaryColor: BRAND.PRIMARY_COLOR,
+    siteName: initialBranding?.siteName || BRAND.NAME,
+    primaryColor: initialBranding?.primaryColor || BRAND.PRIMARY_COLOR,
   });
 
   const router = useRouter();
 
-  const fetchBranding = useCallback(() => {
-    fetch(`${env.API_URL}/settings`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === 'success' && data.data) {
-          setBranding(data.data);
-          const { primaryColor } = data.data;
-          document.documentElement.style.setProperty('--primary', primaryColor);
-          
-          let glowValue = primaryColor;
-          if (primaryColor.startsWith('#')) {
-            glowValue = primaryColor + '15'; 
-          } else if (primaryColor.includes('oklch') || primaryColor.includes('rgb')) {
-            glowValue = `color-mix(in srgb, ${primaryColor}, transparent 90%)`;
-          }
-          document.documentElement.style.setProperty('--primary-glow', glowValue);
-          
-          document.title = `${data.data.siteName} - ${L.common.auth.login}`;
-
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const checkSystem = useCallback(async () => {
-    setSystemState('loading');
-    try {
-      const res = await fetch(`${env.API_URL}/system-status`);
-      const data = await res.json();
-
-      if (!data.hasDbUrl)
-        return (
-          setSystemState('no_database'),
-          setSystemError(L.common.login.databaseUrlNotFound)
-        );
-      if (!data.isDbConnected)
-        return (setSystemState('db_error'), setSystemError(L.common.login.unableToConnect));
-      if (!data.isAdminCreated) {
-        setSystemState('need_install');
-        setTimeout(() => router.replace('/install'), 1500);
-        return;
-      }
-
-      setSystemState('ready');
-      fetchBranding();
-    } catch {
-      setSystemState('db_error');
-      setSystemError(L.common.system.backendServerError);
-    }
-  }, [router, fetchBranding]);
-
+  // Apply branding + handle install redirect on mount (client-side only)
   useEffect(() => {
-    checkSystem();
-  }, [checkSystem]);
+    if (initialBranding?.primaryColor) {
+      const color = initialBranding.primaryColor;
+      document.documentElement.style.setProperty('--primary', color);
+
+      let glowValue = color;
+      if (color.startsWith('#')) {
+        glowValue = color + '15';
+      } else if (color.includes('oklch') || color.includes('rgb')) {
+        glowValue = `color-mix(in srgb, ${color}, transparent 90%)`;
+      }
+      document.documentElement.style.setProperty('--primary-glow', glowValue);
+    }
+    if (initialBranding?.siteName) {
+      document.title = `${initialBranding.siteName} - ${L.common.auth.login}`;
+    }
+    if (initialSystem?.needInstall) {
+      setTimeout(() => router.replace('/install'), 1500);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // REMOVED: checkSystem() — was fetching env.API_URL/system-status client-side
+  // REMOVED: fetchBranding() — was fetching env.API_URL/settings client-side
+  // REMOVED: useEffect(() => { checkSystem(); }, [checkSystem]);
+  // Data sekarang datang dari Server Component via props (auth.server.ts)
 
   if (systemState === 'loading') return <LoadingScreen />;
-  if (systemState === 'no_database') return <ErrorScreen error={systemError} onRetry={checkSystem} />;
-  if (systemState === 'db_error') return <ErrorScreen error={systemError} onRetry={checkSystem} />;
+  if (systemState === 'no_database') return <ErrorScreen error={systemError} onRetry={() => window.location.reload()} />;
+  if (systemState === 'db_error') return <ErrorScreen error={systemError} onRetry={() => window.location.reload()} />;
   if (systemState === 'need_install') return <InstallRedirectScreen />;
 
   return (
@@ -197,3 +182,4 @@ export function LoginView() {
     </div>
   );
 }
+

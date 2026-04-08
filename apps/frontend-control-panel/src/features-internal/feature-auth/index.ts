@@ -1,4 +1,5 @@
 export * from './api/auth.api';
+export * from './api/auth.server';
 export * from './components/LoginForm';
 export * from './components/LoginView';
 export * from './components/UserSettingsView';

@@ -11,19 +11,27 @@ import * as repo from './target-registry.repository';
 import { TARGET_SYSTEM_STATUS } from './target-registry.config';
 import type { TargetSystem, TargetSystemRow, CreateTargetInput, UpdateTargetInput, HealthCheckResult } from './target-registry.types';
 
-/** Transform a DB row (snake_case) into a frontend-ready object (camelCase) */
-function rowToTargetSystem(row: TargetSystemRow): TargetSystem {
+/** DTO untuk LIST response — TANPA databaseUrl (HARDENING) */
+function rowToTargetSystemSafe(row: TargetSystemRow) {
     return {
         id: row.id,
         name: row.name,
         description: row.description || '',
         apiEndpoint: row.api_endpoint || null,
-        databaseUrl: maskDatabaseUrl(row.database_url),
+        // databaseUrl DIHAPUS dari list response — tidak dibutuhkan di list view
         status: (row.status as TargetSystem['status']) || TARGET_SYSTEM_STATUS.UNKNOWN,
         routeCount: row.route_count || 0,
         lastHealthCheck: row.last_health_check,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+    };
+}
+
+/** DTO untuk DETAIL/EDIT response — databaseUrl di-mask */
+function rowToTargetSystemFull(row: TargetSystemRow): TargetSystem {
+    return {
+        ...rowToTargetSystemSafe(row),
+        databaseUrl: maskDatabaseUrl(row.database_url),
     };
 }
 
@@ -46,14 +54,14 @@ function connectToTargetDb(databaseUrl: string) {
     return connect({ url: httpUrl });
 }
 
-export async function listTargetSystems(db: InternalDatabaseConnection): Promise<TargetSystem[]> {
+export async function listTargetSystems(db: InternalDatabaseConnection) {
     const rows = await repo.findAllTargetSystems(db);
-    return rows.map(rowToTargetSystem);
+    return rows.map(rowToTargetSystemSafe);
 }
 
 export async function getTargetSystemById(db: InternalDatabaseConnection, id: string): Promise<TargetSystem | null> {
     const row = await repo.findTargetSystemById(db, id);
-    return row ? rowToTargetSystem(row) : null;
+    return row ? rowToTargetSystemFull(row) : null;
 }
 
 export async function createTargetSystem(db: InternalDatabaseConnection, input: CreateTargetInput): Promise<TargetSystem> {
@@ -70,7 +78,7 @@ export async function createTargetSystem(db: InternalDatabaseConnection, input: 
 
     const created = await repo.findTargetSystemById(db, id);
     if (!created) throw new Error('Failed to create target system');
-    return rowToTargetSystem(created);
+    return rowToTargetSystemFull(created);
 }
 
 export async function updateTargetSystem(db: InternalDatabaseConnection, id: string, input: UpdateTargetInput): Promise<TargetSystem> {
@@ -87,7 +95,7 @@ export async function updateTargetSystem(db: InternalDatabaseConnection, id: str
 
     const updated = await repo.findTargetSystemById(db, id);
     if (!updated) throw new Error('Failed to update target system');
-    return rowToTargetSystem(updated);
+    return rowToTargetSystemFull(updated);
 }
 
 export async function removeTargetSystem(db: InternalDatabaseConnection, id: string): Promise<void> {

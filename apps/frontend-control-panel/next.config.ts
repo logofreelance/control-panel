@@ -18,9 +18,15 @@ const nextConfig: NextConfig = {
     },
   },
 
-  // Rewrites for API proxy - uses env variable for production
+  // Rewrites: proxy /api/* ke backend (URL tersembunyi dari browser)
+  // Priority: BACKEND_INTERNAL_URL (server-only) → NEXT_PUBLIC_API_URL (build-time) → localhost
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const apiUrl = process.env.BACKEND_INTERNAL_URL
+        || process.env.NEXT_PUBLIC_API_URL
+        || 'http://localhost:3001';
+
+    console.log(`[NEXT_CONFIG] API Rewrite destination: ${apiUrl}`);
+
     return [
       {
         source: "/api/:path*",

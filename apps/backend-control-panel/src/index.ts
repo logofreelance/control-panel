@@ -121,7 +121,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
             hasDbUrl,
             isDbConnected,
             isAdminCreated,
-            version: '1.0.1' 
+            // HARDENING: version dihapus dari response (tidak dibutuhkan frontend)
         });
     });
     

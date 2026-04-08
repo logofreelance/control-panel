@@ -11,7 +11,7 @@ export interface TargetSystem {
     name: string;
     description: string;
     apiEndpoint: string | null;
-    databaseUrl: string;         // masked for display (password hidden)
+    databaseUrl?: string;        // optional: hanya ada di detail/edit response (masked)
     status: TargetSystemStatus;
     routeCount: number;
     lastHealthCheck: string | null;

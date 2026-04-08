@@ -12,18 +12,12 @@
  * - process.env tanpa NEXT_PUBLIC_ prefix tidak di-bundle oleh Webpack
  */
 function getBackendUrl(): string {
-    // Di Cloudflare Worker, process.env TIDAK tersedia seperti Node.js
-    // Jadi kita perlu detect environment dan fallback ke nilai yang known
+    // Di SSR konteks Cloudflare Worker, process.env tidak tersedia
+    // Kita gunakan URL langsung yang sudah diketahui
+    // Saat production → backend worker URL
+    // Saat local dev → localhost
     
-    // Jika di localhost development
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-        return 'http://localhost:3001';
-    }
-    
-    // Di production Cloudflare, gunakan URL langsung
-    // (NEXT_PUBLIC_API_URL di-set di worker vars)
-    // Default ke backend worker URL jika tidak ada
-    return process.env.NEXT_PUBLIC_API_URL || 'https://backend-control-panel.logofreelance-com.workers.dev';
+    return 'https://backend-control-panel.logofreelance-com.workers.dev';
 }
 
 // ======================================================

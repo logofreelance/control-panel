@@ -6,7 +6,6 @@
  */
 
 export { ApiKeysAndCorsView } from "./components/ApiKeysAndCorsView";
-export { IntegrationGuide } from "./components/IntegrationGuide";
 export * from "./types";
 export * from "./composables/useClientApiKeys";
 export * from "./composables/useCorsDomains";

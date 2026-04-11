@@ -365,6 +365,13 @@ export const MenuIcons = {
     href: "/api-keys",
     category: "Connectivity",
   },
+  integration: {
+    id: "integration",
+    label: "Integration",
+    Icon: Code,
+    href: "/integration",
+    category: "Connectivity",
+  },
   appUsers: {
     id: "app-users",
     label: "App Users",

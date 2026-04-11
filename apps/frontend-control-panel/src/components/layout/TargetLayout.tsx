@@ -45,6 +45,7 @@ export function TargetLayout({
       items: [
         { label: 'Endpoints Builder', href: `/target/${nodeId}/routes`, icon: Icons.terminal },
         { label: 'Database Schema', href: `/target/${nodeId}/database-schema`, icon: Icons.workflow },
+        { label: 'Integration Docs', href: `/target/${nodeId}/integration`, icon: Icons.code },
       ]
     },
     {

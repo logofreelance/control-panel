@@ -25,7 +25,7 @@ import { ConfirmDialog, useToast } from '@/modules/_core';
 import { env } from '@/lib/env';
 import { useClientApiKeys } from '../composables/useClientApiKeys';
 import { useCorsDomains } from '../composables/useCorsDomains';
-import { IntegrationGuide } from './IntegrationGuide';
+
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { useTargetRegistry } from '@/features-internal/feature-target-registry/hooks/useTargetRegistry';
 import type { ClientApiKey, CorsDomain } from '../types';
@@ -79,7 +79,7 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
   const { targets, checkHealth } = useTargetRegistry();
   const currentTarget = targets.find(t => t.id === targetId);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [selectedApiUrl, setSelectedApiUrl] = useState<string>('');
+
 
   // Form states
   const [newKeyName, setNewKeyName] = useState('');
@@ -102,15 +102,6 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
     return trimmed.endsWith('/api') ? trimmed : `${trimmed.replace(/\/$/, '')}/api`;
   });
 
-  // Effect to sync selectedApiUrl with discovered endpoints
-  useEffect(() => {
-    if (!selectedApiUrl && targetApiUrls.length > 0) {
-      setSelectedApiUrl(targetApiUrls[0]);
-    } else if (selectedApiUrl && !targetApiUrls.includes(selectedApiUrl)) {
-      // If current selected is no longer in the list (after sync), reset to first
-      setSelectedApiUrl(targetApiUrls[0] || '');
-    }
-  }, [rawTargetApiUrl]); // Re-run when raw data from DB changes
   
   // Use the primary one for the examples/guide
   const primaryApiUrl = targetApiUrls[0];
@@ -288,20 +279,6 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
         </div>
         
         <div className="flex items-center gap-2 w-full sm:w-auto overflow-hidden">
-          {targetApiUrls.length > 1 && (
-            <Select
-              value={selectedApiUrl}
-              onChange={(e) => setSelectedApiUrl(e.target.value)}
-              className="flex-1 min-w-0 sm:min-w-[220px] max-w-[calc(100vw-70px)] sm:max-w-[400px] h-9 rounded-xl lowercase"
-              options={targetApiUrls.map(url => ({ label: url, value: url }))}
-            />
-          )}
-          {targetApiUrls.length <= 1 && (
-             <Badge variant="secondary" className="w-fit gap-2 lowercase py-1.5 px-3">
-                <Icons.lock className="size-3.5" /> {L.labels.protected}
-             </Badge>
-          )}
-          
           <Button
             variant="ghost"
             size="icon"
@@ -405,15 +382,10 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
         </Card>
       </section>
 
-      <section className="space-y-6">
-        <IntegrationGuide 
-          targetApiUrl={selectedApiUrl || targetApiUrls[0]} 
-          copyToClipboard={copyToClipboard}
-        />
-      </section>{/* API Keys & CORS Domains */}
+      {/* API Keys & CORS Domains */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* API Keys Section */}
-        <Card className="bg-card min-h-[400px] relative">
+        <Card className="bg-card relative h-fit">
           {keysLoading && <LoadingOverlay />}
           <div className="p-5 border-b border-border/10 flex items-center justify-between">
             <div className="flex flex-row gap-4 items-center">
@@ -492,7 +464,7 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
         </Card>
 
         {/* CORS Domains Section */}
-        <Card className="bg-card min-h-[400px] relative">
+        <Card className="bg-card relative h-fit">
           {domainsLoading && <LoadingOverlay />}
           <div className="p-5 border-b border-border/10 flex items-center justify-between">
             <div className="flex flex-row gap-4 items-center">
@@ -560,7 +532,46 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
         </Card>
       </div>
 
-      <IntegrationGuide copyToClipboard={copyToClipboard} targetApiUrl={primaryApiUrl} />
+      {/* Target API URLs List Section */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3 px-1 text-muted-foreground">
+          <Icons.link2 className="size-4" />
+          <h3 className="text-sm font-semibold uppercase tracking-wider">{L.stats.apiEndpoint}</h3>
+        </div>
+        
+        <Card className="bg-card overflow-hidden h-fit border-none shadow-none bg-transparent">
+          <CardContent className="p-0">
+            <div className="flex flex-col gap-1">
+              {targetApiUrls.map((url, i) => (
+                <div key={i} className="flex items-center justify-between py-1.5 px-1 hover:bg-muted/30 rounded-xl transition-colors group">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary/20 transition-colors">
+                      <Icons.link2 className="size-4" />
+                    </div>
+                    <span className="text-base font-normal text-foreground truncate selection:bg-primary/20">
+                      {url}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(url, L.messages.urlCopied)}
+                    className="size-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all shrink-0"
+                  >
+                    <Icons.copy className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              {targetApiUrls.length === 0 && (
+                <div className="p-6 text-center text-muted-foreground text-sm lowercase">
+                  no api endpoints discovered
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
 
       <ConfirmDialog
         isOpen={!!confirmDialog}

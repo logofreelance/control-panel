@@ -23,6 +23,7 @@ import { createFeatureRbacPermissions } from './features-target/feature-rbac-per
 import { createFeatureTargetAppUsers } from './features-target/feature-target-app-users/block';
 import { createFeatureMonitorAnalytics } from './features-target/feature-monitor-analytics/block';
 import { createFeatureMonitorDatabase } from './features-target/feature-monitor-database/block';
+import { setupIntegrationRouter } from './features-target/feature-integration/router';
 
 const apiPrefix = "/api";
 
@@ -56,7 +57,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
         const isTargetFeature = [
             '/api/monitor-database', '/api/database-schema', '/api/route-builder', 
             '/api/api-keys', '/api/cors', '/api/roles', '/api/permissions', 
-            '/api/app-users', '/api/monitor-analytics'
+            '/api/app-users', '/api/monitor-analytics', '/api/integration'
         ].some(p => path.startsWith(p));
 
         if (isTargetFeature && targetId) {
@@ -92,6 +93,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
     instance.route(`${apiPrefix}/app-users`, createFeatureTargetAppUsers());
     instance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
     instance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
+    instance.route(`${apiPrefix}/integration`, setupIntegrationRouter());
     
     instance.get(`${apiPrefix}/system-status`, async (ctx) => {
         const hasDbUrl = !!env.DATABASE_URL_INTERNAL_CONTROL_PANEL;

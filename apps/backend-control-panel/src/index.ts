@@ -1,9 +1,9 @@
 // apps/backend-control-panel/src/index.ts
-import { Hono } from "hono";
-import { logger } from "hono/logger";
-import { cors } from "hono/cors";
-import { timeout } from "hono/timeout";
-import { bodyLimit } from "hono/body-limit";
+import { Hono } from 'hono';
+import { logger } from 'hono/logger';
+import { cors } from 'hono/cors';
+import { timeout } from 'hono/timeout';
+import { bodyLimit } from 'hono/body-limit';
 import { loadEnvironmentConfig, type EnvironmentConfig } from './env';
 import { buildInternalDatabaseConnection } from './features-internal/internal.db';
 import { buildTargetDatabaseConnection } from './features-target/target.db';
@@ -25,107 +25,117 @@ import { createFeatureMonitorAnalytics } from './features-target/feature-monitor
 import { createFeatureMonitorDatabase } from './features-target/feature-monitor-database/block';
 import { setupIntegrationRouter } from './features-target/feature-integration/router';
 
-const apiPrefix = "/api";
+const apiPrefix = '/api';
 
 /**
  * FACTORY JALUR DEPLOY: Membangun seluruh app hanya saat dibutuhkan (Lazy)
  * Ini mencegah error "INTERNAL DB URL MISSING" saat build-time/validation
  */
 async function buildAppInstance(env: EnvironmentConfig) {
-    const instance = new Hono<{ Variables: { targetDb: any, targetId: string } }>();
+  const instance = new Hono<{ Variables: { targetDb: any; targetId: string } }>();
 
-    // Global error handler
-    instance.onError((err, ctx) => {
-        console.error("[HONO APP ERROR]", err);
-        return ctx.json({ status: 'error', message: err.message || 'Internal Server Error' }, 500);
+  // Global error handler
+  instance.onError((err, ctx) => {
+    console.error('[HONO APP ERROR]', err);
+    return ctx.json({ status: 'error', message: err.message || 'Internal Server Error' }, 500);
+  });
+
+  // Middlewares dasar
+  instance.use('*', logger());
+  instance.use('*', timeout(25000)); // 25 detik max sebelum timeout
+  instance.use(
+    '*',
+    cors({
+      origin: (origin) => origin, // Izinkan origin yang memanggil
+      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+      allowHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-target-id'],
+      credentials: true,
+    }),
+  );
+
+  // --- SAAS TARGET MIDDLEWARE ---
+  instance.use(`${apiPrefix}/*`, async (ctx, next) => {
+    const targetId = ctx.req.header('x-target-id');
+    const path = ctx.req.path;
+    const isTargetFeature = [
+      '/api/monitor-database',
+      '/api/database-schema',
+      '/api/route-builder',
+      '/api/api-keys',
+      '/api/cors',
+      '/api/roles',
+      '/api/permissions',
+      '/api/app-users',
+      '/api/monitor-analytics',
+      '/api/integration',
+    ].some((p) => path.startsWith(p));
+
+    if (isTargetFeature && targetId) {
+      try {
+        if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL) throw new Error('INTERNAL DB URL MISSING');
+        const internalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
+        const target = await findTargetSystemById(internalDb, targetId);
+        if (!target) return ctx.json({ status: 'error', message: 'Target system not found' }, 404);
+
+        const targetDb = buildTargetDatabaseConnection(target.database_url);
+        ctx.set('targetDb', targetDb);
+        ctx.set('targetId', targetId);
+      } catch (err: any) {
+        console.error('[TARGET-MIDDLEWARE-ERROR]', err);
+        return ctx.json({ status: 'error', message: 'Failed to connect to target database' }, 500);
+      }
+    }
+    await next();
+  });
+
+  // --- REGISTER ROUTES ---
+  instance.route('/api', createFeaturePanelAuth(env));
+  instance.route(`${apiPrefix}/users`, createFeatureAdminUsers(env));
+  instance.route(`${apiPrefix}/settings`, createFeatureSettings(env));
+  instance.route(`${apiPrefix}/target-systems`, createFeatureTargetRegistry(env));
+
+  instance.route(`${apiPrefix}/route-builder`, setupDynamicRoutesRouter());
+  instance.route(`${apiPrefix}/database-schema`, createFeatureTargetDatabaseSchema());
+  instance.route(`${apiPrefix}/api-keys`, setupClientApiKeysRouter());
+  instance.route(`${apiPrefix}/cors`, setupTargetCorsRouter());
+  instance.route(`${apiPrefix}/roles`, createFeatureRbacRoles());
+  instance.route(`${apiPrefix}/permissions`, createFeatureRbacPermissions());
+  instance.route(`${apiPrefix}/app-users`, createFeatureTargetAppUsers());
+  instance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
+  instance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
+  instance.route(`${apiPrefix}/integration`, setupIntegrationRouter());
+
+  instance.get(`${apiPrefix}/system-status`, async (ctx) => {
+    const hasDbUrl = !!env.DATABASE_URL_INTERNAL_CONTROL_PANEL;
+    let isDbConnected = false;
+    let isAdminCreated = false;
+
+    if (hasDbUrl) {
+      try {
+        const db = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
+        await db.execute('SELECT 1'); // Test connection
+        isDbConnected = true;
+
+        const res: any = await db.execute('SELECT id FROM admin_users LIMIT 1');
+        const rows = Array.isArray(res) ? res : res.rows || [];
+        isAdminCreated = rows.length > 0;
+      } catch (err) {
+        console.error('[SYSTEM-STATUS] DB Check Failed:', err);
+      }
+    }
+
+    return ctx.json({
+      status: 'ok',
+      hasDbUrl,
+      isDbConnected,
+      isAdminCreated,
+      // HARDENING: version dihapus dari response (tidak dibutuhkan frontend)
     });
+  });
 
-    // Middlewares dasar
-    instance.use("*", logger());
-    instance.use("*", timeout(25000)); // 25 detik max sebelum timeout
-    instance.use("*", cors({
-        origin: (origin) => origin, // Izinkan origin yang memanggil
-        allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allowHeaders: ["Content-Type", "Authorization", "x-api-key", "x-target-id"],
-        credentials: true,
-    }));
+  instance.get('/health', (ctx) => ctx.json({ status: 'ok', service: 'backend-control-panel' }));
 
-    // --- SAAS TARGET MIDDLEWARE ---
-    instance.use(`${apiPrefix}/*`, async (ctx, next) => {
-        const targetId = ctx.req.header('x-target-id');
-        const path = ctx.req.path;
-        const isTargetFeature = [
-            '/api/monitor-database', '/api/database-schema', '/api/route-builder', 
-            '/api/api-keys', '/api/cors', '/api/roles', '/api/permissions', 
-            '/api/app-users', '/api/monitor-analytics', '/api/integration'
-        ].some(p => path.startsWith(p));
-
-        if (isTargetFeature && targetId) {
-            try {
-                if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL) throw new Error("INTERNAL DB URL MISSING");
-                const internalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-                const target = await findTargetSystemById(internalDb, targetId);
-                if (!target) return ctx.json({ status: 'error', message: 'Target system not found' }, 404);
-
-                const targetDb = buildTargetDatabaseConnection(target.database_url);
-                ctx.set('targetDb', targetDb);
-                ctx.set('targetId', targetId);
-            } catch (err: any) {
-                console.error("[TARGET-MIDDLEWARE-ERROR]", err);
-                return ctx.json({ status: 'error', message: 'Failed to connect to target database' }, 500);
-            }
-        }
-        await next();
-    });
-
-    // --- REGISTER ROUTES ---
-    instance.route('/api', createFeaturePanelAuth(env));
-    instance.route(`${apiPrefix}/users`, createFeatureAdminUsers(env));
-    instance.route(`${apiPrefix}/settings`, createFeatureSettings(env));
-    instance.route(`${apiPrefix}/target-systems`, createFeatureTargetRegistry(env));
-
-    instance.route(`${apiPrefix}/route-builder`, setupDynamicRoutesRouter());
-    instance.route(`${apiPrefix}/database-schema`, createFeatureTargetDatabaseSchema());
-    instance.route(`${apiPrefix}/api-keys`, setupClientApiKeysRouter());
-    instance.route(`${apiPrefix}/cors`, setupTargetCorsRouter());
-    instance.route(`${apiPrefix}/roles`, createFeatureRbacRoles());
-    instance.route(`${apiPrefix}/permissions`, createFeatureRbacPermissions());
-    instance.route(`${apiPrefix}/app-users`, createFeatureTargetAppUsers());
-    instance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
-    instance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
-    instance.route(`${apiPrefix}/integration`, setupIntegrationRouter());
-    
-    instance.get(`${apiPrefix}/system-status`, async (ctx) => {
-        const hasDbUrl = !!env.DATABASE_URL_INTERNAL_CONTROL_PANEL;
-        let isDbConnected = false;
-        let isAdminCreated = false;
-
-        if (hasDbUrl) {
-            try {
-                const db = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-                await db.execute("SELECT 1"); // Test connection
-                isDbConnected = true;
-
-                const res: any = await db.execute("SELECT id FROM admin_users LIMIT 1");
-                const rows = Array.isArray(res) ? res : (res.rows || []);
-                isAdminCreated = rows.length > 0;
-            } catch (err) {
-                console.error("[SYSTEM-STATUS] DB Check Failed:", err);
-            }
-        }
-
-        return ctx.json({ 
-            status: 'ok', 
-            hasDbUrl,
-            isDbConnected,
-            isAdminCreated,
-            // HARDENING: version dihapus dari response (tidak dibutuhkan frontend)
-        });
-    });
-    
-    instance.get("/health", ctx => ctx.json({ status: 'ok', service: 'backend-control-panel' }));
-
-    return instance;
+  return instance;
 }
 
 // --- JALUR RUNTIME (Lokal & Worker) ---
@@ -133,28 +143,28 @@ let cachedApp: any = null;
 const rootApp = new Hono();
 
 rootApp.all('*', async (c) => {
-    try {
-        // 1. Ambil env (dari .env lokal atau Cloudflare Bindings)
-        const env = loadEnvironmentConfig(c.env);
+  try {
+    // 1. Ambil env (dari .env lokal atau Cloudflare Bindings)
+    const env = loadEnvironmentConfig(c.env);
 
-        // 2. Inisialisasi app hanya sekali
-        if (!cachedApp) {
-            cachedApp = await buildAppInstance(env);
-        }
-
-        // 3. SMART SWITCH: Delegasi request sesuai platform
-        const isNode = typeof process !== 'undefined' && !!process.env;
-        if (isNode) {
-            // Jalur Node.js (Lokal): Gunakan request murni
-            return cachedApp.request(c.req.raw, undefined, c.env);
-        } else {
-            // Jalur Worker: Gunakan fetch (butuh executionCtx)
-            return cachedApp.fetch(c.req.raw, c.env, (c as any).executionCtx);
-        }
-    } catch (err: any) {
-        console.error("[ROOT-ERROR]", err);
-        return c.text(`Initialization Error: ${err.message}`, 500);
+    // 2. Inisialisasi app hanya sekali
+    if (!cachedApp) {
+      cachedApp = await buildAppInstance(env);
     }
+
+    // 3. SMART SWITCH: Delegasi request sesuai platform
+    const isNode = typeof process !== 'undefined' && !!process.env;
+    if (isNode) {
+      // Jalur Node.js (Lokal): Gunakan request murni
+      return cachedApp.request(c.req.raw, undefined, c.env);
+    } else {
+      // Jalur Worker: Gunakan fetch (butuh executionCtx)
+      return cachedApp.fetch(c.req.raw, c.env, (c as any).executionCtx);
+    }
+  } catch (err: any) {
+    console.error('[ROOT-ERROR]', err);
+    return c.text(`Initialization Error: ${err.message}`, 500);
+  }
 });
 
 export default rootApp;

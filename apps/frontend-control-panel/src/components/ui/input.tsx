@@ -34,7 +34,7 @@ function Input({ className, type, label, id, ...props }: InputProps) {
 
   if (label) {
     return (
-      <div className="grid gap-2 w-full">
+      <div className="grid gap-1 w-full">
         <div className="flex items-center px-1">
           <Label htmlFor={inputId} className="text-sm font-normal text-foreground/75">
             {label}

@@ -17,6 +17,8 @@ export interface UseCrudOptions<T> {
     onSuccess?: (action: 'create' | 'update' | 'delete', data?: any) => void;
     /** Called on error */
     onError?: (error: Error, action: string) => void;
+    /** Extra Request Headers */
+    headers?: Record<string, string>;
 }
 
 export interface UseCrudReturn<T> {
@@ -49,6 +51,7 @@ export function createCrudHook<T extends { id: number | string }>(
             skipInitialFetch = false,
             onSuccess,
             onError,
+            headers,
         } = options;
 
         const [items, setItems] = useState<T[]>(initialData);
@@ -66,7 +69,7 @@ export function createCrudHook<T extends { id: number | string }>(
             setError(null);
 
             try {
-                const response = await apiClient.get<T[]>(endpoints.list);
+                const response = await apiClient.get<T[]>(endpoints.list, { headers });
                 if (response.status === 'success' && response.data) {
                     setItems(response.data);
                 }
@@ -79,7 +82,7 @@ export function createCrudHook<T extends { id: number | string }>(
 
         const fetchOne = useCallback(async (id: number | string): Promise<T | null> => {
             try {
-                const response = await apiClient.get<T>(endpoints.detail(id));
+                const response = await apiClient.get<T>(endpoints.detail(id), { headers });
                 if (response.status === 'success' && response.data) {
                     return response.data;
                 }
@@ -91,7 +94,7 @@ export function createCrudHook<T extends { id: number | string }>(
 
         const create = useCallback(async (data: Partial<T>): Promise<T | null> => {
             try {
-                const response = await apiClient.post<T>(endpoints.create, data);
+                const response = await apiClient.post<T>(endpoints.create, data, { headers });
                 if (response.status === 'success' && response.data) {
                     setItems(prev => [...prev, response.data!]);
                     onSuccess?.('create', response.data);
@@ -105,7 +108,7 @@ export function createCrudHook<T extends { id: number | string }>(
 
         const update = useCallback(async (id: number | string, data: Partial<T>): Promise<T | null> => {
             try {
-                const response = await apiClient.put<T>(endpoints.update(id), data);
+                const response = await apiClient.put<T>(endpoints.update(id), data, { headers });
                 if (response.status === 'success' && response.data) {
                     setItems(prev => prev.map(item =>
                         item.id === id ? { ...item, ...response.data } : item
@@ -121,7 +124,7 @@ export function createCrudHook<T extends { id: number | string }>(
 
         const remove = useCallback(async (id: number | string): Promise<boolean> => {
             try {
-                const response = await apiClient.delete(endpoints.delete(id));
+                const response = await apiClient.delete(endpoints.delete(id), { headers });
                 if (response.status === 'success') {
                     setItems(prev => prev.filter(item => item.id !== id));
                     onSuccess?.('delete', { id });

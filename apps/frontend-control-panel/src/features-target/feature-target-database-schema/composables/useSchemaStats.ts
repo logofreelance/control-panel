@@ -10,6 +10,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
 import { useConfig } from '@/modules/_core';
 
@@ -30,11 +31,15 @@ export function useSchemaStats() {
     });
     const [loading, setLoading] = useState(true);
 
+    const params = useParams();
+    const targetId = params?.id as string;
+
     const fetchStats = useCallback(async () => {
         setLoading(true);
         try {
+            const headers = targetId ? { 'x-target-id': targetId } : undefined;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const response = await apiClient.get<SchemaStats>((api.databaseSchema as any).stats || `${api.databaseSchema.list}/stats`);
+            const response = await apiClient.get<SchemaStats>((api.databaseSchema as any).stats || `${api.databaseSchema.list}/stats`, { headers });
             if (response?.status === 'success' && response?.data) {
                 setStats(response.data);
             }
@@ -43,7 +48,7 @@ export function useSchemaStats() {
         } finally {
             setLoading(false);
         }
-    }, [api]);
+    }, [api, targetId]);
 
     useEffect(() => {
         fetchStats();

@@ -11,7 +11,7 @@ import { Button, Badge, Card, CardContent } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog, useConfig } from '@/modules/_core';
-import { Icons, MODULE_LABELS } from '@/lib/config/client';
+import { MODULE_LABELS } from '@/lib/config/client';
 import { useRelations } from '../composables';
 import { RELATION_TYPES } from '../registry';
 

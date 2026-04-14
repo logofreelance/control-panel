@@ -19,18 +19,18 @@ import type { DatabaseTable, Resource } from '../types';
 
 const L = MODULE_LABELS.databaseSchema;
 
-export const DatabaseSchemaView = () => {
+export function DatabaseSchemaView() {
     const router = useRouter();
     const params = useParams();
-    const nodeId = params.id as string;
+    const nodeId = params?.id as string;
 
     // Data from composables
-    const { items: sources, loading, remove, fetchAll } = useDatabaseSchema();
+    const { items: sources = [], loading, remove, fetchAll } = useDatabaseSchema();
     const { clone } = useSchemaActions();
 
     // Resource Expansion State
     const [expandedId, setExpandedId] = useState<number | null>(null);
-    const { items: resources, loading: loadingResources, remove: removeResource } = useResources(expandedId);
+    const { items: resources = [], loading: loadingResources, remove: removeResource } = useResources(expandedId);
 
     // Confirm dialog state
     const [confirmDialog, setConfirmDialog] = useState<{
@@ -70,7 +70,13 @@ export const DatabaseSchemaView = () => {
         }
     };
 
-    if (loading && !sources) return <PageLoadingSkeleton showStats={true} contentRows={3} />;
+    if (loading && !sources.length) {
+        return (
+            <TargetLayout>
+                <PageLoadingSkeleton showStats={true} contentRows={3} />
+            </TargetLayout>
+        );
+    }
 
     return (
         <TargetLayout>
@@ -86,14 +92,12 @@ export const DatabaseSchemaView = () => {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-xl border-border/40 hover:bg-muted/50 text-muted-foreground lowercase"
                             onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/trash` : '/database-schema/trash')}
                         >
                             <Icons.trash className="w-4 h-4 mr-2" /> {L.labels.trash}
                         </Button>
                         <Button
                             size="sm"
-                            className="rounded-xl shadow-lg shadow-primary/10 lowercase"
                             onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/create` : '/database-schema/create')}
                         >
                             <Icons.plus className="w-4 h-4 mr-2" />
@@ -124,15 +128,18 @@ export const DatabaseSchemaView = () => {
                     />
                     
                     {/* Create New CTA Card */}
-                    <div 
-                        className="bg-muted/30 hover:bg-muted/50 border border-dashed border-border/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all duration-300 cursor-pointer group"
+                    <Card 
+                        size="sm"
+                        className="bg-muted/30 hover:bg-muted/50 border border-dashed border-border/40 rounded-2xl flex flex-col items-center justify-center text-center transition-all duration-300 cursor-pointer group"
                         onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/create` : '/database-schema/create')}
                     >
-                        <div className="size-10 rounded-xl bg-background border border-border/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                            <Icons.plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                        <span className="text-xs font-semibold text-muted-foreground group-hover:text-primary lowercase">{L.buttons.createSchema}</span>
-                    </div>
+                        <CardContent className="flex flex-col items-center justify-center w-full">
+                            <div className="size-10 rounded-xl bg-background border border-border/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Icons.plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            </div>
+                            <span className="text-xs font-semibold text-muted-foreground group-hover:text-primary lowercase">{L.buttons.createSchema}</span>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Main List Section */}
@@ -147,7 +154,6 @@ export const DatabaseSchemaView = () => {
                                 {L.empty.description.toLowerCase()}
                             </p>
                             <Button 
-                                className="rounded-xl px-8 lowercase"
                                 onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/create` : '/database-schema/create')}
                             >
                                 {L.buttons.createSchema}
@@ -189,30 +195,32 @@ export const DatabaseSchemaView = () => {
             </div>
         </TargetLayout>
     );
-};
+}
 
 // =============================================================================
 // Helper Components
 // =============================================================================
 
-const StatCard = ({ label, value, subtitle, icon: Icon }: any) => (
-    <Card className="bg-card/40 border-none shadow-sm hover:shadow-md transition-shadow duration-300">
-        <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-4">
-                <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">{label}</span>
-                <div className="size-8 rounded-xl bg-primary/5 flex items-center justify-center text-primary/60">
-                    <Icon className="w-4 h-4" />
+function StatCard({ label, value, subtitle, icon: Icon }: any) {
+    return (
+        <Card size="sm" className="bg-card/40 border-none shadow-sm hover:shadow-md transition-shadow duration-300">
+            <CardContent>
+                <div className="flex justify-between items-start mb-3">
+                    <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase">{label}</span>
+                    <div className="size-8 rounded-xl bg-primary/5 flex items-center justify-center text-primary/60">
+                        <Icon className="w-4 h-4" />
+                    </div>
                 </div>
-            </div>
-            <div className="space-y-1">
-                <div className="text-2xl font-bold tracking-tight text-foreground">{value}</div>
-                <p className="text-[11px] text-muted-foreground lowercase">{subtitle}</p>
-            </div>
-        </CardContent>
-    </Card>
-);
+                <div className="space-y-1">
+                    <div className="text-2xl font-semibold text-foreground">{value}</div>
+                    <p className="text-[11px] text-muted-foreground lowercase">{subtitle}</p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
 
-const TableCard = ({
+function TableCard({
     source,
     isExpanded,
     resources,
@@ -222,7 +230,7 @@ const TableCard = ({
     onDelete,
     onDeleteResource,
     nodeId,
-}: any) => {
+}: any) {
     const router = useRouter();
 
     return (
@@ -231,9 +239,10 @@ const TableCard = ({
                 "group border-none shadow-sm overflow-hidden transition-all duration-300",
                 isExpanded ? 'ring-1 ring-primary/20 bg-muted/5' : 'bg-card hover:bg-muted/10'
             )}
+            size="sm"
         >
-            <div 
-                className="p-5 flex flex-col md:flex-row md:items-center gap-6 cursor-pointer" 
+            <CardContent
+                className="flex flex-col md:flex-row md:items-center gap-4 cursor-pointer" 
                 onClick={onToggleExpand}
             >
                 {/* Visual ID & Icon */}
@@ -251,7 +260,7 @@ const TableCard = ({
                                 {source.name}
                             </TextHeading>
                             {source.isSystem && (
-                                <Badge variant="secondary" className="text-[9px] px-1.5 h-4 uppercase font-bold tracking-tighter bg-muted/50 border-none">SYSTEM</Badge>
+                                <Badge variant="secondary" className="text-[9px] px-1.5 h-4 uppercase font-semibold bg-muted/50 border-none">SYSTEM</Badge>
                             )}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground lowercase font-medium">
@@ -266,10 +275,6 @@ const TableCard = ({
                     <Button
                         variant="ghost"
                         size="sm"
-                        className={cn(
-                            "h-9 rounded-xl px-4 text-xs font-medium lowercase transition-all",
-                            isExpanded ? "bg-primary/20 text-primary hover:bg-primary/30" : "text-muted-foreground hover:bg-muted"
-                        )}
                     >
                         {isExpanded ? L.buttons.hideResources : L.buttons.viewResources}
                     </Button>
@@ -279,7 +284,6 @@ const TableCard = ({
                             variant="ghost"
                             size="icon-sm"
                             onClick={(e) => { e.stopPropagation(); onClone(); }}
-                            className="rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
                             title={L.buttons.cloneSchema}
                         >
                             <Icons.copy className="w-4 h-4" />
@@ -288,14 +292,13 @@ const TableCard = ({
                             variant="ghost"
                             size="icon-sm"
                             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                            className="rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
                             title={L.buttons.deleteSchema}
                         >
                             <Icons.trash className="w-4 h-4" />
                         </Button>
                     </div>
                 </div>
-            </div>
+            </CardContent>
 
             {/* Resources Disclosure Panel */}
             {isExpanded && (
@@ -312,16 +315,16 @@ const TableCard = ({
             )}
         </Card>
     );
-};
+}
 
-const ExpandedResourcesPanel = ({
+function ExpandedResourcesPanel({
     sourceId,
     sourceName,
-    resources,
+    resources = [],
     loadingResources,
     onDeleteResource,
     nodeId,
-}: any) => {
+}: any) {
     const router = useRouter();
     
     return (
@@ -371,7 +374,6 @@ const ExpandedResourcesPanel = ({
                     </div>
                     <Button
                         size="sm"
-                        className="rounded-xl h-9 lowercase shadow-sm"
                         onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/resources/create` : `/database-schema/${sourceId}/resources/create`)}
                     >
                         <Icons.plus className="w-3.5 h-3.5 mr-2" />
@@ -404,114 +406,127 @@ const ExpandedResourcesPanel = ({
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
-};
+}
 
-const ActionShortcut = ({ title, desc, icon: Icon, buttonText, onClick }: any) => (
-    <Card className="bg-background/60 border-none shadow-sm hover:shadow-md transition-all duration-300 group">
-        <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors shrink-0">
-                    <Icon className="w-5 h-5" />
+function ActionShortcut({ title, desc, icon: Icon, buttonText, onClick }: any) {
+    return (
+        <Card size="sm" className="bg-background/60 border-none shadow-sm hover:shadow-md transition-all duration-300 group">
+            <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors shrink-0">
+                        <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <TextHeading size="h6" className="text-sm font-semibold lowercase mb-0.5">{title}</TextHeading>
+                        <p className="text-[11px] text-muted-foreground line-clamp-1 lowercase">{desc}</p>
+                    </div>
                 </div>
-                <div className="min-w-0">
-                    <TextHeading size="h6" className="text-sm font-semibold lowercase mb-0.5">{title}</TextHeading>
-                    <p className="text-[11px] text-muted-foreground line-clamp-1 lowercase">{desc}</p>
-                </div>
-            </div>
-            <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 rounded-lg px-3 text-[10px] font-bold lowercase text-primary hover:bg-primary/5 shrink-0"
-                onClick={onClick}
-            >
-                {buttonText} <Icons.chevronRight className="w-3 h-3 ml-1.5" />
-            </Button>
-        </CardContent>
-    </Card>
-);
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClick}
+                >
+                    {buttonText} <Icons.chevronRight className="w-3 h-3 ml-1.5" />
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
 
-const ResourceCard = ({ resource: r, sourceId, onDelete, nodeId }: any) => {
+function ResourceCard({ resource: r, sourceId, onDelete, nodeId }: any) {
     const router = useRouter();
-    const hasFilters = r.filtersJson
-        ? (JSON.parse(r.filtersJson)?.filters?.length > 0 || (Array.isArray(JSON.parse(r.filtersJson)) && JSON.parse(r.filtersJson).length > 0))
-        : false;
-    const hasJoins = r.joinsJson ? (JSON.parse(r.joinsJson)?.length > 0) : false;
+    
+    // Safely parse JSON properties with fallbacks
+    const parseJson = (val: any) => {
+        if (!val) return null;
+        try {
+            return typeof val === 'string' ? JSON.parse(val) : val;
+        } catch (e) {
+            console.error('Failed to parse JSON field', e);
+            return null;
+        }
+    };
+
+    const filters = parseJson(r.filtersJson || r.filters_json);
+    const hasFilters = filters ? (filters.filters?.length > 0 || (Array.isArray(filters) && filters.length > 0)) : false;
+    
+    const joins = parseJson(r.joinsJson || r.joins_json);
+    const hasJoins = joins ? (joins.length > 0) : false;
+
+    const handleEdit = () => {
+        router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/resources/${r.id}/edit` : `/database-schema/${sourceId}/resources/${r.id}/edit`);
+    };
 
     return (
         <Card
-            className="group relative bg-background/80 border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer p-4 overflow-hidden"
-            onClick={(e) => {
-                e.stopPropagation();
-                router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/resources/${r.id}/edit` : `/database-schema/${sourceId}/resources/${r.id}/edit`);
-            }}
+            size="sm"
+            className="group relative bg-background/80 border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+            onClick={handleEdit}
         >
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2">
-                    <div className="h-5 px-1.5 rounded-md bg-emerald-500/10 text-emerald-600 text-[10px] font-black flex items-center justify-center">
-                        GET
-                    </div>
-                    {hasJoins && (
-                        <div className="size-5 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center" title={L.labels.hasJoins}>
-                            <Icons.link className="w-3 h-3" />
+            <CardContent>
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-2">
+                        <div className="h-5 px-1.5 rounded-md bg-emerald-500/10 text-emerald-600 text-[10px] font-semibold flex items-center justify-center">
+                            GET
                         </div>
-                    )}
+                        {hasJoins && (
+                            <div className="size-5 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center" title={L.labels.hasJoins}>
+                                <Icons.link className="w-3 h-3" />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={handleEdit}
+                        >
+                            <Icons.edit className="w-3 h-3 text-muted-foreground" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                        >
+                            <Icons.trash className="w-3 h-3 text-muted-foreground hover:text-rose-500 transition-colors" />
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="rounded-md hover:bg-muted"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/resources/${r.id}/edit` : `/database-schema/${sourceId}/resources/${r.id}/edit`);
-                        }}
-                    >
-                        <Icons.edit className="w-3 h-3 text-muted-foreground" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="rounded-md hover:bg-rose-500/10 hover:text-rose-500"
-                        onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    >
-                        <Icons.trash className="w-3 h-3 text-muted-foreground hover:text-inherit" />
-                    </Button>
+                <div className="mb-4 space-y-1">
+                    <TextHeading size="h6" className="text-sm font-semibold truncate lowercase group-hover:text-primary transition-colors">
+                        {r.name}
+                    </TextHeading>
+                    <div className="font-mono text-[9px] text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded w-fit uppercase">
+                        /{r.slug}
+                    </div>
                 </div>
-            </div>
 
-            <div className="mb-4 space-y-1">
-                <TextHeading size="h6" className="text-sm font-semibold truncate lowercase group-hover:text-primary transition-colors">
-                    {r.name}
-                </TextHeading>
-                <div className="font-mono text-[9px] text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded w-fit uppercase tracking-tight">
-                    /{r.slug}
-                </div>
-            </div>
-
-            <div className="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-border/5">
-                <Badge variant="outline" className={cn(
-                    "text-[9px] px-1.5 py-0 h-4 border-none uppercase font-bold",
-                    r.isPublic ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'
-                )}>
-                    {r.isPublic ? L.labels.public : L.labels.protected}
-                </Badge>
-
-                {hasFilters && (
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-primary/5 text-primary border-none uppercase font-bold">
-                        {L.labels.filters}
+                <div className="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-border/5">
+                    <Badge variant="outline" className={cn(
+                        "text-[9px] px-1.5 py-0 h-4 border-none uppercase font-semibold",
+                        r.isPublic || r.is_public ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'
+                    )}>
+                        {(r.isPublic || r.is_public) ? L.labels.public : L.labels.protected}
                     </Badge>
-                )}
 
-                <Badge variant="outline" className={cn(
-                    "text-[9px] px-1.5 py-0 h-4 border-none uppercase font-bold",
-                    r.isActive ? 'bg-indigo-500/10 text-indigo-600' : 'bg-muted/50 text-muted-foreground/60'
-                )}>
-                    {r.isActive ? L.labels.active : L.labels.draft}
-                </Badge>
-            </div>
+                    {hasFilters && (
+                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-primary/5 text-primary border-none uppercase font-semibold">
+                            {L.labels.filters}
+                        </Badge>
+                    )}
+
+                    <Badge variant="outline" className={cn(
+                        "text-[9px] px-1.5 py-0 h-4 border-none uppercase font-semibold",
+                        (r.isActive || r.is_active) ? 'bg-indigo-500/10 text-indigo-600' : 'bg-muted/50 text-muted-foreground/60'
+                    )}>
+                        {(r.isActive || r.is_active) ? L.labels.active : L.labels.draft}
+                    </Badge>
+                </div>
+            </CardContent>
         </Card>
     );
-};
+}

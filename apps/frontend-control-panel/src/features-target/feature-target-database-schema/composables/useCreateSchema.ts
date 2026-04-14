@@ -9,6 +9,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
 import { useToast, useConfig } from '@/modules/_core';
 import type { ColumnDefinition, DatabaseTable } from '../types';
@@ -49,6 +50,9 @@ export function useCreateSchema() {
     // ✅ Pure DI: Get all dependencies from context
     const { msg, defaults, api, API_STATUS, TOAST_TYPE } = useConfig();
     const { addToast } = useToast();
+    const params = useParams();
+    const targetId = params?.id as string;
+    const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
 
     const [submitting, setSubmitting] = useState(false);
     const [validating, setValidating] = useState(false);
@@ -127,27 +131,29 @@ export function useCreateSchema() {
     // Fetch templates on mount
     useEffect(() => {
         const fetchTemplates = async () => {
+            setLoadingTemplates(true);
             try {
                 // ✅ Use api from context
-                const response = await apiClient.get<Template[]>(`${api.databaseSchema.list}/templates`);
-                if (response.status === API_STATUS.SUCCESS && response.data) {
+                const response = await apiClient.get<Template[]>(`${api.databaseSchema.list}/templates`, { headers: getHeaders() });
+                if (response.status === API_STATUS.SUCCESS && Array.isArray(response.data) && response.data.length > 0) {
                     setTemplates(response.data);
                 }
             } catch (err) {
                 console.error('Failed to fetch templates:', err);
+                // Keep default templates on error
             } finally {
                 setLoadingTemplates(false);
             }
         };
         fetchTemplates();
-    }, [api, API_STATUS]);
+    }, [api, API_STATUS, getHeaders]);
 
     // Fetch available sources for relation column targets
     useEffect(() => {
         const fetchSources = async () => {
             try {
                 // ✅ Use api from context
-                const response = await apiClient.get<DatabaseTable[]>(api.databaseSchema.list);
+                const response = await apiClient.get<DatabaseTable[]>(api.databaseSchema.list, { headers: getHeaders() });
                 if (response.status === API_STATUS.SUCCESS && response.data) {
                     setAvailableSources(
                         response.data.map((s: any) => ({
@@ -181,7 +187,7 @@ export function useCreateSchema() {
             const response = await apiClient.post<ValidationResult>(api.databaseSchema.validate, {
                 tableName,
                 schema: { columns, ...options },
-            });
+            }, { headers: getHeaders() });
 
             // The response IS the validation result (may have data wrapper or not)
             // Use type guard or check property existence
@@ -215,7 +221,7 @@ export function useCreateSchema() {
         setSubmitting(true);
         try {
             // ✅ Use api from context
-            const response = await apiClient.post<DatabaseTable>(api.databaseSchema.save, payload);
+            const response = await apiClient.post<DatabaseTable>(api.databaseSchema.save, payload, { headers: getHeaders() });
             if (response.status === API_STATUS.SUCCESS && response.data) {
                 // ✅ Use msg from context
                 addToast(msg.databaseSchema.success.sourceCreated, TOAST_TYPE.SUCCESS);

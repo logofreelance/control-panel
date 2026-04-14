@@ -9,6 +9,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { createCrudHook, apiClient } from '@/lib/frontend-api';
 import { useToast, useConfig } from '@/modules/_core';
 import type { DatabaseTable } from '../types';
@@ -21,6 +22,9 @@ export function useDatabaseSchema() {
     // ✅ Pure DI: Get all dependencies from context
     const { msg, api, TOAST_TYPE } = useConfig();
     const { addToast } = useToast();
+    const params = useParams();
+    const targetId = params?.id as string;
+    const headers = targetId ? { 'x-target-id': targetId } : undefined;
 
     // Create endpoints from context
     const endpoints = useMemo(() => ({
@@ -49,6 +53,7 @@ export function useDatabaseSchema() {
             // ✅ Use msg from context
             addToast(error.message || msg.databaseSchema.error.loadFailed, TOAST_TYPE.ERROR);
         },
+        headers,
     });
 
     return crud;
@@ -63,12 +68,15 @@ export function useSchemaActions() {
     const { msg, api, API_STATUS, TOAST_TYPE } = useConfig();
     const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
+    const params = useParams();
+    const targetId = params?.id as string;
+    const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
 
     const clone = useCallback(async (id: string | number): Promise<DatabaseTable | null> => {
         setLoading(true);
         try {
             // ✅ Use api from context
-            const response = await apiClient.post<DatabaseTable>(`${api.databaseSchema.list}/${id}/clone`);
+            const response = await apiClient.post<DatabaseTable>(`${api.databaseSchema.list}/${id}/clone`, undefined, { headers: getHeaders() });
             if (response.status === API_STATUS.SUCCESS) {
                 // ✅ Use msg from context
                 addToast(msg.databaseSchema.success.sourceCloned, TOAST_TYPE.SUCCESS);
@@ -86,7 +94,7 @@ export function useSchemaActions() {
         setLoading(true);
         try {
             // ✅ Use api from context
-            const response = await apiClient.delete(api.databaseSchema.archive?.(String(id)) || `${api.databaseSchema.list}/${id}/archive`);
+            const response = await apiClient.delete(api.databaseSchema.archive?.(String(id)) || `${api.databaseSchema.list}/${id}/archive`, { headers: getHeaders() });
             if (response.status === API_STATUS.SUCCESS) {
                 // ✅ Use msg from context
                 addToast(msg.databaseSchema.success.sourceArchived, TOAST_TYPE.SUCCESS);
@@ -104,7 +112,7 @@ export function useSchemaActions() {
         setLoading(true);
         try {
             // ✅ Use api from context
-            const response = await apiClient.post(api.databaseSchema.restore?.(String(id)) || `${api.databaseSchema.list}/${id}/restore`);
+            const response = await apiClient.post(api.databaseSchema.restore?.(String(id)) || `${api.databaseSchema.list}/${id}/restore`, undefined, { headers: getHeaders() });
             if (response.status === API_STATUS.SUCCESS) {
                 // ✅ Use msg from context
                 addToast(msg.databaseSchema.success.sourceRestored, TOAST_TYPE.SUCCESS);

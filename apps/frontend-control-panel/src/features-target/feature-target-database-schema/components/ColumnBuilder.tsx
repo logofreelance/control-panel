@@ -6,15 +6,23 @@
  */
 
 import { useState } from 'react';
-import { Button, Select, Badge } from '@/components/ui';
+import { 
+    Button, 
+    Input, 
+    Card, 
+    CardContent, 
+    Select, 
+    Checkbox, 
+    Label, 
+    Badge,
+    Field,
+    FieldLabel
+} from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { useConfig } from '@/modules/_core';
 import { cn } from '@/lib/utils';
-import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { COLUMN_TYPES } from '../registry';
 import { ColumnDefinition } from '../types';
-
-const L = MODULE_LABELS.databaseSchema;
 
 interface ColumnBuilderProps {
     columns: ColumnDefinition[];
@@ -23,7 +31,8 @@ interface ColumnBuilderProps {
 }
 
 export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: ColumnBuilderProps) => {
-    const { icons: Icons } = useConfig();
+    const { icons: Icons, labels } = useConfig();
+    const L = labels.mod.databaseSchema;
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
     const addColumn = () => {
@@ -57,51 +66,32 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
     const getTypeInfo = (type: string) => COLUMN_TYPES.find(t => t.value === type);
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xs ring-1 ring-primary/20">
-                        {columns.length}
-                    </div>
-                    <div className="space-y-0.5">
-                        <TextHeading size="h6" className="text-sm font-semibold lowercase">{L.forms.definedColumns}</TextHeading>
-                        <p className="text-[11px] text-muted-foreground lowercase hidden sm:block">{L.forms.configureSchemaStructure.toLowerCase()}</p>
-                    </div>
-                </div>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={addColumn}
-                    className="h-9 px-4 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 border-none transition-all lowercase font-bold"
-                >
-                    <Icons.plus className="size-3.5 mr-2" /> {L.forms.addColumn}
-                </Button>
-            </div>
+        <div className="space-y-10">
 
             {columns.length === 0 ? (
-                <div className="text-center py-16 bg-muted/20 border border-dashed border-border/40 rounded-3xl group hover:bg-primary/5 transition-all cursor-pointer" onClick={addColumn}>
-                    <div className="size-16 rounded-2xl bg-muted/40 mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                        <Icons.sparkles className="size-8 text-muted-foreground/30 group-hover:text-primary/40 transition-colors" />
-                    </div>
-                    <TextHeading size="h6" className="mb-1 lowercase">{L.forms.startBuildingSchema}</TextHeading>
-                    <p className="text-xs text-muted-foreground lowercase mb-6">{L.forms.addColumnsToDefine}</p>
-                    <Button type="button" variant="outline" size="sm" className="h-9 rounded-xl border-border/40 lowercase">
+                <div 
+                    className="text-center py-24 border border-dashed rounded-xl cursor-pointer hover:bg-muted/5 transition-all" 
+                    onClick={addColumn}
+                >
+                    <Icons.sparkles className="size-12 text-muted-foreground/20 mx-auto mb-4" />
+                    <TextHeading size="h6" className="mb-2 text-base font-semibold">{L.forms.startBuildingSchema}</TextHeading>
+                    <p className="text-sm text-muted-foreground mb-8">{L.forms.addColumnsToDefine}</p>
+                    <Button type="button" variant="outline">
                         {L.forms.addFirstColumn}
                     </Button>
                 </div>
             ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {columns.map((col, index) => {
                         const typeInfo = getTypeInfo(col.type);
                         const isFocused = focusedIndex === index;
 
                         return (
-                            <div
+                            <Card
                                 key={index}
                                 className={cn(
-                                    "relative bg-background/60 rounded-2xl transition-all duration-300 border-none ring-1 ring-border/5 group overflow-hidden",
-                                    isFocused ? 'ring-primary/40 bg-background shadow-xl scale-[1.01] z-20' : 'hover:ring-primary/10'
+                                    "group border-none shadow-sm transition-all duration-300 bg-card",
+                                    isFocused && "ring-1 ring-primary/30 shadow-md"
                                 )}
                                 onFocus={() => setFocusedIndex(index)}
                                 onBlur={(e) => {
@@ -110,188 +100,151 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                                     }
                                 }}
                             >
-                                <div className="p-4 md:p-5">
-                                    <div className="flex flex-col md:flex-row gap-6 md:items-center">
-                                        {/* Type Icon & Mobile Header */}
-                                        <div className="flex border-b border-border/5 items-center justify-between pb-px md:justify-start gap-4">
-                                            <div className={cn(
-                                                "size-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                isFocused
-                                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 rotate-12'
-                                                    : 'bg-muted/40 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:rotate-6'
-                                            )}>
-                                                {typeInfo?.Icon ? <typeInfo.Icon className="size-6" /> : <Icons.fileText className="size-6" />}
-                                            </div>
-                                            
-                                            <div className="md:hidden flex-1 min-w-0">
-                                                <TextHeading size="h6" className={cn(
-                                                    "text-sm font-bold truncate lowercase",
-                                                    isFocused ? "text-primary" : ""
-                                                )}>
-                                                    {col.name || L.forms.untitledColumn}
-                                                </TextHeading>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{typeInfo?.label || L.forms.unknownType}</p>
-                                            </div>
-
-                                            <div className="flex md:hidden items-center gap-1">
-                                                <Button size="icon-xs" variant="ghost" className="rounded-lg h-8 w-8" onClick={(e) => { e.stopPropagation(); moveColumn(index, 'up'); }} disabled={index === 0}>
-                                                    <Icons.chevronUp className="size-3.5" />
-                                                </Button>
-                                                <Button size="icon-xs" variant="ghost" className="rounded-lg h-8 w-8" onClick={(e) => { e.stopPropagation(); moveColumn(index, 'down'); }} disabled={index === columns.length - 1}>
-                                                    <Icons.chevronDown className="size-3.5" />
-                                                </Button>
-                                            </div>
+                                <CardContent className="px-5 py-4">
+                                    <div className="flex flex-col md:flex-row gap-x-8 gap-y-4 md:items-start">
+                                        <div className="flex items-center justify-between md:flex-col gap-4">
+                                        <div className={cn(
+                                            "size-12 rounded-xl flex items-center justify-center shrink-0",
+                                            isFocused ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                        )}>
+                                            {typeInfo?.Icon ? <typeInfo.Icon className="size-6" /> : <Icons.fileText className="size-6" />}
                                         </div>
-
-                                        {/* Inputs Grid */}
-                                        <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4">
-                                            {/* Column Name */}
-                                            <div className="md:col-span-4 space-y-1">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">name (sql)</label>
-                                                <input
-                                                    type="text"
-                                                    value={col.name}
-                                                    onChange={(e) => updateColumn(index, 'name', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                                                    placeholder={L.forms.columnName}
-                                                    className="w-full h-10 px-4 rounded-xl bg-muted/20 border-none font-mono text-xs focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/30 lowercase"
-                                                />
-                                            </div>
-
-                                            {/* Type Selector */}
-                                            <div className="md:col-span-4 space-y-1">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">data type</label>
-                                                <Select
-                                                    value={col.type}
-                                                    onChange={(e) => updateColumn(index, 'type', e.target.value)}
-                                                    size="sm"
-                                                    fullWidth
-                                                    className="h-10 text-xs font-bold lowercase"
-                                                    options={COLUMN_TYPES.map(t => ({ label: t.label, value: t.value }))}
-                                                />
-                                            </div>
-
-                                            {/* Toggles */}
-                                            <div className="md:col-span-4 flex items-end gap-3 pb-px">
-                                                <CheckboxToggle
-                                                    label="REQUIRED"
-                                                    checked={!!col.required}
-                                                    onChange={(val) => updateColumn(index, 'required', val)}
-                                                    activeClass="bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20"
-                                                />
-                                                <CheckboxToggle
-                                                    label="UNIQUE"
-                                                    checked={!!col.unique}
-                                                    onChange={(val) => updateColumn(index, 'unique', val)}
-                                                    activeClass="bg-indigo-500/10 text-indigo-600 ring-1 ring-indigo-500/20"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Actions (Desktop) */}
-                                        <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="flex flex-col">
-                                                <Button size="icon-xs" variant="ghost" className="h-6 w-6 rounded-md" onClick={() => moveColumn(index, 'up')} disabled={index === 0}>
-                                                    <Icons.chevronUp className="size-3" />
-                                                </Button>
-                                                <Button size="icon-xs" variant="ghost" className="h-6 w-6 rounded-md" onClick={() => moveColumn(index, 'down')} disabled={index === columns.length - 1}>
-                                                    <Icons.chevronDown className="size-3" />
-                                                </Button>
-                                            </div>
-                                            <div className="w-px h-10 bg-border/40 mx-2" />
-                                            <Button
-                                                size="icon-sm"
-                                                variant="ghost"
-                                                onClick={() => removeColumn(index)}
-                                                className="h-10 w-10 rounded-xl hover:bg-rose-500/10 hover:text-rose-600 text-muted-foreground/30 transition-all"
-                                            >
-                                                <Icons.trash className="size-4" />
+                                        <div className="flex flex-col gap-1">
+                                            <Button size="icon-xs" variant="ghost" onClick={() => moveColumn(index, 'up')} disabled={index === 0}>
+                                                <Icons.chevronUp className="size-4" />
+                                            </Button>
+                                            <Button size="icon-xs" variant="ghost" onClick={() => moveColumn(index, 'down')} disabled={index === columns.length - 1}>
+                                                <Icons.chevronDown className="size-4" />
                                             </Button>
                                         </div>
                                     </div>
 
-                                    {/* Advanced Options */}
-                                    {(typeInfo?.requiresValues || typeInfo?.requiresTarget || col.type === 'string' || col.type === 'slug') && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:pl-18 animate-in fade-in slide-in-from-top-2 duration-300">
-                                            <div className="flex flex-wrap items-end gap-6 md:pl-18">
-                                                {/* Enum Values */}
-                                                {typeInfo?.requiresValues && (
-                                                    <div className="flex-1 min-w-[240px] space-y-1.5">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">{L.forms.allowedValues}</label>
-                                                        <input
-                                                            type="text"
-                                                            value={(col.values || []).join(', ')}
-                                                            onChange={(e) => updateColumn(index, 'values', e.target.value.split(',').map(v => v.trim()).filter(Boolean))}
-                                                            placeholder="pending, active, suspended"
-                                                            className="w-full h-10 px-4 rounded-xl bg-muted/20 border-none text-xs focus:ring-1 focus:ring-primary/20 outline-none transition-all lowercase"
-                                                        />
-                                                    </div>
-                                                )}
+                                    <div className="flex-1 space-y-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-2">
+                                            <div className="md:col-span-4">
+                                                <Input
+                                                    label="Column Name"
+                                                    value={col.name}
+                                                    onChange={(e) => updateColumn(index, 'name', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                                                    placeholder="e.g. user_id"
+                                                />
+                                            </div>
 
-                                                {/* Relation Target */}
-                                                {typeInfo?.requiresTarget && (
-                                                    <div className="flex-1 min-w-[240px] space-y-1.5">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">{L.forms.targetTable}</label>
-                                                        <Select
-                                                            value={col.target || ''}
-                                                            onChange={(e) => updateColumn(index, 'target', e.target.value)}
-                                                            size="sm"
-                                                            fullWidth
-                                                            className="h-10 text-xs lowercase"
-                                                            options={[
-                                                                { label: L.forms.selectTable.toLowerCase() || 'select table', value: '' },
-                                                                ...availableSources.map(s => ({ label: s.label.toLowerCase(), value: s.value }))
-                                                            ]}
-                                                        />
-                                                    </div>
-                                                )}
+                                            <Field className="md:col-span-4">
+                                                <FieldLabel>Data Type</FieldLabel>
+                                                <Select
+                                                    value={col.type}
+                                                    onChange={(e) => updateColumn(index, 'type', e.target.value)}
+                                                    fullWidth
+                                                    options={COLUMN_TYPES.map(t => ({ label: t.label, value: t.value }))}
+                                                />
+                                            </Field>
 
-                                                {/* String Length */}
-                                                {col.type === 'string' && (
-                                                    <div className="w-[100px] space-y-1.5">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-1">LENGTH</label>
-                                                        <input
-                                                            type="number"
-                                                            value={col.length || 255}
-                                                            onChange={(e) => updateColumn(index, 'length', parseInt(e.target.value) || 255)}
-                                                            className="w-full h-10 px-4 rounded-xl bg-muted/20 border-none text-xs focus:ring-1 focus:ring-primary/20 outline-none transition-all text-center"
-                                                        />
-                                                    </div>
-                                                )}
+                                            <div className="md:col-span-4 flex items-end gap-6 pb-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <Checkbox
+                                                        id={`required-${index}`}
+                                                        checked={!!col.required}
+                                                        onCheckedChange={(val: boolean) => updateColumn(index, 'required', val)}
+                                                    />
+                                                    <Label htmlFor={`required-${index}`} className="text-sm font-medium cursor-pointer">REQUIRED</Label>
+                                                </div>
 
-                                                {/* Hints */}
-                                                <p className="text-[10px] text-muted-foreground/40 italic lowercase pb-3">
-                                                    {col.type === 'slug' && L.forms.slugHint.toLowerCase()}
-                                                    {col.type === 'string' && L.forms.stringHint.toLowerCase()}
-                                                    {col.type === 'relation' && L.forms.relationHint.toLowerCase()}
-                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <Checkbox
+                                                        id={`unique-${index}`}
+                                                        checked={!!col.unique}
+                                                        onCheckedChange={(val: boolean) => updateColumn(index, 'unique', val)}
+                                                    />
+                                                    <Label htmlFor={`unique-${index}`} className="text-sm font-medium cursor-pointer">UNIQUE</Label>
+                                                </div>
                                             </div>
                                         </div>
-                                    )}
+
+                                        {(typeInfo?.requiresValues || typeInfo?.requiresTarget || col.type === 'string') && (
+                                            <div className="pt-0 space-y-2">
+                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-2">
+                                                    {typeInfo?.requiresValues && (
+                                                        <div className="md:col-span-8">
+                                                            <Input
+                                                                label={L.forms.allowedValues}
+                                                                value={(col.values || []).join(', ')}
+                                                                onChange={(e) => updateColumn(index, 'values', e.target.value.split(',').map(v => v.trim()).filter(Boolean))}
+                                                                placeholder="e.g. active, pending, archive"
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    {typeInfo?.requiresTarget && (
+                                                        <div className="md:col-span-4">
+                                                            <Field>
+                                                                <FieldLabel>{L.forms.targetTable}</FieldLabel>
+                                                                <Select
+                                                                    value={col.target || ''}
+                                                                    onChange={(e) => updateColumn(index, 'target', e.target.value)}
+                                                                    fullWidth
+                                                                    options={[
+                                                                        { label: 'Select target table...', value: '' },
+                                                                        ...availableSources.map(s => ({ label: s.label, value: s.value }))
+                                                                    ]}
+                                                                />
+                                                            </Field>
+                                                        </div>
+                                                    )}
+
+                                                    {col.type === 'string' && (
+                                                        <div className="md:col-span-2">
+                                                            <Input
+                                                                label="Length"
+                                                                type="number"
+                                                                value={col.length || 255}
+                                                                onChange={(e) => updateColumn(index, 'length', parseInt(e.target.value) || 255)}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+
+                                <div className="mt-2 flex items-center justify-between gap-4">
+                                    <div className="px-1">
+                                        <p className="text-xs text-muted-foreground/60 italic">
+                                            {col.type === 'slug' && L.forms.slugHint}
+                                            {col.type === 'string' && L.forms.stringHint}
+                                            {col.type === 'relation' && L.forms.relationHint}
+                                        </p>
+                                    </div>
+
+                                    <Button
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="text-muted-foreground hover:text-destructive transition-colors"
+                                        onClick={() => removeColumn(index)}
+                                    >
+                                        <Icons.trash className="size-4" />
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+
+                <div className="pt-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-12 border-dashed hover:border-solid transition-all"
+                        onClick={addColumn}
+                    >
+                        <Icons.plus className="size-5 sm:mr-2" />
+                        <span className="hidden sm:inline">{L.forms.addColumn}</span>
+                    </Button>
+                </div>
                 </div>
             )}
         </div>
     );
 };
 
-const CheckboxToggle = ({ label, checked, onChange, activeClass }: { label: string, checked: boolean, onChange: (val: boolean) => void, activeClass: string }) => (
-    <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className={cn(
-            "h-10 flex-1 flex items-center justify-center gap-2 rounded-xl border-none transition-all text-[10px] font-black tracking-widest",
-            checked ? activeClass : "bg-muted/10 text-muted-foreground/30 hover:bg-muted/20"
-        )}
-    >
-        <div className={cn(
-            "size-3.5 rounded border transition-all flex items-center justify-center",
-            checked ? "bg-white/20 border-transparent" : "bg-muted border-transparent"
-        )}>
-            {checked && <Icons.check className="size-2.5 stroke-4" />}
-        </div>
-        {label}
-    </button>
-);

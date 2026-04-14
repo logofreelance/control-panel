@@ -5,7 +5,6 @@ This guide contains the mandatory styling rules for all AI agents when revising 
 ## 🚫 Strictly Prohibited
 
 - **No Letter Spacing**: Never use `tracking-wider`, `tracking-widest`, or any other letter-spacing utilities.
-- **No Rings**: Do not use `ring-x` for functional reasons.
 - **No Sharp Shadows**: Avoid sharp or heavy shadows. Use soft, diffused shadows (e.g., `shadow-sm`, `shadow-md` with subtle opacity) to maintain a premium glassmorphic feel.
 - **No Manual Styling on Shadcn Components**: It is strictly PROHIBITED to add custom styles or override existing ones using `className` on any Shadcn component (e.g., `<Button className="font-bold" />` is forbidden). You must rely exclusively on the component's internal styles and predefined variants.
 - **No Manual Styling Outside Shadcn**: Prohibited from giving styles to components outside of the Shadcn framework (e.g., `<div className="..." />` for layouts that a `Card` or shadcn component should handle). All styles must be encapsulated within Shadcn components.

@@ -35,7 +35,6 @@ export const EndpointDetailView = ({
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  if (loading) return null;
 
   if (!endpoint) {
     return (

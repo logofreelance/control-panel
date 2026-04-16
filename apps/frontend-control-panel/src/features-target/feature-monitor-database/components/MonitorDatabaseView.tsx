@@ -39,7 +39,7 @@ export const MonitorDatabaseView = () => {
   return (
     <TargetLayout>
       <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden pb-10 sm:pb-20">
-        <main className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-10 md:gap-14 animate-spring">
+        <main className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-10 md:gap-14">
           {/* BOLD COLOR HEADER - CLEAN TYPO */}
           <header className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
@@ -76,12 +76,11 @@ export const MonitorDatabaseView = () => {
           </header>
 
           {/* Stats Cards */}
-          <DatabaseStatsCard stats={stats} loading={loading} />
+          <DatabaseStatsCard stats={stats} />
 
           {/* Tables List */}
           <MonitorTablesList
             tables={stats.tables}
-            loading={loading}
             dropping={dropping}
             onDelete={dropTable}
           />

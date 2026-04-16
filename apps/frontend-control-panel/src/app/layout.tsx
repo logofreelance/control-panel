@@ -1,9 +1,8 @@
 import { Instrument_Sans } from 'next/font/google';
 import { cookies } from 'next/headers';
 import './globals.css';
-import { ToastProvider, ConfigProvider } from '@/modules/_core';
+import { ToastProvider, ConfigProvider, PageLoadingProvider } from '@/modules/_core';
 import { BRAND } from '@/lib/config';
-import { NavigationProgressWrapper } from './NavigationProgressWrapper';
 
 const fontBrand = Instrument_Sans({ 
   subsets: ['latin'], 
@@ -97,12 +96,13 @@ export default async function RootLayout({
       </head>
       <body className={`${fontBrand.variable} ${fontBrand.className} min-h-screen bg-background`} suppressHydrationWarning>
         <ThemeInitializer />
-        <NavigationProgressWrapper />
 
         <ConfigProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
+          <PageLoadingProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </PageLoadingProvider>
         </ConfigProvider>
       </body>
     </html>

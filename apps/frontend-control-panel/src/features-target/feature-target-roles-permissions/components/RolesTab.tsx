@@ -5,7 +5,6 @@ import { TextHeading } from '@/components/ui/text-heading';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { useRoles } from '../composables/useRoles';
 import { RoleModal } from './RoleModal';
-import { PageLoadingSkeleton } from '@/modules/_core';
 import { cn } from '@/lib/utils';
 import type { Role } from '../types';
 
@@ -26,8 +25,6 @@ export const RolesTab = () => {
         getLevelColor,
         getLevelBarColor,
     } = useRoles();
-
-    if (loading) return <PageLoadingSkeleton showStats={false} contentRows={4} />;
 
     return (
         <div className="space-y-6 animate-page-enter">

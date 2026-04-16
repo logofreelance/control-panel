@@ -73,7 +73,12 @@ export function DatabaseSchemaView() {
     if (loading && !sources.length) {
         return (
             <TargetLayout>
-                <PageLoadingSkeleton showStats={true} contentRows={3} />
+                <div className="w-full flex items-center justify-center min-h-[60vh]">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+                        <span className="text-base text-muted-foreground font-medium lowercase">synchronizing database schema...</span>
+                    </div>
+                </div>
             </TargetLayout>
         );
     }
@@ -379,8 +384,9 @@ function ExpandedResourcesPanel({
                 </div>
 
                 {loadingResources && resources.length === 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[1, 2, 3].map(i => <div key={i} className="h-32 bg-muted/40 rounded-2xl animate-pulse" />)}
+                    <div className="flex flex-col items-center justify-center py-12 gap-4">
+                        <div className="size-8 border-[3px] border-primary/20 border-t-primary animate-spin rounded-full" />
+                        <span className="text-sm text-muted-foreground lowercase">fetching resources...</span>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

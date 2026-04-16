@@ -43,7 +43,6 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
     const [source, setSource] = useState<DatabaseTable | null>(null);
     const [columns, setColumns] = useState<ColumnDefinition[]>([]);
     const [originalColumns, setOriginalColumns] = useState<ColumnDefinition[]>([]);
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
     // Compute available sources for relation picker
@@ -60,7 +59,6 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
     // Fetch source details
     useEffect(() => {
         const loadSource = async () => {
-            setLoading(true);
             const data = await fetchOne(DatabaseTableId);
             if (data) {
                 setSource(data);
@@ -106,7 +104,6 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
                     setOriginalColumns(JSON.parse(JSON.stringify(schema.columns || [])));
                 }
             }
-            setLoading(false);
         };
 
         if (DatabaseTableId) loadSource();
@@ -148,22 +145,6 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
         setSaving(false);
     };
 
-    if (loading) {
-        return (
-            <TargetLayout>
-                <div className="py-40">
-                    <Empty>
-                        <EmptyHeader>
-                            <EmptyMedia variant="icon">
-                                <Icons.loading className="animate-spin" />
-                            </EmptyMedia>
-                            <EmptyTitle>{C.status.loading}</EmptyTitle>
-                        </EmptyHeader>
-                    </Empty>
-                </div>
-            </TargetLayout>
-        );
-    }
 
     return (
         <TargetLayout>

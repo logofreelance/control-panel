@@ -12,7 +12,6 @@ const L = MODULE_LABELS.users;
 
 interface UsersTableProps {
     users: User[];
-    loading?: boolean;
     onEdit: (user: User) => void;
     onDelete: (user: User) => void;
 }
@@ -49,25 +48,7 @@ const formatDate = (dateStr: string) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-export const UsersTable = ({ users, loading, onEdit, onDelete }: UsersTableProps) => {
-    if (loading) {
-        return (
-            <div className="bg-white rounded-xl p-5 shadow-sm shadow-slate-200/50">
-                <div className="space-y-3">
-                    {[...Array(5)].map((_, i) => (
-                        <div key={i} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl animate-pulse">
-                            <div className="w-10 h-10 bg-slate-200 rounded-lg"></div>
-                            <div className="flex-1">
-                                <div className="h-4 w-32 bg-slate-200 rounded mb-2"></div>
-                                <div className="h-3 w-48 bg-slate-200 rounded"></div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
+export const UsersTable = ({ users, onEdit, onDelete }: UsersTableProps) => {
     if (!users.length) {
         return (
             <div className="bg-white rounded-xl p-12 shadow-sm shadow-slate-200/50 text-center">

@@ -65,16 +65,6 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
         }
     };
 
-    if (loading) {
-        return (
-             <TargetLayout>
-                <div className="flex flex-col items-center justify-center py-32 gap-6 opacity-40 animate-pulse">
-                    <Icons.loading className="size-10 animate-spin" />
-                    <p className="text-xs font-black uppercase tracking-widest">{L.messages.relations.loadingRelations.toLowerCase()}</p>
-                </div>
-            </TargetLayout>
-        );
-    }
 
     return (
         <TargetLayout>

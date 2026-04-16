@@ -21,15 +21,6 @@ export function UserSettingsView() {
     handleChangePassword,
   } = useUserSettings();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="size-12 rounded-2xl bg-card border border-border/50 shadow-xl shadow-primary/5 flex items-center justify-center">
-          <Icons.loading className="size-6 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <InternalLayout>

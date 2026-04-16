@@ -156,7 +156,6 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
   const isWriteOp = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(form.method || 'GET');
 
-  if (loading) return null;
 
   return (
     <div className="space-y-6 pb-24 animate-page-enter">

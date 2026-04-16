@@ -49,7 +49,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
   const L = DYNAMIC_ROUTES_LABELS.routeBuilder;
 
   return (
-    <div className="space-y-8 pb-16 animate-page-enter">
+    <div className="space-y-8 pb-16">
       {/* Header - Flat Luxury */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
         <div className="flex flex-col gap-1">

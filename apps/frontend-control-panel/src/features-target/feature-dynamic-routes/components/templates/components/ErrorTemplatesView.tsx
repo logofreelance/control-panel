@@ -34,7 +34,7 @@ export const ErrorTemplatesView = ({ targetId }: { targetId?: string }) => {
   } = useErrorTemplates(targetId);
 
   return (
-    <div className="space-y-4 animate-page-enter">
+    <div className="space-y-4">
       {/* Header - No Icon */}
       <div className="px-1">
         <TextHeading size="h3" className="lowercase">

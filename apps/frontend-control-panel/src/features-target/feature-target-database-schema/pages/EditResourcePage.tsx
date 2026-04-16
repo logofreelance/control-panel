@@ -15,6 +15,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button, Badge } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { useConfig } from '@/modules/_core';
+import { apiClient } from '@/lib/api-client';
 import { ResourceForm } from '../components/ResourceForm';
 import type { DatabaseTable, Resource } from '../types';
 
@@ -29,7 +30,6 @@ export function EditResourcePage() {
     // State
     const [DatabaseTable, setDatabaseTable] = useState<DatabaseTable | null>(null);
     const [resource, setResource] = useState<Resource | null>(null);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     // Resolve IDs from URL params
@@ -46,25 +46,19 @@ export function EditResourcePage() {
 
         const fetchDetails = async () => {
             try {
-                const headers: Record<string, string> = {};
-                if (nodeId) {
-                    headers['x-target-id'] = nodeId;
-                }
+                const headers: Record<string, string> = nodeId ? { 'x-target-id': nodeId } : {};
 
-                // Fetch Source
-                const sourceRes = await fetch(api.databaseSchema.detail(tableId), { headers });
-                const sourceData = await sourceRes.json();
-
-                // Fetch Resources
-                const resRes = await fetch(api.databaseSchema.resources(tableId), { headers });
-                const resData = await resRes.json();
+                // Fetch Source & Resources in parallel
+                const [sourceData, resData] = await Promise.all([
+                    apiClient.get<any>(api.databaseSchema.detail(tableId), { headers }),
+                    apiClient.get<any>(api.databaseSchema.resources(tableId), { headers })
+                ]);
 
                 if (sourceData.status === API_STATUS.SUCCESS) {
                     setDatabaseTable(sourceData.data);
                 }
 
                 if (resData.status === API_STATUS.SUCCESS) {
-                    // Resource IDs are usually still numbers in the DB, but they might be strings in params
                     const found = resData.data.find((r: Resource) => String(r.id) === resourceId);
                     if (found) {
                         setResource(found);
@@ -75,23 +69,11 @@ export function EditResourcePage() {
             } catch (e) {
                 console.error(e);
                 setError(L.messages.error.network);
-            } finally {
-                setLoading(false);
             }
         };
 
         fetchDetails();
     }, [tableId, resourceId, nodeId, api, API_STATUS, L]);
-
-    // Loading state
-    if (loading) {
-        return (
-            <div className="p-12 text-center text-muted-foreground">
-                <Icons.loading className="w-6 h-6 animate-spin mx-auto" />
-                <p className="text-sm text-muted-foreground mt-2">{L.labels.loadingDetails}</p>
-            </div>
-        );
-    }
 
     // Error state
     if (error || !DatabaseTable || !resource) {

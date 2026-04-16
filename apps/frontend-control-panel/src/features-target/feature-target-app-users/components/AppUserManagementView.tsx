@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { Button, Card, CardContent, Skeleton } from '@/components/ui';
+import { Button, Card, CardContent } from '@/components/ui';
 import { Icons } from '../config/icons';
 import { APP_USER_LABELS } from '../constants/ui-labels';
 import { ConfirmDialog } from '@/modules/_core';
@@ -132,7 +132,7 @@ export const AppUserManagementView = () => {
   return (
     <TargetLayout>
       <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden pb-6">
-        <main className="relative z-10 w-full max-w-7xl mx-auto py-4 md:py-6 px-4 md:px-6 flex flex-col gap-4 animate-spring">
+        <main className="relative z-10 w-full max-w-7xl mx-auto py-4 md:py-6 px-4 md:px-6 flex flex-col gap-4">
           {/* PAGE HEADER */}
           <header className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
@@ -177,7 +177,7 @@ export const AppUserManagementView = () => {
                         size="h3"
                         className="text-foreground"
                       >
-                        {loading ? <Skeleton className="h-8 w-20" /> : m.value}
+                        {loading ? '...' : m.value}
                       </TextHeading>
                       <div className="flex items-center gap-2">
                         <div className={cn('size-1.5 rounded-full', m.bg)} />

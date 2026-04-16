@@ -2,7 +2,7 @@
 
 /**
  * MainDashboardView - Elite Minimalist Refactor
- * 
+ *
  * STICKING TO RULES:
  * - No tracking-* (Removed tracking-tight, tracking-[0.05em], etc.)
  * - No text size < text-xs (Changed text-[10px]/[11px] to text-xs)
@@ -20,16 +20,7 @@ import { DASHBOARD_ROUTES } from '../config/routes';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatTargetId } from '../services/dashboard-stats';
 import { DASHBOARD_CONFIG } from '../constants/ui-labels';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Input,
-  Button,
-  Skeleton,
-} from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle, Badge, Input, Button } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { InternalLayout } from '@/components/layout/InternalLayout';
 
@@ -65,15 +56,22 @@ export function MainDashboardView() {
       {/* Hero Section */}
       <div className="relative w-full border-b border-border min-h-[50vh] flex flex-col justify-center">
         <DecorativeHeroBackground />
-        
+
         <div className="container mx-auto px-4 md:px-6 pt-10 pb-10 relative z-10 font-instrument">
           <div className="w-full max-w-5xl mx-auto text-center flex flex-col items-center gap-6">
             <div className="max-w-4xl mx-auto">
               <TextHeading as="h1" size="h1" className="mb-4 lowercase">
-                where <span className="bg-primary text-primary-foreground px-3 sm:px-4 py-0.5 sm:py-1 rounded-2xl mx-1 inline-block">focus</span> goes,<br />energy flows.
+                where{' '}
+                <span className="bg-primary text-primary-foreground px-3 sm:px-4 py-0.5 sm:py-1 rounded-2xl mx-1 inline-block">
+                  focus
+                </span>{' '}
+                goes,
+                <br />
+                energy flows.
               </TextHeading>
               <p className="text-muted-foreground text-lg md:text-xl font-normal leading-[1.6] max-w-2xl mx-auto lowercase">
-                streamline your operational workflow with precision node management and real-time connectivity diagnostics.
+                streamline your operational workflow with precision node management and real-time
+                connectivity diagnostics.
               </p>
             </div>
 
@@ -104,22 +102,35 @@ export function MainDashboardView() {
                             className="flex items-center justify-between p-4 rounded-xl hover:bg-muted group/res transition-colors"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                               <div className="size-9 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border group-hover/res:bg-primary group-hover/res:text-primary-foreground transition-colors">
-                                 <Icons.network className="size-4" />
-                               </div>
-                               <div className="flex flex-col items-start min-w-0">
-                                  <span className="text-base font-normal text-foreground truncate text-left lowercase">{target.name}</span>
-                                  <span className="text-base text-muted-foreground font-normal text-left">{formatTargetId(target.id, 12)}</span>
-                               </div>
+                              <div className="size-9 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border group-hover/res:bg-primary group-hover/res:text-primary-foreground transition-colors">
+                                <Icons.network className="size-4" />
+                              </div>
+                              <div className="flex flex-col items-start min-w-0">
+                                <span className="text-base font-normal text-foreground truncate text-left lowercase">
+                                  {target.name}
+                                </span>
+                                <span className="text-base text-muted-foreground font-normal text-left">
+                                  {formatTargetId(target.id, 12)}
+                                </span>
+                              </div>
                             </div>
-                            <div className={cn("size-2 rounded-full", target.status === 'online' ? "bg-primary animate-pulse" : "bg-muted")} />
+                            <div
+                              className={cn(
+                                'size-2 rounded-full',
+                                target.status === 'online'
+                                  ? 'bg-primary animate-pulse'
+                                  : 'bg-muted',
+                              )}
+                            />
                           </Link>
                         ))}
                       </div>
                     ) : (
                       <div className="p-6 text-center">
                         <Icons.search className="size-10 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-base text-muted-foreground font-normal lowercase">no matches found for "{searchQuery}"</p>
+                        <p className="text-base text-muted-foreground font-normal lowercase">
+                          no matches found for "{searchQuery}"
+                        </p>
                       </div>
                     )}
                   </div>
@@ -154,139 +165,161 @@ export function MainDashboardView() {
 
       {/* Main Content Area */}
       <div className="container mx-auto px-4 md:px-6 py-6 relative z-20 animate-page-enter">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto w-full">
-            
-            {/* Primary Action Card */}
-            <Card className="bg-primary text-primary-foreground border-primary">
-              <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div className="size-14 bg-background rounded-2xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform duration-500 border border-background">
-                      <Icons.database className="size-7" />
-                    </div>
-                    <Badge variant="secondary" className="px-4 py-1.5 bg-background text-primary border-none text-base font-normal rounded-full lowercase">
-                      node ecosystem
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-3 pt-4">
-                    <p className="text-base font-normal text-primary-foreground lowercase">
-                      system infrastructure
-                    </p>
-                    <TextHeading size="h3" className="leading-tight lowercase text-primary-foreground">
-                      consolidated <br /> infrastructure
-                    </TextHeading>
-                    <p className="text-base md:text-lg font-normal leading-relaxed lowercase text-primary-foreground">
-                      consolidate your distributed node registry into a single, high-precision control interface.
-                    </p>
-                  </div>
-              </CardHeader>
-                
-              <CardContent>
-                <div className="space-y-6 relative z-10">
-                  <div className="flex items-center gap-8">
-                    {loading ? (
-                      <Skeleton className="h-20 w-40 rounded-2xl bg-background" />
-                    ) : (
-                      <div className="flex items-center gap-8">
-                        <span className="text-4xl md:text-5xl font-semibold leading-none text-primary-foreground">
-                          {targets.length.toString().padStart(2, '0')}
-                        </span>
-                        <div className="space-y-1.5 border-l border-primary-foreground pl-6">
-                           <p className="text-base font-normal text-primary-foreground leading-none lowercase">active nodes</p>
-                           <p className="text-base font-normal text-primary-foreground lowercase">system instances</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3 w-full">
-                    <Button
-                      type="button"
-                      size="lg"
-                      variant="secondary"
-                      onClick={() => setShowAddModal(true)}
-                      className="flex-1 h-14 rounded-2xl bg-background text-primary hover:bg-muted font-instrument lowercase text-base font-normal"
-                    >
-                      <Icons.plus className="size-5 mr-2" />
-                      deploy system
-                    </Button>
-                    <Link href={DASHBOARD_ROUTES.targetSystems} className="block shrink-0">
-                      <Button 
-                        variant="secondary" 
-                        size="icon"
-                        className="size-14 rounded-2xl bg-background text-primary hover:bg-muted transition-all border-none"
-                      >
-                        <Icons.settings className="size-5" />
-                      </Button>
-                    </Link>
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto w-full">
+          {/* Primary Action Card */}
+          <Card className="bg-primary text-primary-foreground border-primary">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div className="size-14 bg-background rounded-2xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform duration-500 border border-background">
+                  <Icons.database className="size-7" />
                 </div>
-              </CardContent>
-            </Card>
+                <Badge
+                  variant="secondary"
+                  className="bg-background text-primary border-none lowercase"
+                >
+                  node ecosystem
+                </Badge>
+              </div>
 
-            {/* System Monitor List */}
-            <Card>
-              <CardHeader>
-                <div className="flex gap-4 items-start">
-                  <div className="size-14 rounded-2xl bg-muted border border-border flex items-center justify-center text-primary shrink-0 aspect-square">
-                    <Icons.monitor className="size-7" />
-                  </div>
-                  <div className="font-instrument">
-                    <TextHeading size="h3" className="lowercase">{searchQuery ? 'search results' : 'target system'}</TextHeading>
-                    <p className="text-base text-muted-foreground font-normal mt-2 lowercase">
-                      {searchQuery ? `displaying matches for "${searchQuery}"` : 'high-fidelity monitoring of your active infrastructure nodes.'}
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
+              <div className="space-y-3 pt-4">
+                <p className="text-base font-normal text-primary-foreground lowercase">
+                  system infrastructure
+                </p>
+                <TextHeading size="h3" className="leading-tight lowercase text-primary-foreground">
+                  consolidated <br /> infrastructure
+                </TextHeading>
+                <p className="text-base md:text-lg font-normal leading-relaxed lowercase text-primary-foreground">
+                  consolidate your distributed node registry into a single, high-precision control
+                  interface.
+                </p>
+              </div>
+            </CardHeader>
 
-              <CardContent>
-                <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar max-h-[400px]">
+            <CardContent>
+              <div className="space-y-6 relative z-10">
+                <div className="flex items-center gap-8">
                   {loading ? (
-                      <div className="flex flex-col gap-4">
-                          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
-                      </div>
-                  ) : (searchQuery ? filteredTargets : topTargets).length > 0 ? (
-                      <div className="flex flex-col gap-3">
-                          {(searchQuery ? filteredTargets : topTargets).map((target) => (
-                              <Link
-                                  key={target.id}
-                                  href={DASHBOARD_ROUTES.target(target.id)}
-                                  className="group flex items-center justify-between p-4 bg-muted hover:bg-accent transition-all rounded-3xl border border-border"
-                              >
-                                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                                      <div className="size-14 rounded-2xl bg-background text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all flex items-center justify-center shrink-0 border border-border">
-                                          <Icons.network className="size-7" />
-                                      </div>
-                                      <div className="min-w-0 flex-1 flex flex-col gap-2 font-instrument">
-                                          <p className="text-lg font-normal text-foreground truncate group-hover:text-primary transition-all leading-tight lowercase">
-                                              {target.name}
-                                          </p>
-                                          <div className="flex items-center gap-3">
-                                              <p className="text-base font-normal text-muted-foreground leading-tight">
-                                                  {formatTargetId(target.id, DASHBOARD_CONFIG.idSliceLength)}
-                                              </p>
-                                              <div className={cn(
-                                                "size-1.5 rounded-full",
-                                                target.status === 'online' ? "bg-primary animate-pulse" : "bg-muted"
-                                              )} />
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <Icons.chevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
-                              </Link>
-                          ))}
-                      </div>
+                    <span className="text-4xl md:text-5xl font-semibold leading-none text-primary-foreground animate-pulse">
+                      --
+                    </span>
                   ) : (
-                      <div className="flex-1 flex flex-col items-center justify-center py-10 bg-muted rounded-3xl border border-dashed border-border font-instrument">
-                          <Icons.search className="size-12 text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground font-normal text-base lowercase">no results for "{searchQuery}"</p>
+                    <div className="flex items-center gap-8">
+                      <span className="text-4xl md:text-5xl font-semibold leading-none text-primary-foreground">
+                        {targets.length.toString().padStart(2, '0')}
+                      </span>
+                      <div className="space-y-1.5 border-l border-primary-foreground pl-6">
+                        <p className="text-base font-normal text-primary-foreground leading-none lowercase">
+                          active nodes
+                        </p>
+                        <p className="text-base font-normal text-primary-foreground lowercase">
+                          system instances
+                        </p>
                       </div>
+                    </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+
+                <div className="flex items-center gap-3 w-full">
+                  <Button
+                    type="button"
+                    size="lg"
+                    variant="secondary"
+                    onClick={() => setShowAddModal(true)}
+                    className="flex-1 hover:bg-muted font-instrument text-primary lowercase"
+                  >
+                    <Icons.plus className="size-5 mr-2" />
+                    deploy system
+                  </Button>
+                  <Link href={DASHBOARD_ROUTES.targetSystems} className="block shrink-0">
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="size-13 text-primary hover:bg-muted transition-all"
+                    >
+                      <Icons.settings className="size-5" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* System Monitor List */}
+          <Card>
+            <CardHeader>
+              <div className="flex gap-4 items-center">
+                <div className="size-14 rounded-2xl bg-muted border border-border flex items-center justify-center text-primary shrink-0 aspect-square">
+                  <Icons.monitor className="size-7" />
+                </div>
+                <div>
+                  <TextHeading size="h4" className="lowercase">
+                    {searchQuery ? 'search results' : 'target system'}
+                  </TextHeading>
+                  <p className="text-base text-muted-foreground font-normal lowercase">
+                    {searchQuery
+                      ? `displaying matches for "${searchQuery}"`
+                      : 'high-fidelity monitoring of your active infrastructure nodes.'}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent>
+              <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar max-h-[400px]">
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-4 bg-muted rounded-3xl border border-border border-dashed">
+                    <div className="size-10 border-[3px] border-primary/10 border-t-primary animate-spin rounded-full" />
+                    <span className="text-base text-muted-foreground font-normal lowercase tracking-tight">
+                      polling ecosystem...
+                    </span>
+                  </div>
+                ) : (searchQuery ? filteredTargets : topTargets).length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {(searchQuery ? filteredTargets : topTargets).map((target) => (
+                      <Link
+                        key={target.id}
+                        href={DASHBOARD_ROUTES.target(target.id)}
+                        className="group flex items-center justify-between p-2 hover:bg-accent transition-all rounded-3xl"
+                      >
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                          <div className="size-14 rounded-2xl bg-background text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all flex items-center justify-center shrink-0 border border-border">
+                            <Icons.network className="size-7" />
+                          </div>
+                          <div className="min-w-0 flex-1 flex flex-col gap-2 font-instrument">
+                            <p className="text-lg font-normal text-foreground truncate group-hover:text-primary transition-all leading-tight lowercase">
+                              {target.name}
+                            </p>
+                            <div className="flex items-center gap-3">
+                              <p className="text-base font-normal text-muted-foreground leading-tight">
+                                {formatTargetId(target.id, DASHBOARD_CONFIG.idSliceLength)}
+                              </p>
+                              <div
+                                className={cn(
+                                  'size-1.5 rounded-full',
+                                  target.status === 'online'
+                                    ? 'bg-primary animate-pulse'
+                                    : 'bg-muted',
+                                )}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <Icons.chevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center py-10 bg-muted rounded-3xl border border-dashed border-border font-instrument">
+                    <Icons.search className="size-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground font-normal text-base lowercase">
+                      no results for "{searchQuery}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <TargetFormModal

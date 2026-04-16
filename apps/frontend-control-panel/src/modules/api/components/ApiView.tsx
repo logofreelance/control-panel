@@ -3,7 +3,7 @@
 // ApiView - API keys and CORS management
 // Manages API access keys and cross-origin domains
 
-import { Button, Input, Badge, Skeleton } from '@/components/ui';
+import { Button, Input, Badge } from '@/components/ui';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { ConfirmDialog } from '@/modules/_core';
 import { env } from '@/lib/env';
@@ -33,11 +33,7 @@ export const ApiView = () => {
         getConfirmDialogMessage,
     } = useApi();
 
-    const LoadingOverlay = () => (
-        <div className="absolute inset-0 bg-white z-10 flex items-center justify-center rounded-xl">
-            <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin shadow-sm" />
-        </div>
-    );
+
 
     return (
         <div className="space-y-6 animate-page-enter">
@@ -52,7 +48,7 @@ export const ApiView = () => {
             </header>
 
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative min-h-[140px]">
-                {loading && <LoadingOverlay />}
+                
                 <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-100 transition-all group">
                     <div className="flex justify-between items-start mb-3">
                         <p className="text-xs font-medium text-slate-500">{L.stats.apiKeys}</p>
@@ -108,7 +104,7 @@ export const ApiView = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-xl border border-slate-100 overflow-hidden flex flex-col relative min-h-[300px]">
-                    {loading && <LoadingOverlay />}
+                    
                     <div className="p-4 sm:p-5 border-b border-slate-50 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center">

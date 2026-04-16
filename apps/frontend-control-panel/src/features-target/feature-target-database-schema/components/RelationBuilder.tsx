@@ -73,17 +73,6 @@ export const RelationBuilder = ({ DatabaseTableId, DatabaseTableName, onRelation
     const getTypeLabel = (type: string) => RELATION_TYPES.find(t => t.value === type)?.label || type;
     const getTypeIcon = (type: string) => RELATION_TYPES.find(t => t.value === type)?.icon || '?';
 
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 gap-6 animate-in fade-in duration-700">
-                <Spinner size="lg" />
-                <div className="space-y-1 text-center">
-                    <p className="text-sm font-semibold tracking-tight">fetching connections</p>
-                    <p className="text-xs text-muted-foreground opacity-60">preparing your database relations...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">

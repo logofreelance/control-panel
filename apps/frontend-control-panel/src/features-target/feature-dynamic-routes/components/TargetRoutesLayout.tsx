@@ -9,77 +9,79 @@ import { EndpointDetailView } from './builder/components/EndpointDetailView';
 import { ApiTesterView } from './tester/components/ApiTesterView';
 import { ErrorTemplatesView } from './templates/components/ErrorTemplatesView';
 import { TargetLayout } from '@/components/layout/TargetLayout';
+import { Button } from '@/components/ui';
 
 interface TargetRoutesLayoutProps {
-    targetId: string;
+  targetId: string;
 }
 
 export function TargetRoutesLayout({ targetId }: TargetRoutesLayoutProps) {
-    const [activeTab, setActiveTab] = useState('builder');
-    const [subView, setSubView] = useState<{ view: string; id?: string } | null>(null);
+  const [activeTab, setActiveTab] = useState('builder');
+  const [subView, setSubView] = useState<{ view: string; id?: string } | null>(null);
 
-    const tabs = [
-        { id: 'builder', label: 'route builder', icon: Icons.plus },
-        { id: 'tester', label: 'tester', icon: Icons.zap },
-        { id: 'templates', label: 'error templates', icon: Icons.fileText },
-    ];
+  const tabs = [
+    { id: 'builder', label: 'route builder', icon: Icons.plus },
+    { id: 'tester', label: 'tester', icon: Icons.zap },
+    { id: 'templates', label: 'error templates', icon: Icons.fileText },
+  ];
 
-    const handleNavigate = (view: string, id?: string) => {
-        setSubView({ view, id });
-    };
+  const handleNavigate = (view: string, id?: string) => {
+    setSubView({ view, id });
+  };
 
-    const handleBack = () => {
-        setSubView(null);
-    };
+  const handleBack = () => {
+    setSubView(null);
+  };
 
-    const handleTabChange = (tabId: string) => {
-        setActiveTab(tabId);
-        setSubView(null);
-    };
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    setSubView(null);
+  };
 
-    return (
-        <TargetLayout>
-            <div className="flex flex-col gap-8 md:gap-10 animate-page-enter">
-                {/* TABS - FLAT LUXURY DESIGN */}
-                <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md pt-2 pb-4 border-b border-border/10">
-                    <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar px-1">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleTabChange(tab.id)}
-                                className={cn(
-                                    "flex items-center gap-2.5 sm:gap-3 px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-medium rounded-2xl whitespace-nowrap transition-all active:scale-95 lowercase border-none",
-                                    activeTab === tab.id
-                                        ? 'bg-foreground text-background shadow-none'
-                                        : 'bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-                                )}
-                            >
-                                <tab.icon className={cn("size-4.5 sm:size-5 transition-transform", activeTab === tab.id && "scale-105")} />
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+  return (
+    <TargetLayout>
+      <div className="flex flex-col gap-8">
+        {/* TABS NAVIGATION - ONLY AREA REQUESTED */}
+        <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md pt-2 pb-4">
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar px-1">
+            {tabs.map((tab) => (
+              <Button
+                key={tab.id}
+                variant={activeTab === tab.id ? 'default' : 'secondary'}
+                onClick={() => handleTabChange(tab.id)}
+                className={cn(
+                  'h-11 px-6 rounded-xl lowercase font-normal text-base border-none',
+                  activeTab !== tab.id && 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
+                )}
+              >
+                <tab.icon className="size-4 mr-2" />
+                {tab.label}
+              </Button>
+            ))}
+          </div>
+        </div>
 
-                {/* CONTENT AREA */}
-                <div className="min-h-[600px] w-full px-1">
-                    {activeTab === 'builder' && !subView && (
-                        <RouteBuilderView targetId={targetId} onNavigate={handleNavigate} />
-                    )}
-                    {activeTab === 'builder' && subView?.view === 'editor' && (
-                        <EndpointEditor targetId={targetId} endpointId={subView.id} onBack={handleBack} />
-                    )}
-                    {activeTab === 'builder' && subView?.view === 'detail' && subView.id && (
-                        <EndpointDetailView targetId={targetId} endpointId={subView.id} onNavigate={handleNavigate} onBack={handleBack} />
-                    )}
+        {/* CONTENT AREA - RESTORED ORIGINAL LOGIC */}
+        <div className="min-h-[600px] w-full px-1">
+          {activeTab === 'builder' && !subView && (
+            <RouteBuilderView targetId={targetId} onNavigate={handleNavigate} />
+          )}
+          {activeTab === 'builder' && subView?.view === 'editor' && (
+            <EndpointEditor targetId={targetId} endpointId={subView.id} onBack={handleBack} />
+          )}
+          {activeTab === 'builder' && subView?.view === 'detail' && subView.id && (
+            <EndpointDetailView
+              targetId={targetId}
+              endpointId={subView.id}
+              onNavigate={handleNavigate}
+              onBack={handleBack}
+            />
+          )}
 
-
-
-
-                    {activeTab === 'tester' && <ApiTesterView targetId={targetId} />}
-                    {activeTab === 'templates' && <ErrorTemplatesView targetId={targetId} />}
-                </div>
-            </div>
-        </TargetLayout>
-    );
+          {activeTab === 'tester' && <ApiTesterView targetId={targetId} />}
+          {activeTab === 'templates' && <ErrorTemplatesView targetId={targetId} />}
+        </div>
+      </div>
+    </TargetLayout>
+  );
 }

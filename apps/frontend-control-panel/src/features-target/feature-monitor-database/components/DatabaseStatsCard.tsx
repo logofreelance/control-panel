@@ -27,7 +27,7 @@ export const DatabaseStatsCard = ({ stats, loading }: DatabaseStatsCardProps) =>
         }), { dataMB: 0, indexMB: 0, overheadMB: 0 });
     }, [stats]);
 
-    if (loading || !stats) return null;
+    if (!stats) return null;
 
     const totalStorageMB = stats.totalSizeMb;
     const totalRows = stats.totalRows;

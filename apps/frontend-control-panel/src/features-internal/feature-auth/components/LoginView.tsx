@@ -47,13 +47,8 @@ const DecorativeBackground = () => (
 );
 
 const LoadingScreen = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-    <div className="relative">
-      <div className="absolute inset-0 bg-primary/5 blur-xl rounded-full scale-150 animate-pulse" />
-      <div className="relative w-12 h-12 bg-card rounded-xl border border-border/50 shadow-sm flex items-center justify-center">
-        <Icons.loading className="w-6 h-6 text-primary animate-spin" />
-      </div>
-    </div>
+  <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="size-12 border-4 border-primary border-t-transparent animate-spin rounded-full" />
   </div>
 );
 

@@ -4,7 +4,6 @@ import { Button, Card, CardContent } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { usePermissions } from '../composables/usePermissions';
-import { PageLoadingSkeleton } from '@/modules/_core';
 import { PermissionModal } from './PermissionModal';
 import { cn } from '@/lib/utils';
 import type { Permission } from '../types';
@@ -27,8 +26,6 @@ export const PermissionsTab = () => {
         updatePermission,
         deletePermission,
     } = usePermissions();
-
-    if (loading) return <PageLoadingSkeleton showStats={false} contentRows={4} />;
 
     return (
         <div className="space-y-6 animate-page-enter">

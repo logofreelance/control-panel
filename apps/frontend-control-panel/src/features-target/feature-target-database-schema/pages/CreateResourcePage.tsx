@@ -15,6 +15,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button, Badge } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { useConfig } from '@/modules/_core';
+import { apiClient } from '@/lib/api-client';
 import { ResourceForm } from '../components/ResourceForm';
 import type { DatabaseTable } from '../types';
 
@@ -28,7 +29,6 @@ export function CreateResourcePage() {
 
     // State
     const [DatabaseTable, setDatabaseTable] = useState<DatabaseTable | null>(null);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     // Resolve IDs from URL params
@@ -44,13 +44,9 @@ export function CreateResourcePage() {
 
         const fetchSource = async () => {
             try {
-                const headers: Record<string, string> = {};
-                if (nodeId) {
-                    headers['x-target-id'] = nodeId;
-                }
-
-                const res = await fetch(api.databaseSchema.detail(tableId), { headers });
-                const data = await res.json();
+                const data = await apiClient.get<any>(api.databaseSchema.detail(tableId), {
+                    headers: nodeId ? { 'x-target-id': nodeId } : {}
+                });
 
                 if (data.status === API_STATUS.SUCCESS) {
                     setDatabaseTable(data.data);
@@ -60,23 +56,11 @@ export function CreateResourcePage() {
             } catch (e) {
                 console.error(e);
                 setError(L.messages.error.network);
-            } finally {
-                setLoading(false);
             }
         };
 
         fetchSource();
     }, [tableId, nodeId, api, API_STATUS, L]);
-
-    // Loading state
-    if (loading) {
-        return (
-            <div className="p-12 text-center text-muted-foreground">
-                <Icons.loading className="w-6 h-6 animate-spin mx-auto" />
-                <p className="text-sm text-muted-foreground mt-2">{L.labels.loadingSourceDetails}</p>
-            </div>
-        );
-    }
 
     // Error state
     if (error || !DatabaseTable) {

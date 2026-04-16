@@ -14,6 +14,35 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
 import { LABELS } from '@/lib/config/client';
 
+/**
+ * GlobalLoading - Event-based trigger for loading states outside React
+ */
+export class GlobalLoading {
+    private static listeners: ((loading: boolean) => void)[] = [];
+    private static activeCount = 0;
+
+    static start() {
+        this.activeCount++;
+        if (this.activeCount === 1) this.notify(true);
+    }
+
+    static stop() {
+        this.activeCount = Math.max(0, this.activeCount - 1);
+        if (this.activeCount === 0) this.notify(false);
+    }
+
+    static subscribe(listener: (loading: boolean) => void) {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+
+    private static notify(loading: boolean) {
+        this.listeners.forEach(l => l(loading));
+    }
+}
+
 interface PageLoadingContextType {
     isPageLoading: boolean;
     setPageLoading: (loading: boolean) => void;
@@ -33,10 +62,11 @@ interface PageLoadingProviderProps {
 export const PageLoadingProvider = ({ children }: PageLoadingProviderProps) => {
     const [loaders, setLoaders] = useState<Record<string, boolean>>({});
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [isGlobalBusy, setIsGlobalBusy] = useState(false);
     const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Calculate if any loader is still loading
-    const isPageLoading = isTransitioning || Object.values(loaders).some(loading => loading);
+    const isPageLoading = isTransitioning || isGlobalBusy || Object.values(loaders).some(loading => loading);
 
     // Simple setter for single-loader pages
     const setPageLoading = useCallback((loading: boolean) => {
@@ -60,6 +90,11 @@ export const PageLoadingProvider = ({ children }: PageLoadingProviderProps) => {
     // Update a specific loader's state
     const updateLoader = useCallback((id: string, loading: boolean) => {
         setLoaders(prev => ({ ...prev, [id]: loading }));
+    }, []);
+
+    // Listen for global loading events from ApiClient or others
+    useEffect(() => {
+        return GlobalLoading.subscribe(setIsGlobalBusy);
     }, []);
 
     // Listen for route changes to set transitioning state
@@ -133,7 +168,20 @@ export const PageLoadingProvider = ({ children }: PageLoadingProviderProps) => {
             updateLoader
         }}>
             {children}
-            {/* Global Locking Overlay Removed - Allowing Component Level Loading */}
+            
+            {/* Unified Global Loading Overlay - FLAT REDESIGN */}
+            {isPageLoading && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background animate-in fade-in duration-300">
+                    <div className="flex flex-col items-center">
+                        {/* Bold Single-Ring Flat Spinner */}
+                        <div className="relative size-16 flex items-center justify-center">
+                            {/* Main Thick Ring */}
+                            <div className="absolute inset-0 border-[5px] border-primary/10 rounded-full" />
+                            <div className="absolute inset-0 border-[5px] border-primary border-t-transparent rounded-full animate-spin [animation-duration:0.8s]" />
+                        </div>
+                    </div>
+                </div>
+            )}
         </PageLoadingContext.Provider>
     );
 };

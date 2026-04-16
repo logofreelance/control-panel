@@ -1,5 +1,4 @@
 export * from './components/MainDashboardView';
-export * from './components/DashboardSkeleton';
 export * from './hooks/useDashboard';
 export * from './services/dashboard-stats';
 export * from './constants/ui-labels';

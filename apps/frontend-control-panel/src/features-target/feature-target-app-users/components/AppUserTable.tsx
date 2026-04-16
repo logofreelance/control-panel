@@ -19,7 +19,6 @@ import {
   CardContent,
   Button,
   Badge,
-  Skeleton,
   Table,
   TableHeader,
   TableBody,
@@ -49,15 +48,6 @@ const formatDate = (dateStr: string) => {
 };
 
 export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableProps) => {
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full rounded-xl bg-muted" />
-        ))}
-      </div>
-    );
-  }
 
   if (!users.length) {
     return (

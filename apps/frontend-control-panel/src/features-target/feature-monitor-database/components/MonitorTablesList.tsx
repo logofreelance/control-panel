@@ -244,7 +244,6 @@ export const MonitorTablesList = ({ tables, loading, dropping, onDelete }: Monit
         setConfirmDelete(null);
     };
 
-    if (loading) return null; // Parent handles loading skeleton
 
     if (!tables.length) {
         return (

@@ -114,7 +114,7 @@ export function AppSidebar({ menuItems, siteName }: AppSidebarProps) {
                 <div className="flex flex-col text-left">
                     <span className="text-[11px] font-bold text-foreground/50 leading-none">Secured core</span>
                     <div className="flex items-center gap-2 mt-2 leading-none">
-                        <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-500/10" />
+                        <div className="size-1.5 rounded-full bg-emerald-500" />
                         <span className="text-xs font-medium text-muted-foreground/30">Stable protocol active</span>
                     </div>
                 </div>

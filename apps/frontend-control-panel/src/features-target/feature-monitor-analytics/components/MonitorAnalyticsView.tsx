@@ -7,7 +7,6 @@ import {
   Input,
   Card,
   CardContent,
-  Skeleton,
   Table,
   TableHeader,
   TableBody,
@@ -120,7 +119,7 @@ export const MonitorAnalyticsView = () => {
   return (
     <TargetLayout>
       <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden pb-10 sm:pb-20">
-        <main className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-10 md:gap-14 animate-spring">
+        <main className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-10 md:gap-14">
           {/* BOLD COLOR HEADER - CLEAN TYPO */}
           <header className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
@@ -161,7 +160,7 @@ export const MonitorAnalyticsView = () => {
                   </div>
                   <div className="flex flex-col gap-1">
                     <TextHeading size="h3" className="leading-none">
-                      {loading ? <Skeleton className="h-10 w-20" /> : m.value}
+                      {loading ? '...' : m.value}
                     </TextHeading>
                     <div className="flex items-center gap-2">
                        <span className="text-base font-normal text-muted-foreground lowercase">
@@ -269,25 +268,13 @@ export const MonitorAnalyticsView = () => {
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                    [1, 2, 3, 4, 5].map((i) => (
-                      <TableRow key={i} className="border-border">
-                        <TableCell className="h-16 px-8">
-                          <Skeleton className="h-4 w-12 rounded-lg" />
-                        </TableCell>
-                        <TableCell className="h-16 text-center">
-                          <Skeleton className="h-6 w-16 mx-auto rounded-lg" />
-                        </TableCell>
-                        <TableCell className="h-16 px-6">
-                          <Skeleton className="h-4 w-full max-w-[200px] rounded-lg" />
-                        </TableCell>
-                        <TableCell className="h-16 text-right px-6 hidden md:table-cell">
-                          <Skeleton className="h-4 w-12 ml-auto rounded-lg" />
-                        </TableCell>
-                        <TableCell className="h-16 text-right px-8 hidden md:table-cell">
-                          <Skeleton className="h-4 w-20 ml-auto rounded-lg" />
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    <TableRow className="border-border">
+                      <TableCell colSpan={5} className="h-40 text-center">
+                        <div className="flex items-center justify-center">
+                          <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ) : filteredLogs.length === 0 ? (
                     <TableRow>
                       <TableCell

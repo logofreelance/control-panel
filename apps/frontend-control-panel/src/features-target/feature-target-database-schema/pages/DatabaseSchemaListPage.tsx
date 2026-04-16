@@ -89,8 +89,8 @@ export function DatabaseSchemaListPage() {
   if (loading && !sources.length) {
     return (
       <TargetLayout>
-        <div className="px-4">
-          <PageLoadingSkeleton showStats={true} contentRows={3} />
+        <div className="w-full flex items-center justify-center min-h-[60vh]">
+          <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
         </div>
       </TargetLayout>
     );
@@ -462,7 +462,7 @@ function ExpandedResourcesPanel({
               API Endpoints
             </TextHeading>
             {loadingResources && (
-              <Icons.loading className="w-3.5 h-3.5 animate-spin text-primary" />
+              <div className="size-4 border-2 border-primary border-t-transparent animate-spin rounded-full" />
             )}
           </div>
           <Button
@@ -483,13 +483,8 @@ function ExpandedResourcesPanel({
         </div>
 
         {loadingResources ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-32 bg-background border border-border rounded-2xl animate-pulse"
-              />
-            ))}
+          <div className="flex items-center justify-center py-12">
+            <div className="size-8 border-[3px] border-primary border-t-transparent animate-spin rounded-full" />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

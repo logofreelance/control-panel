@@ -10,7 +10,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button, Badge, Card, CardContent } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
-import { ConfirmDialog, useConfig, PageLoadingSkeleton } from '@/modules/_core';
+import { ConfirmDialog, useConfig } from '@/modules/_core';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { useTrash } from '../composables';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,7 @@ export const DatabaseSchemaTrashView = () => {
     const router = useRouter();
     const params = useParams();
     const nodeId = params.id as string;
-    const { items, loading, restore, destroy } = useTrash();
+    const { items, restore, destroy } = useTrash();
 
     const [confirmDialog, setConfirmDialog] = useState<{
         id: string | number;
@@ -41,8 +41,6 @@ export const DatabaseSchemaTrashView = () => {
         setActionLoading(false);
         setConfirmDialog(null);
     };
-
-    if (loading) return <PageLoadingSkeleton showStats={false} contentRows={4} />;
 
     return (
         <TargetLayout>

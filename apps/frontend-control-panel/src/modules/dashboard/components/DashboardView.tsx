@@ -9,10 +9,11 @@ import { Badge, Button } from '@/components/ui';
 import { Icons, MODULE_LABELS, COMMON_LABELS } from '@/lib/config/client';
 import { useDashboard } from '../composables';
 
+import { PageLoadingSkeleton } from '@/modules/_core';
+
 export const DashboardView = () => {
     const L = MODULE_LABELS.dashboard;
-    const MS = 'ms'; // Extract 'ms' to variable to satisfy no-literals rule
-    const { stats, copyGatewayUrl, gatewayUrl, loading } = useDashboard();
+    const { stats, copyGatewayUrl, gatewayUrl } = useDashboard();
 
     // Infrastructure items with icons
     const infraItems = [
@@ -20,15 +21,6 @@ export const DashboardView = () => {
         { label: L.labels.securityKeys, value: stats?.activeKeys || 0, Icon: Icons.key, color: 'text-amber-500' },
         { label: L.labels.systemHealth, value: '100%', Icon: Icons.checkCircle, color: 'text-emerald-500' }
     ];
-
-    // SOLID Loading Overlay
-    // absolute inset-0 bg-white (NO opacity) -> Covers content completely (Blank)
-    // z-20 -> Ensures it sits on top
-    const LoadingOverlay = () => (
-        <div className="absolute inset-0 bg-white z-20 flex items-center justify-center rounded-xl">
-            <div className="w-8 h-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin shadow-sm" />
-        </div>
-    );
 
     return (
         <div className="space-y-6">
@@ -51,7 +43,7 @@ export const DashboardView = () => {
 
             {/* Stats Grid - Mobile 2 Columns - Solid Overlay Wrapper */}
             <div className="relative min-h-[140px]">
-                {loading && <LoadingOverlay />}
+                
                 <section className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                     {/* Total Users */}
                     <div className="bg-white rounded-xl p-5 shadow-sm shadow-slate-200/50 hover:shadow-md hover:shadow-slate-200/50 transition-all group">
@@ -112,7 +104,7 @@ export const DashboardView = () => {
             </div>
 
             <div className="relative min-h-[400px]">
-                {loading && <LoadingOverlay />}
+                
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Recent Activity */}
                     <div className="lg:col-span-2 bg-white rounded-xl shadow-sm shadow-slate-200/50 overflow-hidden flex flex-col">

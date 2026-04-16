@@ -12,6 +12,7 @@ import { TextHeading } from '@/components/ui/text-heading';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { DataViewer } from '../components/DataViewer';
 import { PageTitle } from '@/components/ui/page-title';
+import { ConfirmDialog } from '@/modules/_core';
 import { Icons } from '@/lib/config/client';
 import { cn } from '@/lib/utils';
 import { API } from '../api/endpoints';
@@ -34,14 +35,11 @@ export function DataPage() {
 
   // State
   const [source, setSource] = useState<DatabaseTable | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch data source details
   const fetchSource = async () => {
     if (!tableId) return;
-
-    setLoading(true);
     try {
       const headers: Record<string, string> = {};
       if (nodeId) headers['x-target-id'] = nodeId;
@@ -56,8 +54,6 @@ export function DataPage() {
     } catch (e) {
       console.error(e);
       setError('network error occurred');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -65,20 +61,6 @@ export function DataPage() {
     fetchSource();
   }, [tableId, nodeId]);
 
-  if (loading) {
-    return (
-      <TargetLayout>
-        <div className="flex flex-col items-center justify-center py-32 gap-6 opacity-40 animate-pulse">
-          <div className="size-16 rounded-3xl bg-muted/60 flex items-center justify-center">
-            <Icons.loading className="size-8 animate-spin" />
-          </div>
-          <p className="text-xl font-normal lowercase">
-            {L.labels.loading || 'loading...'}
-          </p>
-        </div>
-      </TargetLayout>
-    );
-  }
 
   if (error || !source) {
     return (
@@ -140,7 +122,7 @@ export function DataPage() {
               <Icons.edit className="size-4 mr-2" /> edit schema
             </Button>
             <Button variant="default" size="icon-sm" onClick={() => fetchSource()}>
-              <Icons.refresh className={cn(loading && 'animate-spin')} />
+              <Icons.refresh />
             </Button>
           </div>
         </header>

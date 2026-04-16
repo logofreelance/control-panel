@@ -66,34 +66,6 @@ export function TargetDashboardView() {
     });
   }, [metrics]);
 
-  if (loading)
-    return (
-      <TargetLayout>
-        <div className="w-full max-w-7xl mx-auto py-8 md:py-10 px-6 lg:px-10 flex flex-col gap-8">
-          <div className="flex flex-col gap-6">
-            <Skeleton className="h-6 w-32 rounded-full" />
-            <Skeleton className="h-12 w-96 rounded-xl" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i}>
-                <CardContent className="p-6 flex flex-col gap-6">
-                  <div className="flex justify-between">
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="size-10 rounded-lg" />
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <Skeleton className="h-10 w-16" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </TargetLayout>
-    );
 
   if (!target)
     return (
@@ -128,7 +100,7 @@ export function TargetDashboardView() {
   return (
     <TargetLayout>
       <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden pb-20">
-        <div className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-8 animate-spring">
+        <div className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-8">
           {/* FLAT LUXURY HEADER */}
           <header className="flex items-center justify-end">
             <Button

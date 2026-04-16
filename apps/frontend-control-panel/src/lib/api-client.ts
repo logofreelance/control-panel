@@ -1,4 +1,5 @@
 import { env } from './env';
+import { GlobalLoading } from '@/modules/_core/providers/PageLoadingProvider';
 
 interface FetchOptions extends RequestInit {
     params?: Record<string, string>;
@@ -11,7 +12,9 @@ class ApiClient {
     }
 
     private async request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-        const urlStr = `${this.baseUrl}${endpoint}`;
+        GlobalLoading.start();
+        try {
+            const urlStr = `${this.baseUrl}${endpoint}`;
         // Jika urlStr adalah path relatif (misal '/api/login'), kita harus menyediakan base URL 
         // agar 'new URL()' tidak melempar error "Invalid URL".
         const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
@@ -52,8 +55,11 @@ class ApiClient {
             throw new Error('Unauthorized');
         }
 
-        const data = await response.json();
-        return data as T;
+            const data = await response.json();
+            return data as T;
+        } finally {
+            GlobalLoading.stop();
+        }
     }
 
     public get<T>(endpoint: string, options?: Omit<FetchOptions, 'body'>) {

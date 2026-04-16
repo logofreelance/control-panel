@@ -8,6 +8,7 @@ import { loadEnvironmentConfig, type EnvironmentConfig } from './env';
 import { buildInternalDatabaseConnection } from './features-internal/internal.db';
 import { buildTargetDatabaseConnection } from './features-target/target.db';
 import { findTargetSystemById } from './features-internal/feature-target-registry/target-registry.repository';
+import { buildAuthPanelLucia } from './features-internal/feature-auth/auth.lucia';
 
 // Fitur-fitur
 import { createFeaturePanelAuth } from './features-internal/feature-auth/auth.block';
@@ -15,7 +16,7 @@ import { createFeatureAdminUsers } from './features-internal/feature-admin-users
 import { createFeatureSettings } from './features-internal/feature-settings/settings.block';
 import { createFeatureTargetRegistry } from './features-internal/feature-target-registry/target-registry.block';
 import { setupDynamicRoutesRouter } from './features-target/feature-dynamic-routes/router';
-import { createFeatureTargetDatabaseSchema } from './features-target/feature-target-database-schema/block';
+import { createFeatureTargetDatabaseSchema } from './features-target/feature-target-database-schema/router';
 import { setupClientApiKeysRouter } from './features-target/feature-client-api-keys/router';
 import { setupTargetCorsRouter } from './features-target/feature-target-cors/router';
 import { createFeatureRbacRoles } from './features-target/feature-rbac-roles/block';
@@ -53,6 +54,44 @@ async function buildAppInstance(env: EnvironmentConfig) {
     }),
   );
 
+  // --- AUTH MIDDLEWARE (SESSION VALIDATION) ---
+  instance.use(`${apiPrefix}/*`, async (ctx, next) => {
+    // Skip session validation for public health check
+    if (ctx.req.path === '/health') return next();
+
+    try {
+      if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL) throw new Error('INTERNAL DB URL MISSING');
+      const db = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
+      const isProd = env.NODE_ENV === 'production';
+      const lucia = buildAuthPanelLucia(db, isProd);
+
+      const sessionId = lucia.readSessionCookie(ctx.req.header('Cookie') ?? "") 
+                     ?? lucia.readBearerToken(ctx.req.header('Authorization') ?? "");
+                     
+      if (!sessionId) {
+        ctx.set('user', null);
+        ctx.set('session', null);
+        return next();
+      }
+
+      const { session, user } = await lucia.validateSession(sessionId);
+      if (session && session.fresh) {
+        ctx.header('Set-Cookie', lucia.createSessionCookie(session.id).serialize(), { append: true });
+      }
+      if (!session) {
+        ctx.header('Set-Cookie', lucia.createBlankSessionCookie().serialize(), { append: true });
+      }
+      
+      ctx.set('session', session);
+      ctx.set('user', user);
+    } catch (err) {
+      console.error('[AUTH-MIDDLEWARE-ERROR]', err);
+      ctx.set('session', null);
+      ctx.set('user', null);
+    }
+    await next();
+  });
+
   // --- SAAS TARGET MIDDLEWARE ---
   instance.use(`${apiPrefix}/*`, async (ctx, next) => {
     const targetId = ctx.req.header('x-target-id');
@@ -88,23 +127,25 @@ async function buildAppInstance(env: EnvironmentConfig) {
     await next();
   });
 
-  // --- REGISTER ROUTES ---
-  instance.route('/api', createFeaturePanelAuth(env));
+  // --- REGISTER ROUTES (SPECIFIC FEATURES FIRST) ---
+  // Target System Features
+  instance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
+  instance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
+  instance.route(`${apiPrefix}/database-schema`, createFeatureTargetDatabaseSchema(env));
+  instance.route(`${apiPrefix}/route-builder`, setupDynamicRoutesRouter());
+  instance.route(`${apiPrefix}/integration`, setupIntegrationRouter());
+  instance.route(`${apiPrefix}/app-users`, createFeatureTargetAppUsers());
+  instance.route(`${apiPrefix}/permissions`, createFeatureRbacPermissions());
+  instance.route(`${apiPrefix}/roles`, createFeatureRbacRoles());
+  instance.route(`${apiPrefix}/api-keys`, setupClientApiKeysRouter());
+  instance.route(`${apiPrefix}/cors`, setupTargetCorsRouter());
+
+  // Internal System Features
   instance.route(`${apiPrefix}/users`, createFeatureAdminUsers(env));
   instance.route(`${apiPrefix}/settings`, createFeatureSettings(env));
   instance.route(`${apiPrefix}/target-systems`, createFeatureTargetRegistry(env));
 
-  instance.route(`${apiPrefix}/route-builder`, setupDynamicRoutesRouter());
-  instance.route(`${apiPrefix}/database-schema`, createFeatureTargetDatabaseSchema());
-  instance.route(`${apiPrefix}/api-keys`, setupClientApiKeysRouter());
-  instance.route(`${apiPrefix}/cors`, setupTargetCorsRouter());
-  instance.route(`${apiPrefix}/roles`, createFeatureRbacRoles());
-  instance.route(`${apiPrefix}/permissions`, createFeatureRbacPermissions());
-  instance.route(`${apiPrefix}/app-users`, createFeatureTargetAppUsers());
-  instance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
-  instance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
-  instance.route(`${apiPrefix}/integration`, setupIntegrationRouter());
-
+  // System Status
   instance.get(`${apiPrefix}/system-status`, async (ctx) => {
     const hasDbUrl = !!env.DATABASE_URL_INTERNAL_CONTROL_PANEL;
     let isDbConnected = false;
@@ -129,9 +170,12 @@ async function buildAppInstance(env: EnvironmentConfig) {
       hasDbUrl,
       isDbConnected,
       isAdminCreated,
-      // HARDENING: version dihapus dari response (tidak dibutuhkan frontend)
     });
   });
+
+  // --- LEAST SPECIFIC / BROAD PREFIX (RUN LAST) ---
+  // Auth App registered last to avoid shadowing other /api/* routes
+  instance.route('/api', createFeaturePanelAuth(env));
 
   instance.get('/health', (ctx) => ctx.json({ status: 'ok', service: 'backend-control-panel' }));
 

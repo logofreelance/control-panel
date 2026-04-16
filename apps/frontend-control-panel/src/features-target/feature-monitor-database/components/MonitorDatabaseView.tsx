@@ -43,10 +43,10 @@ export const MonitorDatabaseView = () => {
           {/* BOLD COLOR HEADER - CLEAN TYPO */}
           <header className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <TextHeading as="h1" size="h3">
+              <TextHeading as="h1" size="h1">
                 {MODULE_LABELS.monitorDatabase?.title}
               </TextHeading>
-              <span className="text-sm md:text-lg text-muted-foreground font-normal lowercase">
+              <span className="text-base text-muted-foreground font-normal lowercase">
                 {MODULE_LABELS.monitorDatabase?.subtitle?.toLowerCase()}
               </span>
             </div>
@@ -60,7 +60,6 @@ export const MonitorDatabaseView = () => {
                   addToast('database refreshed', 'success');
                 }}
                 disabled={loading}
-                className="rounded-xl border-border transition-all active:scale-95"
               >
                 <Icons.refresh className={cn('size-4 text-muted-foreground', loading && 'animate-spin')} />
               </Button>
@@ -70,7 +69,6 @@ export const MonitorDatabaseView = () => {
                 size="icon"
                 onClick={handleCleanup}
                 disabled={loading || isCleaning}
-                className="rounded-xl transition-all active:scale-95"
               >
                 <Icons.sparkles className={cn('size-4', isCleaning && 'animate-pulse')} />
               </Button>

@@ -10,7 +10,7 @@ import { setupAuthPanelRoutes } from './auth.routes';
 
 export function createFeaturePanelAuth(env: EnvironmentConfig) {
     const db = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-    const lucia = buildAuthPanelLucia(db);
+    const lucia = buildAuthPanelLucia(db, env.NODE_ENV === 'production');
     
     // Custom router type injection if needed
     const router = new Hono<{ Variables: { user: any, session: any } }>();

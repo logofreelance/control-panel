@@ -81,22 +81,22 @@ export function TargetFormModal({ isOpen, onClose, onSave, onTestConnection, edi
             title={editingTarget ? TARGET_UI_LABELS.modal.updateTitle.toLowerCase() : TARGET_UI_LABELS.modal.createTitle.toLowerCase()}
             className="sm:max-w-xl"
         >
-            <div className="flex flex-col gap-8 font-instrument pt-4">
+            <div className="flex flex-col gap-5 font-instrument pt-2">
                 {/* Interesting Context Box */}
-                <div className="flex items-center justify-between p-5 bg-muted/10 rounded-3xl border border-border border-dashed">
-                    <div className="flex items-center gap-4">
-                        <div className="size-11 rounded-2xl bg-background flex items-center justify-center text-primary shadow-sm border border-border shrink-0">
+                <div className="flex items-center justify-between p-4 bg-muted rounded-2xl border border-border">
+                    <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-background flex items-center justify-center text-primary shadow-sm border border-border shrink-0">
                             <Icons.database className="size-5" />
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-foreground uppercase">Infrastructure setup</span>
-                            <span className="text-xs text-muted-foreground font-normal lowercase">{TARGET_UI_LABELS.modal.configBadge.toLowerCase()}</span>
+                        <div className="flex flex-col leading-tight">
+                            <span className="text-base font-semibold text-foreground lowercase">infrastructure setup</span>
+                            <span className="text-base text-muted-foreground font-normal lowercase">{TARGET_UI_LABELS.modal.configBadge.toLowerCase()}</span>
                         </div>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    <div className="grid grid-cols-1 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="grid grid-cols-1 gap-4">
                         <Input
                             label={TARGET_UI_LABELS.modal.nameLabel.toLowerCase()}
                             placeholder={TARGET_UI_LABELS.modal.namePlaceholder.toLowerCase()}
@@ -113,7 +113,7 @@ export function TargetFormModal({ isOpen, onClose, onSave, onTestConnection, edi
                             className="h-12 bg-muted border border-border text-base font-normal rounded-2xl shadow-none"
                         />
                         
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             <Input
                                 label={TARGET_UI_LABELS.modal.dbUrlLabel.toLowerCase()}
                                 placeholder={TARGET_UI_LABELS.modal.dbUrlPlaceholder.toLowerCase()}
@@ -138,9 +138,9 @@ export function TargetFormModal({ isOpen, onClose, onSave, onTestConnection, edi
                                 </Button>
                                 
                                 {testResult && (
-                                    <Badge variant="secondary" className={cn("rounded-lg px-3 py-1.5 border-none", testResult.ok ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive")}>
-                                        <div className={cn("size-1.5 rounded-full shrink-0 mr-2", testResult.ok ? "bg-emerald-500" : "bg-destructive")} />
-                                        <span className="text-xs font-semibold lowercase">
+                                    <Badge variant={testResult.ok ? "secondary" : "destructive"} className="rounded-lg px-3 py-1.5 border-none">
+                                        <div className={cn("size-1.5 rounded-full shrink-0 mr-2", testResult.ok ? "bg-primary" : "bg-destructive-foreground")} />
+                                        <span className="text-base font-normal lowercase">
                                             {testResult.ok ? TARGET_UI_LABELS.modal.reachable(testResult.latencyMs).toLowerCase() : (testResult.error?.toLowerCase() || TARGET_UI_LABELS.modal.connectionFailed.toLowerCase())}
                                         </span>
                                     </Badge>
@@ -149,7 +149,7 @@ export function TargetFormModal({ isOpen, onClose, onSave, onTestConnection, edi
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-3 pt-6 border-t border-border/10">
+                    <div className="flex items-center justify-end gap-3 pt-5 border-t border-border">
                         <Button 
                             type="button" 
                             onClick={onClose} 

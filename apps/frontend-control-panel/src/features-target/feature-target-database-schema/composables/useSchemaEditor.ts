@@ -8,7 +8,8 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
 import { useToast, useConfig } from '@/modules/_core';
 import type { ColumnDefinition } from '../types';
@@ -23,19 +24,22 @@ export interface UseSchemaEditorReturn {
  * Hook for schema column operations
  * Uses Pure DI via useConfig() hook
  */
-export function useSchemaEditor(DatabaseTableId: number): UseSchemaEditorReturn {
+export function useSchemaEditor(DatabaseTableId: string | number): UseSchemaEditorReturn {
     // ✅ Pure DI: Get all dependencies from context
     const { msg, api, API_STATUS, TOAST_TYPE } = useConfig();
     const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
+    
+    // Resolve target ID for headers
+    const params = useParams();
+    const targetId = params?.id as string;
+    const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
 
     const addColumn = useCallback(async (column: ColumnDefinition): Promise<boolean> => {
         setLoading(true);
         try {
-            // ✅ Use api from context
-            const response = await apiClient.post(api.databaseSchema.addColumn(DatabaseTableId), column);
+            const response = await apiClient.post(api.databaseSchema.addColumn(DatabaseTableId), column, { headers });
             if (response.status === API_STATUS.SUCCESS) {
-                // ✅ Use msg from context
                 addToast(msg.databaseSchema.success.columnAdded, TOAST_TYPE.SUCCESS);
                 return true;
             } else {
@@ -47,15 +51,13 @@ export function useSchemaEditor(DatabaseTableId: number): UseSchemaEditorReturn 
             setLoading(false);
         }
         return false;
-    }, [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE]);
+    }, [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE, headers]);
 
     const dropColumn = useCallback(async (columnName: string): Promise<boolean> => {
         setLoading(true);
         try {
-            // ✅ Use api from context
-            const response = await apiClient.delete(api.databaseSchema.dropColumn(DatabaseTableId, columnName));
+            const response = await apiClient.delete(api.databaseSchema.dropColumn(DatabaseTableId, columnName), { headers });
             if (response.status === API_STATUS.SUCCESS) {
-                // ✅ Use msg from context
                 addToast(msg.databaseSchema.success.columnDropped, TOAST_TYPE.SUCCESS);
                 return true;
             } else {
@@ -67,7 +69,7 @@ export function useSchemaEditor(DatabaseTableId: number): UseSchemaEditorReturn 
             setLoading(false);
         }
         return false;
-    }, [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE]);
+    }, [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE, headers]);
 
     return {
         loading,

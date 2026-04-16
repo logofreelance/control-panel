@@ -6,20 +6,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-xl border border-transparent bg-clip-padding text-base font-medium whitespace-nowrap transition-all duration-200 outline-none select-none focus-visible:ring-4 focus-visible:ring-primary/10 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-4 aria-invalid:ring-destructive/10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-xl border border-transparent bg-clip-padding text-base font-medium whitespace-nowrap transition-all duration-200 outline-none select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:bg-primary/90 hover:shadow-md hover:-translate-y-0.5",
+          "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5",
         outline:
-          "border-border/80 bg-background text-foreground shadow-sm hover:bg-muted/50 hover:border-border hover:-translate-y-0.5 dark:border-border/40 dark:bg-transparent dark:hover:bg-muted/20",
+          "border-border/80 bg-background text-foreground hover:bg-muted/50 hover:border-border hover:-translate-y-0.5 dark:border-border/40 dark:bg-transparent dark:hover:bg-muted/20",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:-translate-y-0.5",
         ghost:
           "text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted/80",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive shadow-sm hover:text-destructive-foreground focus-visible:ring-destructive/10",
+          "bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground",
         link: "text-primary underline-offset-8 hover:underline font-medium",
       },
       size: {

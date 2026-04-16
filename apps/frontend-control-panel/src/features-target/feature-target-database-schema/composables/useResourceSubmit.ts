@@ -1,20 +1,14 @@
-/**
- * database-schema/composables/useResourceSubmit.ts
- *
- * Resource form submission (create/update)
- *
- * ✅ PURE DI: Uses useConfig() hook for all config, messages, and API
- */
-
-'use client';
-
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
-import { useToast, useConfig } from '@/modules/_core';
+import { useToast } from '@/modules/_core';
+import { API } from '../api/endpoints';
+import { FEATURE_MESSAGES } from '../constants';
+import { TOAST_TYPE, API_STATUS } from '@/lib/config/defaults';
 import type { Resource, DatabaseTable } from '../types';
 
 export interface ResourcePayload {
-  data_source_id: number;
+  data_source_id: string | number;
   name: string;
   slug: string;
   description?: string;
@@ -35,22 +29,29 @@ export interface ResourcePayload {
  * Hook for submitting resource create/update
  * Uses Pure DI via useConfig() hook
  */
-export function useResourceSubmit(DatabaseTableId: number) {
-  // ✅ Pure DI: Get all dependencies from context
-  const { msg, api, API_STATUS, TOAST_TYPE } = useConfig();
+/**
+ * Hook for submitting resource create/update
+ * Modularized: Uses internal API and local constants
+ */
+export function useResourceSubmit(DatabaseTableId: string | number) {
   const { addToast } = useToast();
   const [submitting, setSubmitting] = useState(false);
+  const params = useParams();
+  
+  const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const targetId = rawNodeId;
+
+  const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
 
   // Validate payload before submit
   const validate = useCallback(
     (name: string, slug: string): string[] => {
       const errors: string[] = [];
-      // ✅ Use msg from context
-      if (!name.trim()) errors.push(msg.databaseSchema.validation.resourceNameRequired);
-      if (!slug.trim()) errors.push(msg.databaseSchema.validation.slugRequired);
+      if (!name.trim()) errors.push(FEATURE_MESSAGES.validation.resourceNameRequired);
+      if (!slug.trim()) errors.push(FEATURE_MESSAGES.validation.slugRequired);
       return errors;
     },
-    [msg],
+    [],
   );
 
   // Create resource
@@ -64,29 +65,28 @@ export function useResourceSubmit(DatabaseTableId: number) {
 
       setSubmitting(true);
       try {
-        // ✅ Use api from context
         const response = await apiClient.post<Resource>(
-          api.databaseSchema.resources(DatabaseTableId),
+          API.resources(DatabaseTableId),
           { ...payload, is_active: true },
+          { headers }
         );
         if (response.status === API_STATUS.SUCCESS && response.data) {
-          // ✅ Use msg from context
-          addToast(msg.databaseSchema.success.resourceCreated, TOAST_TYPE.SUCCESS);
+          addToast(FEATURE_MESSAGES.success.resourceCreated, TOAST_TYPE.SUCCESS);
           return response.data;
         } else {
           addToast(
-            (response as { message?: string }).message || msg.error.generic,
+            (response as { message?: string }).message || 'Failed to create resource',
             TOAST_TYPE.ERROR,
           );
         }
       } catch {
-        addToast(msg.error.network, TOAST_TYPE.ERROR);
+        addToast('Network error occurred', TOAST_TYPE.ERROR);
       } finally {
         setSubmitting(false);
       }
       return null;
     },
-    [DatabaseTableId, validate, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, validate, addToast, headers],
   );
 
   // Update resource
@@ -100,50 +100,46 @@ export function useResourceSubmit(DatabaseTableId: number) {
 
       setSubmitting(true);
       try {
-        // ✅ Use api from context
         const response = await apiClient.put<Resource>(
-          `${api.databaseSchema.resources(DatabaseTableId)}/${resourceId}`,
+          API.updateResource(DatabaseTableId, resourceId),
           payload,
+          { headers }
         );
         if (response.status === API_STATUS.SUCCESS && response.data) {
-          // ✅ Use msg from context
-          addToast(msg.databaseSchema.success.resourceUpdated, TOAST_TYPE.SUCCESS);
+          addToast(FEATURE_MESSAGES.success.resourceUpdated, TOAST_TYPE.SUCCESS);
           return response.data;
         } else {
           addToast(
-            (response as { message?: string }).message ||
-              msg.databaseSchema.error.resourceUpdateFailed,
+            (response as { message?: string }).message || 'Failed to update resource',
             TOAST_TYPE.ERROR,
           );
         }
       } catch {
-        addToast(msg.error.network, TOAST_TYPE.ERROR);
+        addToast('Network error occurred', TOAST_TYPE.ERROR);
       } finally {
         setSubmitting(false);
       }
       return null;
     },
-    [DatabaseTableId, validate, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, validate, addToast, headers],
   );
 
   // Fetch available data sources for joins (excluding current)
   const fetchAvailableSources = useCallback(
-    async (excludeId?: number): Promise<DatabaseTable[]> => {
+    async (excludeId?: string | number): Promise<DatabaseTable[]> => {
       try {
-        // ✅ Use api from context
-        const response = await apiClient.get<DatabaseTable[]>(api.databaseSchema.list);
+        const response = await apiClient.get<DatabaseTable[]>(API.list, { headers });
         if (response.status === API_STATUS.SUCCESS && response.data) {
           const sources = response.data;
 
           // Add System Users Mock (if not present)
-          // This is needed for "Related Data" column selection for relations targeting "users"
           if (!sources.some((s) => s.id === 0)) {
             sources.push({
               id: 0,
-              name: 'System Users', // Should use label but this is mock
+              name: 'System Users',
               tableName: 'users',
               isSystem: true,
-              schema: {
+              schema_json: JSON.stringify({
                 columns: [
                   { name: 'id', type: 'integer' },
                   { name: 'email', type: 'string' },
@@ -152,8 +148,8 @@ export function useResourceSubmit(DatabaseTableId: number) {
                   { name: 'created_at', type: 'timestamp' },
                   { name: 'updated_at', type: 'timestamp' },
                 ],
-              },
-            });
+              }),
+            } as any);
           }
 
           return excludeId ? sources.filter((ds) => ds.id !== excludeId) : sources;
@@ -163,7 +159,7 @@ export function useResourceSubmit(DatabaseTableId: number) {
       }
       return [];
     },
-    [api, API_STATUS],
+    [headers],
   );
 
   return {

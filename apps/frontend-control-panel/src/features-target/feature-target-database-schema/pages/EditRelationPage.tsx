@@ -15,10 +15,13 @@ import { EditRelationForm } from '../components/EditRelationForm';
 
 export const EditRelationPage = () => {
     const params = useParams();
-    const tableId = Number(params.tableId || params.id);
+    // Resolve IDs from URL params
+    const rawTableId = Array.isArray(params.tableId) ? params.tableId[0] : params.tableId;
+    const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const tableId = rawTableId || rawNodeId;
     const relationName = params.localKey as string;
 
-    if (!tableId || isNaN(tableId) || !relationName) return null;
+    if (!tableId || !relationName) return null;
 
     return (
         <div className="max-w-5xl mx-auto py-8 px-4">

@@ -10,7 +10,10 @@ import { SchemaEditor } from '../components/SchemaEditor';
 
 export function SchemaPage() {
     const params = useParams();
-    const tableId = parseInt((params.tableId as string) || (params.id as string));
+    // Resolve IDs from URL params
+    const rawTableId = Array.isArray(params.tableId) ? params.tableId[0] : params.tableId;
+    const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const tableId = rawTableId || rawNodeId;
 
     if (!tableId) return null;
 

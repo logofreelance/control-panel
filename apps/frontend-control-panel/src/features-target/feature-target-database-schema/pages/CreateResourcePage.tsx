@@ -31,13 +31,25 @@ export function CreateResourcePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Resolve IDs from URL params
+    const rawTableId = Array.isArray(params.tableId) ? params.tableId[0] : params.tableId;
+    const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const isTargetRoute = !!rawTableId;
+    const nodeId = isTargetRoute ? rawNodeId : undefined;
+    const tableId = rawTableId || rawNodeId;
+
     // Fetch data source details
     useEffect(() => {
-        if (!params.id) return;
+        if (!tableId) return;
 
         const fetchSource = async () => {
             try {
-                const res = await fetch(api.databaseSchema.detail(Number(params.id)));
+                const headers: Record<string, string> = {};
+                if (nodeId) {
+                    headers['x-target-id'] = nodeId;
+                }
+
+                const res = await fetch(api.databaseSchema.detail(tableId), { headers });
                 const data = await res.json();
 
                 if (data.status === API_STATUS.SUCCESS) {
@@ -54,7 +66,7 @@ export function CreateResourcePage() {
         };
 
         fetchSource();
-    }, [params.id, api, API_STATUS, L]);
+    }, [tableId, nodeId, api, API_STATUS, L]);
 
     // Loading state
     if (loading) {

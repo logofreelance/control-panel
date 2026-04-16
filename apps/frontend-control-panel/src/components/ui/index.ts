@@ -56,3 +56,5 @@ export * from './tooltip';
 
 // Custom Components
 export * from './modal';
+export * from './page-title';
+export * from './text-heading';

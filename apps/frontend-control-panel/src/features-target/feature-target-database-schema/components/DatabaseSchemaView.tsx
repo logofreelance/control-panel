@@ -10,14 +10,14 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button, Badge, Card, CardContent } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
-import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { useDatabaseSchema, useSchemaActions, useResources, useSchemaStats } from '../composables';
 import { ConfirmDialog, PageLoadingSkeleton } from '@/modules/_core';
 import { RelationBuilder } from './RelationBuilder';
+import { FEATURE_LABELS, FEATURE_ICONS as Icons } from '../constants';
 import type { DatabaseTable, Resource } from '../types';
 
-const L = MODULE_LABELS.databaseSchema;
+const L = FEATURE_LABELS;
 
 export function DatabaseSchemaView() {
     const router = useRouter();
@@ -29,12 +29,12 @@ export function DatabaseSchemaView() {
     const { clone } = useSchemaActions();
 
     // Resource Expansion State
-    const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [expandedId, setExpandedId] = useState<string | number | null>(null);
     const { items: resources = [], loading: loadingResources, remove: removeResource } = useResources(expandedId);
 
     // Confirm dialog state
     const [confirmDialog, setConfirmDialog] = useState<{
-        id: number;
+        id: string | number;
         name: string;
         type?: 'source' | 'resource';
         sourceId?: number;
@@ -45,7 +45,7 @@ export function DatabaseSchemaView() {
     const { stats } = useSchemaStats();
 
     // UI handlers
-    const toggleExpand = (id: number) => {
+    const toggleExpand = (id: string | number) => {
         setExpandedId(prev => (prev === id ? null : id));
     };
 
@@ -110,19 +110,19 @@ export function DatabaseSchemaView() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-1">
                     <StatCard 
                         label={L.labels.sources} 
-                        value={stats.total_sources} 
+                        value={(stats.totalSources ?? 0).toLocaleString()} 
                         subtitle={L.labels.activeConnections} 
                         icon={Icons.bookOpen} 
                     />
                     <StatCard 
                         label={L.labels.tables} 
-                        value={stats.total_tables} 
+                        value={(stats.totalTables ?? 0).toLocaleString()} 
                         subtitle={L.labels.schemasDefined} 
                         icon={Icons.storage} 
                     />
                     <StatCard 
                         label={L.labels.records} 
-                        value={(stats.total_records || 0).toLocaleString()} 
+                        value={(stats.totalRecords ?? 0).toLocaleString()} 
                         subtitle={L.labels.totalRows} 
                         icon={Icons.chart} 
                     />
@@ -130,14 +130,13 @@ export function DatabaseSchemaView() {
                     {/* Create New CTA Card */}
                     <Card 
                         size="sm"
-                        className="bg-muted/30 hover:bg-muted/50 border border-dashed border-border/40 rounded-2xl flex flex-col items-center justify-center text-center transition-all duration-300 cursor-pointer group"
                         onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/create` : '/database-schema/create')}
                     >
-                        <CardContent className="flex flex-col items-center justify-center w-full">
-                            <div className="size-10 rounded-xl bg-background border border-border/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                <Icons.plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                        <CardContent className="flex flex-col items-center justify-center w-full py-6">
+                            <div className="size-12 rounded-2xl bg-muted/20 flex items-center justify-center mb-4 transition-transform shadow-sm">
+                                <Icons.plus className="w-6 h-6 text-muted-foreground transition-colors" />
                             </div>
-                            <span className="text-xs font-semibold text-muted-foreground group-hover:text-primary lowercase">{L.buttons.createSchema}</span>
+                            <span className="text-sm font-medium text-muted-foreground lowercase">{L.buttons.createSchema}</span>
                         </CardContent>
                     </Card>
                 </div>
@@ -203,17 +202,17 @@ export function DatabaseSchemaView() {
 
 function StatCard({ label, value, subtitle, icon: Icon }: any) {
     return (
-        <Card size="sm" className="bg-card/40 border-none shadow-sm hover:shadow-md transition-shadow duration-300">
+        <Card size="sm">
             <CardContent>
                 <div className="flex justify-between items-start mb-3">
-                    <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase">{label}</span>
-                    <div className="size-8 rounded-xl bg-primary/5 flex items-center justify-center text-primary/60">
-                        <Icon className="w-4 h-4" />
+                    <span className="text-[11px] font-semibold text-muted-foreground/60 uppercase">{label}</span>
+                    <div className="size-9 rounded-xl bg-primary/5 flex items-center justify-center text-primary/60 border border-primary/5">
+                        <Icon className="w-4.5 h-4.5" />
                     </div>
                 </div>
-                <div className="space-y-1">
-                    <div className="text-2xl font-semibold text-foreground">{value}</div>
-                    <p className="text-[11px] text-muted-foreground lowercase">{subtitle}</p>
+                <div className="space-y-1.5">
+                    <div className="text-3xl font-semibold text-foreground">{value}</div>
+                    <p className="text-xs md:text-sm text-muted-foreground lowercase font-normal">{subtitle}</p>
                 </div>
             </CardContent>
         </Card>
@@ -234,13 +233,7 @@ function TableCard({
     const router = useRouter();
 
     return (
-        <Card 
-            className={cn(
-                "group border-none shadow-sm overflow-hidden transition-all duration-300",
-                isExpanded ? 'ring-1 ring-primary/20 bg-muted/5' : 'bg-card hover:bg-muted/10'
-            )}
-            size="sm"
-        >
+        <Card size="sm">
             <CardContent
                 className="flex flex-col md:flex-row md:items-center gap-4 cursor-pointer" 
                 onClick={onToggleExpand}
@@ -256,15 +249,15 @@ function TableCard({
 
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                            <TextHeading size="h5" className="text-base font-semibold truncate lowercase leading-none">
+                            <TextHeading size="h5" className="lowercase">
                                 {source.name}
                             </TextHeading>
                             {source.isSystem && (
-                                <Badge variant="secondary" className="text-[9px] px-1.5 h-4 uppercase font-semibold bg-muted/50 border-none">SYSTEM</Badge>
+                                <Badge variant="secondary">SYSTEM</Badge>
                             )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground lowercase font-medium">
-                            <span className="font-mono text-[10px] text-primary/70 bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">{source.tableName}</span>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground lowercase font-normal">
+                            <span className="font-mono text-[11px] text-primary/80 bg-primary/5 px-2.5 py-0.5 rounded-lg border border-primary/10">{source.tableName}</span>
                             <span className="opacity-30">•</span>
                             <span>{source.rowCount || 0} {L.labels.records.toLowerCase()}</span>
                         </div>
@@ -335,22 +328,25 @@ function ExpandedResourcesPanel({
                     title={L.labels.tableData} 
                     desc={L.labels.viewAndManageRecords} 
                     icon={Icons.table} 
-                    buttonText={L.buttons.viewData}
-                    onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/data` : `/database-schema/${sourceId}/data`)}
+                    label={L.buttons.viewData} 
+                    actionIcon={Icons.externalLink}
+                    action={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/data` : `/database-schema/${sourceId}/data`)}
                 />
                 <ActionShortcut 
                     title={L.labels.schema} 
                     desc={L.labels.editColumnsTypes} 
                     icon={Icons.clipboardList} 
-                    buttonText={L.buttons.editSchema}
-                    onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/schema` : `/database-schema/${sourceId}/schema`)}
+                    label={L.buttons.editSchema} 
+                    actionIcon={Icons.edit}
+                    action={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/schema` : `/database-schema/${sourceId}/schema`)}
                 />
                 <ActionShortcut 
                     title={L.messages?.relations?.title || 'Relations'} 
                     desc={L.messages?.relations?.addRelation || 'Connect tables'} 
                     icon={Icons.link} 
-                    buttonText={L.buttons?.addRelation || "Add"}
-                    onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/relations/create` : `/database-schema/${sourceId}/relations/create`)}
+                    label={L.buttons?.addRelation || "Add"}
+                    actionIcon={Icons.plus}
+                    action={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/relations/create` : `/database-schema/${sourceId}/relations/create`)}
                 />
             </div>
 
@@ -369,15 +365,16 @@ function ExpandedResourcesPanel({
                         <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                             <Icons.api className="w-4 h-4" />
                         </div>
-                        <TextHeading size="h6" className="text-sm font-semibold lowercase">API Endpoints</TextHeading>
+                        <TextHeading size="h6" className="lowercase">API Endpoints</TextHeading>
                         {loadingResources && <Icons.loading className="w-3.5 h-3.5 animate-spin text-muted-foreground/40" />}
                     </div>
                     <Button
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => router.push(nodeId ? `/target/${nodeId}/database-schema/${sourceId}/resources/create` : `/database-schema/${sourceId}/resources/create`)}
+                        title={L.buttons.createResource}
                     >
-                        <Icons.plus className="w-3.5 h-3.5 mr-2" />
-                        {L.buttons.createResource}
+                        <Icons.plus className="w-4 h-4" />
                     </Button>
                 </div>
 
@@ -410,25 +407,27 @@ function ExpandedResourcesPanel({
     );
 }
 
-function ActionShortcut({ title, desc, icon: Icon, buttonText, onClick }: any) {
+function ActionShortcut({ title, desc, icon: Icon, action, label, actionIcon: ActionIcon = Icons.chevronRight, variant = "ghost" }: any) {
     return (
-        <Card size="sm" className="bg-background/60 border-none shadow-sm hover:shadow-md transition-all duration-300 group">
-            <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Card size="sm">
+            <CardContent className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors shrink-0">
                         <Icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                        <TextHeading size="h6" className="text-sm font-semibold lowercase mb-0.5">{title}</TextHeading>
-                        <p className="text-[11px] text-muted-foreground line-clamp-1 lowercase">{desc}</p>
+                        <TextHeading size="h6" className="lowercase mb-1">{title}</TextHeading>
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-1 lowercase font-normal">{desc}</p>
                     </div>
                 </div>
                 <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClick}
+                    variant={variant}
+                    size="icon"
+                    className="size-8 rounded-lg text-primary hover:text-primary hover:bg-primary/5"
+                    onClick={action}
+                    title={label}
                 >
-                    {buttonText} <Icons.chevronRight className="w-3 h-3 ml-1.5" />
+                    <ActionIcon className="w-4 h-4" />
                 </Button>
             </CardContent>
         </Card>
@@ -462,15 +461,14 @@ function ResourceCard({ resource: r, sourceId, onDelete, nodeId }: any) {
     return (
         <Card
             size="sm"
-            className="group relative bg-background/80 border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             onClick={handleEdit}
         >
             <CardContent>
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
-                        <div className="h-5 px-1.5 rounded-md bg-emerald-500/10 text-emerald-600 text-[10px] font-semibold flex items-center justify-center">
+                        <Badge variant="outline" className="text-emerald-600 bg-emerald-500/10 border-none font-semibold uppercase">
                             GET
-                        </div>
+                        </Badge>
                         {hasJoins && (
                             <div className="size-5 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center" title={L.labels.hasJoins}>
                                 <Icons.link className="w-3 h-3" />
@@ -497,7 +495,7 @@ function ResourceCard({ resource: r, sourceId, onDelete, nodeId }: any) {
                 </div>
 
                 <div className="mb-4 space-y-1">
-                    <TextHeading size="h6" className="text-sm font-semibold truncate lowercase group-hover:text-primary transition-colors">
+                    <TextHeading size="h6" className="lowercase">
                         {r.name}
                     </TextHeading>
                     <div className="font-mono text-[9px] text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded w-fit uppercase">

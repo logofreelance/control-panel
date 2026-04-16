@@ -2,7 +2,7 @@
  * feature-dynamic-routes — Barrel Export
  * 
  * 🤖 AI: Defines everything related to a Target System's Routes (endpoints).
- * Includes Route Builder, Explorer, Tester, Auth configs, and Error templates.
+ * Includes Route Builder, API Tester, and Error templates.
  */
 
 export { TargetRoutesLayout } from './components/TargetRoutesLayout';

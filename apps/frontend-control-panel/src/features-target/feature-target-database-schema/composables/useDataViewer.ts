@@ -9,9 +9,13 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
 import { usePagination, useSorting, useSelection } from '@/lib/frontend-table';
-import { useToast, useConfig } from '@/modules/_core';
+import { useToast } from '@/modules/_core';
+import { API } from '../api/endpoints';
+import { FEATURE_MESSAGES } from '../constants';
+import { TOAST_TYPE, API_STATUS, DEFAULTS } from '@/lib/config/defaults';
 
 export interface UseDataViewerOptions {
   defaultLimit?: number;
@@ -19,16 +23,22 @@ export interface UseDataViewerOptions {
 
 /**
  * Hook for managing data viewer operations
- * Uses Pure DI via useConfig() hook
+ * Modularized: Uses internal API and local FEATURE_MESSAGES
  */
-export function useDataViewer(DatabaseTableId: number, options: UseDataViewerOptions = {}) {
-  // ✅ Pure DI: Get all dependencies from context
-  const { msg, defaults, api, API_STATUS, TOAST_TYPE } = useConfig();
+export function useDataViewer(DatabaseTableId: string | number, options: UseDataViewerOptions = {}) {
   const { addToast } = useToast();
+  const params = useParams();
 
-  const { defaultLimit = defaults.databaseSchema.dataViewer.limit } = options;
+  // Resolve target ID for x-target-id header
+  const rawTableId = Array.isArray(params.tableId) ? params.tableId[0] : params.tableId;
+  const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const targetId = rawTableId ? rawNodeId : undefined;
+  const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+
+  const { defaultLimit = DEFAULTS.databaseSchema.dataViewer.limit } = options;
 
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
+  const [columns, setColumns] = useState<any[]>([]); // New physical columns state
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
 
@@ -39,10 +49,10 @@ export function useDataViewer(DatabaseTableId: number, options: UseDataViewerOpt
     total,
   });
 
-  // Sorting from @repo/frontend-table (using defaults from config)
+  // Sorting from @repo/frontend-table
   const sorting = useSorting({
     initialColumn: 'id',
-    initialDirection: defaults.sortOrder,
+    initialDirection: 'DESC',
   });
 
   // Selection from @repo/frontend-table
@@ -52,40 +62,50 @@ export function useDataViewer(DatabaseTableId: number, options: UseDataViewerOpt
 
   // Fetch data
   const fetchData = useCallback(async () => {
+    if (loading) return; // Prevent concurrent requests
+    
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(pagination.page),
-        limit: String(pagination.limit),
+      const searchParams = new URLSearchParams({
+        page: String(pagination.page || 1),
+        limit: String(pagination.limit || 10),
         sortBy: sorting.sortColumn || 'id',
-        sortDir: sorting.sortDirection,
+        sortDir: sorting.sortDirection || 'DESC',
       });
 
-      // ✅ Use api from context
       const response = await apiClient.get<{
         data: Record<string, unknown>[];
         total: number;
-      }>(`${api.databaseSchema.data(DatabaseTableId)}?${params}`);
+      }>(`${API.data(DatabaseTableId)}?${searchParams}`, { headers: getHeaders() });
 
       if (response.status === API_STATUS.SUCCESS && response.data) {
         setRows(response.data.data || []);
         setTotal(response.data.total || 0);
         pagination.setTotal(response.data.total || 0);
+        
+        // Fetch columns if not available
+        if (columns.length === 0) {
+            const colRes = await apiClient.get<any[]>(API.columns(DatabaseTableId), { headers: getHeaders() });
+            if (colRes.status === API_STATUS.SUCCESS && colRes.data) {
+                setColumns(colRes.data);
+            }
+        }
       }
-    } catch {
-      // ✅ Use msg from context
-      addToast(msg.databaseSchema.error.dataLoadFailed, TOAST_TYPE.ERROR);
+    } catch (e) {
+      console.error("Data fetch failed", e);
+      addToast(FEATURE_MESSAGES.error.dataLoadFailed, TOAST_TYPE.ERROR);
     } finally {
       setLoading(false);
     }
   }, [
     DatabaseTableId,
-    pagination,
+    pagination.page,
+    pagination.limit,
     sorting.sortColumn,
     sorting.sortDirection,
+    getHeaders,
     addToast,
-    api,
-    msg,
+    columns.length,
     API_STATUS,
     TOAST_TYPE,
   ]);
@@ -94,65 +114,61 @@ export function useDataViewer(DatabaseTableId: number, options: UseDataViewerOpt
   const insertRow = useCallback(
     async (data: Record<string, unknown>): Promise<boolean> => {
       try {
-        // ✅ Use api from context
-        const response = await apiClient.post(api.databaseSchema.insertRow(DatabaseTableId), data);
+        const response = await apiClient.post(API.insertRow(DatabaseTableId), data, { headers: getHeaders() });
         if (response.status === API_STATUS.SUCCESS) {
-          // ✅ Use msg from context
-          addToast(msg.databaseSchema.success.rowInserted, TOAST_TYPE.SUCCESS);
+          addToast(FEATURE_MESSAGES.success.rowInserted, TOAST_TYPE.SUCCESS);
           await fetchData();
           return true;
         }
       } catch {
-        addToast(msg.databaseSchema.error.rowInsertFailed, TOAST_TYPE.ERROR);
+        addToast(FEATURE_MESSAGES.error.rowInsertFailed, TOAST_TYPE.ERROR);
       }
       return false;
     },
-    [DatabaseTableId, fetchData, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, fetchData, addToast, getHeaders],
   );
 
   // Update row
   const updateRow = useCallback(
     async (rowId: number, data: Record<string, unknown>): Promise<boolean> => {
       try {
-        // ✅ Use api from context
         const response = await apiClient.put(
-          api.databaseSchema.updateRow(DatabaseTableId, rowId),
+          API.updateRow(DatabaseTableId, rowId),
           data,
+          { headers: getHeaders() },
         );
         if (response.status === API_STATUS.SUCCESS) {
-          // ✅ Use msg from context
-          addToast(msg.databaseSchema.success.rowUpdated, TOAST_TYPE.SUCCESS);
+          addToast(FEATURE_MESSAGES.success.rowUpdated, TOAST_TYPE.SUCCESS);
           await fetchData();
           return true;
         }
       } catch {
-        addToast(msg.databaseSchema.error.rowUpdateFailed, TOAST_TYPE.ERROR);
+        addToast(FEATURE_MESSAGES.error.rowUpdateFailed, TOAST_TYPE.ERROR);
       }
       return false;
     },
-    [DatabaseTableId, fetchData, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, fetchData, addToast, getHeaders],
   );
 
   // Delete row
   const deleteRow = useCallback(
     async (rowId: number): Promise<boolean> => {
       try {
-        // ✅ Use api from context
         const response = await apiClient.delete(
-          api.databaseSchema.deleteRow(DatabaseTableId, rowId),
+          API.deleteRow(DatabaseTableId, rowId),
+          { headers: getHeaders() },
         );
         if (response.status === API_STATUS.SUCCESS) {
-          // ✅ Use msg from context
-          addToast(msg.databaseSchema.success.rowDeleted, TOAST_TYPE.SUCCESS);
+          addToast(FEATURE_MESSAGES.success.rowDeleted, TOAST_TYPE.SUCCESS);
           await fetchData();
           return true;
         }
       } catch {
-        addToast(msg.databaseSchema.error.rowDeleteFailed, TOAST_TYPE.ERROR);
+        addToast(FEATURE_MESSAGES.error.rowDeleteFailed, TOAST_TYPE.ERROR);
       }
       return false;
     },
-    [DatabaseTableId, fetchData, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, fetchData, addToast, getHeaders],
   );
 
   // Delete selected rows
@@ -168,15 +184,15 @@ export function useDataViewer(DatabaseTableId: number, options: UseDataViewerOpt
 
     if (success > 0) {
       selection.deselectAll();
-      // ✅ Use msg from context
-      addToast(msg.databaseSchema.success.rowsDeleted(success), TOAST_TYPE.SUCCESS);
+      addToast(FEATURE_MESSAGES.success.rowsDeleted(success), TOAST_TYPE.SUCCESS);
     }
     return success === ids.length;
-  }, [selection, deleteRow, addToast, msg, TOAST_TYPE]);
+  }, [selection, deleteRow, addToast]);
 
   return {
     // Data
     rows,
+    columns, // Expose physical columns
     loading,
     total,
 

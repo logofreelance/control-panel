@@ -19,7 +19,7 @@ import { RELATION_TYPES } from '../registry';
 const L = MODULE_LABELS.databaseSchema;
 
 interface EditRelationFormProps {
-    DatabaseTableId: number;
+    DatabaseTableId: string | number;
     relationName: string; // This is the localKey / column name
 }
 

@@ -19,7 +19,7 @@ import { RELATION_TYPES } from '../registry';
 const L = MODULE_LABELS.databaseSchema;
 
 interface CreateRelationFormProps {
-    DatabaseTableId: number;
+    DatabaseTableId: string | number;
 }
 
 export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps) => {

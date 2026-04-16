@@ -36,9 +36,8 @@ import { InternalLayout } from '@/components/layout/InternalLayout';
 
 const DecorativeHeroBackground = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
-    <div className="absolute top-[10%] left-[-20%] md:left-[-10%] w-64 md:w-[800px] h-64 md:h-[800px] bg-foreground/5 rounded-full animate-float" />
-    <div className="absolute bottom-[20%] right-[-15%] md:right-[-10%] w-72 md:w-[900px] h-72 md:h-[900px] bg-foreground/2 rounded-full animate-float-slow" />
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--foreground)_1px,transparent_1px)] opacity-[0.01] bg-size-[100px_100px] md:bg-size-[150px_150px]" />
+    <div className="absolute top-[10%] left-[-20%] md:left-[-10%] w-64 md:w-[800px] h-64 md:h-[800px] bg-muted rounded-full animate-float" />
+    <div className="absolute bottom-[20%] right-[-15%] md:right-[-10%] w-72 md:w-[900px] h-72 md:h-[900px] bg-muted rounded-full animate-float-slow" />
   </div>
 );
 
@@ -75,13 +74,13 @@ export function TargetRegistryView() {
     <InternalLayout>
       <div className="w-full">
         {/* HERO SECTION */}
-        <div className="relative w-full min-h-[45vh] flex flex-col items-center justify-center pt-16 pb-24 px-6 border-b border-border/40 z-30 bg-transparent">
+        <div className="relative w-full min-h-[45vh] flex flex-col items-center justify-center pt-10 pb-16 px-6 border-b border-border z-30 bg-transparent">
           <DecorativeHeroBackground />
-          <div className="w-full max-w-5xl mx-auto text-center flex flex-col items-center gap-10 relative z-10 font-instrument">
+          <div className="w-full max-w-5xl mx-auto text-center flex flex-col items-center gap-6 relative z-10 font-instrument">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center gap-2 justify-center mb-6">
-                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-semibold text-muted-foreground lowercase">
+                <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-base font-semibold text-muted-foreground lowercase">
                   {onlineCount} of {targets.length} systems operational
                 </span>
               </div>
@@ -89,7 +88,7 @@ export function TargetRegistryView() {
               <TextHeading
                 as="h1"
                 size="h1"
-                className="mb-6 leading-none text-6xl md:text-7xl font-bold lowercase"
+                className="mb-4 lowercase"
               >
                 system registry
               </TextHeading>
@@ -107,7 +106,7 @@ export function TargetRegistryView() {
               <div className="flex-1 w-full relative group">
                 <Icons.search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground transition-colors group-focus-within:text-primary z-10" />
                 <Input
-                  className="pl-11 pr-14 h-12 bg-background/50 backdrop-blur-md rounded-2xl border-border text-base font-normal shadow-none"
+                  className="pl-11 pr-14 h-12 bg-background rounded-2xl border-border text-base font-normal shadow-none"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -138,7 +137,7 @@ export function TargetRegistryView() {
                                   <span className="text-base font-normal text-foreground truncate text-left lowercase">
                                     {target.name}
                                   </span>
-                                  <span className="text-xs text-muted-foreground font-normal text-left">
+                                  <span className="text-base text-muted-foreground font-normal text-left">
                                     {target.id.slice(0, 12)}
                                   </span>
                                 </div>
@@ -147,7 +146,7 @@ export function TargetRegistryView() {
                                 className={cn(
                                   'size-2 rounded-full',
                                   target.status === 'online'
-                                    ? 'bg-emerald-500 animate-pulse'
+                                    ? 'bg-primary animate-pulse'
                                     : 'bg-muted',
                                 )}
                               />
@@ -156,7 +155,7 @@ export function TargetRegistryView() {
                         </div>
                       ) : (
                         <div className="p-10 text-center">
-                          <Icons.search className="size-10 text-muted-foreground/10 mx-auto mb-4" />
+                          <Icons.search className="size-10 text-muted-foreground mx-auto mb-4" />
                           <p className="text-base text-muted-foreground font-normal lowercase">
                             no matches found for "{searchQuery}"
                           </p>
@@ -185,9 +184,9 @@ export function TargetRegistryView() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Empty Search State */}
             {!loading && filteredTargets.length === 0 && (
-              <div className="col-span-full py-24 flex flex-col items-center text-center bg-muted/5 border border-dashed border-border rounded-[2.5rem] font-instrument">
-                <div className="size-20 rounded-3xl bg-background border border-border/10 shadow-sm flex items-center justify-center mb-6">
-                  <Icons.search className="size-10 text-muted-foreground/10" />
+              <div className="col-span-full py-24 flex flex-col items-center text-center bg-muted border border-dashed border-border rounded-[2.5rem] font-instrument">
+                <div className="size-20 rounded-3xl bg-background border border-border shadow-sm flex items-center justify-center mb-6">
+                  <Icons.search className="size-10 text-muted-foreground" />
                 </div>
                 <TextHeading size="h3" className="mb-2 lowercase">
                   {searchQuery ? 'no results for your search' : 'no nodes detected'}
@@ -207,97 +206,87 @@ export function TargetRegistryView() {
                 <Card
                   key={target.id}
                   onClick={() => router.push(TARGET_ROUTES.target(target.id))}
-                  className="cursor-pointer group bg-background/60 backdrop-blur-sm transition-all duration-300 relative overflow-hidden"
+                  className="cursor-pointer hover:border-primary/50 transition-colors"
                 >
-                  <div className="absolute -right-8 -bottom-8 opacity-[0.03] transition-all duration-700">
-                    <Icons.network className="size-48 rotate-12" />
-                  </div>
-
-                  <CardHeader className="p-8 relative z-10 font-instrument flex flex-col gap-6">
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-4 min-w-0">
-                        <div className="size-16 rounded-2xl bg-muted/40 text-muted-foreground flex items-center justify-center shrink-0 transition-all duration-500 border border-border">
-                          <Icons.network className="size-8" />
-                        </div>
-                        <div className="flex flex-col gap-2 min-w-0 text-left">
-                          <TextHeading size="h4" className="truncate text-lg font-medium lowercase">
-                            {target.name}
-                          </TextHeading>
-                          <div className="flex items-center gap-3">
-                            <Badge
-                              variant="secondary"
+                  <CardHeader>
+                    <div className="flex gap-4 items-start min-w-0">
+                      <div className="size-14 rounded-2xl bg-muted text-primary flex items-center justify-center shrink-0 border border-border">
+                        <Icons.network className="size-7" />
+                      </div>
+                      <div className="flex flex-col gap-1 min-w-0 text-left">
+                        <TextHeading size="h3" className="truncate lowercase">
+                          {target.name}
+                        </TextHeading>
+                        <div className="flex flex-wrap items-center gap-3 mt-1">
+                          <Badge
+                            variant={cfg.variant === 'destructive' ? 'destructive' : 'secondary'}
+                            className="rounded-full px-3 py-0.5 border-none lowercase"
+                          >
+                            <div
                               className={cn(
-                                'rounded-full px-3 py-0.5 border-none lowercase',
-                                cfg.variant === 'destructive'
-                                  ? 'bg-destructive/10 text-destructive'
-                                  : 'bg-emerald-500/10 text-emerald-600',
+                                'size-1.5 rounded-full mr-2',
+                                target.status === 'online'
+                                  ? 'bg-primary animate-pulse'
+                                  : 'bg-background',
                               )}
-                            >
-                              <div
-                                className={cn(
-                                  'size-1.5 rounded-full mr-2',
-                                  target.status === 'online'
-                                    ? 'bg-emerald-500 animate-pulse'
-                                    : 'bg-destructive',
-                                )}
-                              />
-                              {target.status}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground font-normal truncate leading-tight lowercase">
-                              seen {timeAgo(target.lastHealthCheck)}
-                            </span>
-                          </div>
+                            />
+                            {target.status}
+                          </Badge>
+                          <span className="text-base text-muted-foreground font-normal truncate leading-tight lowercase">
+                            seen {timeAgo(target.lastHealthCheck)}
+                          </span>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="flex justify-between items-center relative z-20 pt-4 border-t border-border/10">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="default"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCheckHealth(target.id);
-                          }}
-                          disabled={checkingId === target.id}
-                          className="h-10 px-4 rounded-xl lowercase"
-                        >
-                          {checkingId === target.id ? (
-                            <Icons.loading className="size-4 animate-spin mr-2" />
-                          ) : (
-                            <Icons.activity className="size-4 mr-2" />
-                          )}
-                          ping
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="default"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(target);
-                          }}
-                          className="h-10 px-4 rounded-xl lowercase"
-                        >
-                          <Icons.pencil className="size-4 mr-2" />
-                          setup
-                        </Button>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(target.id);
-                        }}
-                        disabled={deletingId === target.id}
-                        className="size-10 rounded-xl hover:text-destructive hover:bg-destructive/10 transition-all"
-                      >
-                        <Icons.trash className="size-5 text-muted-foreground" />
-                      </Button>
                     </div>
                   </CardHeader>
+
+                  <CardFooter className="pt-4 border-t border-border flex justify-between items-center mt-2">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCheckHealth(target.id);
+                        }}
+                        disabled={checkingId === target.id}
+                        className="lowercase px-3"
+                      >
+                        {checkingId === target.id ? (
+                          <Icons.loading className="size-4 animate-spin mr-2" />
+                        ) : (
+                          <Icons.activity className="size-4 mr-2" />
+                        )}
+                        ping
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(target);
+                        }}
+                        className="lowercase px-3"
+                      >
+                        <Icons.pencil className="size-4 mr-2" />
+                        setup
+                      </Button>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(target.id);
+                      }}
+                      disabled={deletingId === target.id}
+                      className="size-9 rounded-xl hover:text-destructive-foreground hover:bg-destructive transition-all"
+                    >
+                      <Icons.trash className="size-4 text-muted-foreground" />
+                    </Button>
+                  </CardFooter>
                 </Card>
+
               );
             })}
           </div>

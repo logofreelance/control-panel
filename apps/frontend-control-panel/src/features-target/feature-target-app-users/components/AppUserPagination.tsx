@@ -2,14 +2,14 @@
 
 /**
  * AppUserPagination - Refactored to Analytics Style (V2 Clean Typography)
- * 
+ *
  * STICKING TO RULES:
  * - No tracking-*
  * - No text size < text-xs
  * - No text color opacity (text-foreground/80)
  * - Standard Button usage only
- * 
- * UPDATE: Removed forced 'lowercase' transformation from status text 
+ *
+ * UPDATE: Removed forced 'lowercase' transformation from status text
  * to avoid 'overdoing' lowercase while keeping a premium minimalist feel.
  */
 
@@ -20,100 +20,96 @@ import { cn } from '@/lib/utils';
 import type { AppUserPaginationState as PaginationType } from '../types/app-user.types';
 
 interface AppUserPaginationProps {
-    pagination: PaginationType;
-    limit: number;
-    onPageChange: (page: number) => void;
+  pagination: PaginationType;
+  limit: number;
+  onPageChange: (page: number) => void;
 }
 
-export const AppUserPagination = ({
-    pagination,
-    limit,
-    onPageChange
-}: AppUserPaginationProps) => {
-    if (!pagination) return null;
-    
-    const { page: currentPage, total: totalItems } = pagination;
-    const totalPages = Math.ceil(totalItems / limit);
-    
-    const start = (currentPage - 1) * limit + 1;
-    const end = Math.min(currentPage * limit, totalItems);
+export const AppUserPagination = ({ pagination, limit, onPageChange }: AppUserPaginationProps) => {
+  if (!pagination) return null;
 
-    const getPageNumbers = () => {
-        const pages: (number | string)[] = [];
-        const maxVisible = 5;
+  const { page: currentPage, total: totalItems } = pagination;
+  const totalPages = Math.ceil(totalItems / limit);
 
-        if (totalPages <= maxVisible) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-        } else {
-            if (currentPage <= 3) {
-                for (let i = 1; i <= 4; i++) pages.push(i);
-                pages.push('...');
-                pages.push(totalPages);
-            } else if (currentPage >= totalPages - 2) {
-                pages.push(1);
-                pages.push('...');
-                for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-            } else {
-                pages.push(1);
-                pages.push('...');
-                for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-                pages.push('...');
-                pages.push(totalPages);
-            }
-        }
-        return pages;
-    };
+  const start = (currentPage - 1) * limit + 1;
+  const end = Math.min(currentPage * limit, totalItems);
 
-    if (totalPages <= 1) return null;
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
 
-    return (
-        <div className="flex flex-col md:flex-row items-center justify-between gap-10 py-6 px-1 border-t border-border mt-4">
-            <div className="flex items-center gap-3">
-                 <div className="size-2 rounded-full bg-chart-2 animate-pulse" />
-                 <p className="text-xs font-normal text-muted-foreground">
-                    {APP_USER_LABELS.pagination.showing(start, end, totalItems)}
-                </p>
-            </div>
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
 
-            <div className="flex items-center gap-1 bg-muted/20 p-1.5 rounded-xl border border-border">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onPageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                >
-                    <Icons.chevronLeft className="size-4" />
-                </Button>
+  if (totalPages <= 1) return null;
 
-                <div className="flex items-center gap-1 px-1">
-                    {getPageNumbers().map((page, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => typeof page === 'number' && onPageChange(page)}
-                            disabled={page === '...'}
-                            className={cn(
-                                "h-9 min-w-[36px] px-2 rounded-lg flex items-center justify-center text-xs font-semibold transition-all",
-                                page === currentPage
-                                    ? 'bg-foreground text-background shadow-none'
-                                    : page === '...'
-                                        ? 'cursor-default text-muted-foreground'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-background'
-                            )}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                </div>
+  return (
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4 px-1 border-t border-border mt-4">
+      <div className="flex items-center gap-3">
+        <div className="size-2 rounded-full bg-primary animate-pulse" />
+        <p className="text-base font-normal text-muted-foreground">
+          {APP_USER_LABELS.pagination.showing(start, end, totalItems)}
+        </p>
+      </div>
 
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onPageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                >
-                    <Icons.chevronRight className="size-4" />
-                </Button>
-            </div>
+      <div className="flex items-center gap-1 bg-muted p-1.5 rounded-xl border border-border">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <Icons.chevronLeft className="size-4" />
+        </Button>
+
+        <div className="flex items-center gap-1 px-1">
+          {getPageNumbers().map((page, idx) => (
+            <button
+              key={idx}
+              onClick={() => typeof page === 'number' && onPageChange(page)}
+              disabled={page === '...'}
+              className={cn(
+                'h-9 min-w-[36px] px-2 rounded-lg flex items-center justify-center text-base font-normal transition-all',
+                page === currentPage
+                  ? 'bg-foreground text-background'
+                  : page === '...'
+                    ? 'cursor-default text-muted-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-background',
+              )}
+            >
+              {page}
+            </button>
+          ))}
         </div>
-    );
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          <Icons.chevronRight className="size-4" />
+        </Button>
+      </div>
+    </div>
+  );
 };

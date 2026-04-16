@@ -58,13 +58,13 @@ class TiDBServerlessAdminAdapter {
     }
 }
 
-export function buildAuthPanelLucia(db: InternalDatabaseConnection): AuthPanelLuciaInstance {
+export function buildAuthPanelLucia(db: InternalDatabaseConnection, isProduction: boolean = false): AuthPanelLuciaInstance {
     const adapter = new TiDBServerlessAdminAdapter(db) as any;
     return new Lucia(adapter, {
         sessionCookie: {
             attributes: {
-                secure: true, // Wajib TRUE untuk SameSite=None
-                sameSite: "none" // Izinkan cookie lintas subdomain/cross-site
+                secure: isProduction, // Wajib TRUE hanya jika produksi (HTTPS)
+                sameSite: isProduction ? "none" : "lax" // "none" untuk lintas domain produksi, "lax" untuk lokal
             }
         },
         getUserAttributes: (attributes: any) => {

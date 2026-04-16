@@ -12,34 +12,38 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
-import { useConfig } from '@/modules/_core';
+import { API } from '../api/endpoints';
 
 interface SchemaStats {
-    total_sources: number;
-    total_tables: number;
-    total_records: number;
+    totalSources: number;
+    totalTables: number;
+    totalRecords: number;
 }
 
+/**
+ * Hook to fetch aggregated stats for data sources from the server.
+ * Modularized: Uses internal API.
+ */
 export function useSchemaStats() {
-    // ✅ Pure DI: Get all dependencies from context
-    const { api } = useConfig();
-
     const [stats, setStats] = useState<SchemaStats>({
-        total_sources: 0,
-        total_tables: 0,
-        total_records: 0
+        totalSources: 0,
+        totalTables: 0,
+        totalRecords: 0
     });
     const [loading, setLoading] = useState(true);
 
     const params = useParams();
-    const targetId = params?.id as string;
+    const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const targetId = rawNodeId;
 
     const fetchStats = useCallback(async () => {
         setLoading(true);
         try {
             const headers = targetId ? { 'x-target-id': targetId } : undefined;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const response = await apiClient.get<SchemaStats>((api.databaseSchema as any).stats || `${api.databaseSchema.list}/stats`, { headers });
+            // ✅ Use Internal API or fallback to standard path
+            const statsUrl = (API as any).stats || `${API.list}/stats`;
+            const response = await apiClient.get<SchemaStats>(statsUrl, { headers });
+            
             if (response?.status === 'success' && response?.data) {
                 setStats(response.data);
             }
@@ -48,7 +52,7 @@ export function useSchemaStats() {
         } finally {
             setLoading(false);
         }
-    }, [api, targetId]);
+    }, [targetId]);
 
     useEffect(() => {
         fetchStats();

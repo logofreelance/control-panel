@@ -9,8 +9,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
-import { useToast, useConfig } from '@/modules/_core';
+import { useToast } from '@/modules/_core';
+import { API } from '../api/endpoints';
+import { TOAST_TYPE, API_STATUS } from '@/lib/config/defaults';
 
 export interface UseImportDataReturn {
     importing: boolean;
@@ -20,12 +23,17 @@ export interface UseImportDataReturn {
 
 /**
  * Hook for bulk importing data into a data source
- * Uses Pure DI via useConfig() hook
+ * Modularized: Uses internal API and local constants
  */
-export function useImportData(DatabaseTableId: number): UseImportDataReturn {
-    // ✅ Pure DI: Get all dependencies from context
-    const { msg, api, API_STATUS, TOAST_TYPE } = useConfig();
+export function useImportData(DatabaseTableId: string | number): UseImportDataReturn {
     const { addToast } = useToast();
+    const params = useParams();
+    
+    // Resolve target ID for x-target-id header
+    const rawTableId = Array.isArray(params.tableId) ? params.tableId[0] : params.tableId;
+    const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const targetId = rawTableId ? rawNodeId : undefined;
+    const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
 
     const [importing, setImporting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -39,29 +47,28 @@ export function useImportData(DatabaseTableId: number): UseImportDataReturn {
                 throw new Error('Input must be an array of objects');
             }
 
-            // ✅ Use api from context
             const response = await apiClient.post(
-                `${api.databaseSchema.data(DatabaseTableId)}/bulk`,
-                jsonData
+                `${API.data(DatabaseTableId)}/bulk`,
+                jsonData,
+                { headers: getHeaders() }
             );
 
             if (response.status === API_STATUS.SUCCESS) {
-                // ✅ Use msg from context
-                addToast((response as { message?: string }).message || msg.databaseSchema.success.dataImported, TOAST_TYPE.SUCCESS);
+                addToast((response as { message?: string }).message || 'Data imported successfully', TOAST_TYPE.SUCCESS);
                 return true;
             } else {
                 throw new Error((response as { message?: string }).message || 'Import failed');
             }
         } catch (err) {
             console.error('Import error:', err);
-            const errorMessage = (err instanceof Error ? err.message : String(err)) || msg.error.generic;
+            const errorMessage = (err instanceof Error ? err.message : String(err)) || 'Network error occurred';
             setError(errorMessage);
             addToast(errorMessage, TOAST_TYPE.ERROR);
             return false;
         } finally {
             setImporting(false);
         }
-    }, [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE]);
+    }, [DatabaseTableId, addToast, getHeaders]);
 
     return {
         importing,

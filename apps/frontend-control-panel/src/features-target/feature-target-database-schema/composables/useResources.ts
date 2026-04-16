@@ -9,8 +9,12 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
-import { useToast, useConfig } from '@/modules/_core';
+import { useToast } from '@/modules/_core';
+import { API } from '../api/endpoints';
+import { FEATURE_MESSAGES } from '../constants';
+import { TOAST_TYPE, API_STATUS } from '@/lib/config/defaults';
 import type { Resource } from '../types';
 
 export interface UseResourcesOptions {
@@ -31,20 +35,23 @@ export interface UseResourcesReturn {
 
 /**
  * Hook for managing resources under a specific data source
- * Uses Pure DI via useConfig() hook
+ * Modularized: Uses internal API and local FEATURE_MESSAGES
  */
 export function useResources(
-  DatabaseTableId: number | null,
+  DatabaseTableId: string | number | null,
   options: UseResourcesOptions = {},
 ): UseResourcesReturn {
   const { skipInitialFetch = false } = options;
-  // ✅ Pure DI: Get all dependencies from context
-  const { msg, api, API_STATUS, TOAST_TYPE } = useConfig();
   const { addToast } = useToast();
+  const params = useParams();
+  const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const targetId = rawNodeId;
 
   const [items, setItems] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
 
   const fetchAll = useCallback(async () => {
     if (!DatabaseTableId) return;
@@ -52,9 +59,9 @@ export function useResources(
     setLoading(true);
     setError(null);
     try {
-      // ✅ Use api from context
       const response = await apiClient.get<Resource[]>(
-        api.databaseSchema.resources(DatabaseTableId),
+        API.resources(DatabaseTableId),
+        { headers: getHeaders() }
       );
       if (response.status === API_STATUS.SUCCESS && response.data) {
         setItems(response.data);
@@ -62,32 +69,30 @@ export function useResources(
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
-      // ✅ Use msg from context
-      addToast(msg.databaseSchema.error.resourceLoadFailed, TOAST_TYPE.ERROR);
+      addToast(FEATURE_MESSAGES.error.resourceLoadFailed, TOAST_TYPE.ERROR);
     } finally {
       setLoading(false);
     }
-  }, [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE]);
+  }, [DatabaseTableId, addToast, getHeaders]);
 
   const fetchOne = useCallback(
     async (resourceId: number): Promise<Resource | null> => {
       if (!DatabaseTableId) return null;
 
       try {
-        // ✅ Use api from context
         const response = await apiClient.get<Resource>(
-          `${api.databaseSchema.resources(DatabaseTableId)}/${resourceId}`,
+          `${API.resources(DatabaseTableId)}/${resourceId}`,
+          { headers: getHeaders() }
         );
         if (response.status === API_STATUS.SUCCESS && response.data) {
           return response.data;
         }
       } catch {
-        // ✅ Use msg from context
-        addToast(msg.databaseSchema.error.resourceLoadFailed, TOAST_TYPE.ERROR);
+        addToast(FEATURE_MESSAGES.error.resourceLoadFailed, TOAST_TYPE.ERROR);
       }
       return null;
     },
-    [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, addToast, getHeaders],
   );
 
   const create = useCallback(
@@ -95,23 +100,22 @@ export function useResources(
       if (!DatabaseTableId) return null;
 
       try {
-        // ✅ Use api from context
         const response = await apiClient.post<Resource>(
-          api.databaseSchema.createResource(DatabaseTableId),
+          API.createResource(DatabaseTableId),
           data,
+          { headers: getHeaders() }
         );
         if (response.status === API_STATUS.SUCCESS && response.data) {
           setItems((prev) => [...prev, response.data!]);
-          // ✅ Use msg from context
-          addToast(msg.databaseSchema.success.resourceCreated, TOAST_TYPE.SUCCESS);
+          addToast(FEATURE_MESSAGES.success.resourceCreated, TOAST_TYPE.SUCCESS);
           return response.data;
         }
       } catch {
-        addToast(msg.databaseSchema.error.resourceCreateFailed, TOAST_TYPE.ERROR);
+        addToast(FEATURE_MESSAGES.error.resourceCreateFailed, TOAST_TYPE.ERROR);
       }
       return null;
     },
-    [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, addToast, getHeaders],
   );
 
   const update = useCallback(
@@ -119,25 +123,24 @@ export function useResources(
       if (!DatabaseTableId) return null;
 
       try {
-        // ✅ Use api from context
         const response = await apiClient.put<Resource>(
-          api.databaseSchema.updateResource(DatabaseTableId, resourceId),
+          API.updateResource(DatabaseTableId, resourceId),
           data,
+          { headers: getHeaders() }
         );
         if (response.status === API_STATUS.SUCCESS && response.data) {
           setItems((prev) =>
             prev.map((item) => (item.id === resourceId ? { ...item, ...response.data } : item)),
           );
-          // ✅ Use msg from context
-          addToast(msg.databaseSchema.success.resourceUpdated, TOAST_TYPE.SUCCESS);
+          addToast(FEATURE_MESSAGES.success.resourceUpdated, TOAST_TYPE.SUCCESS);
           return response.data;
         }
       } catch {
-        addToast(msg.databaseSchema.error.resourceUpdateFailed, TOAST_TYPE.ERROR);
+        addToast(FEATURE_MESSAGES.error.resourceUpdateFailed, TOAST_TYPE.ERROR);
       }
       return null;
     },
-    [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, addToast, getHeaders],
   );
 
   const remove = useCallback(
@@ -145,22 +148,21 @@ export function useResources(
       if (!DatabaseTableId) return false;
 
       try {
-        // ✅ Use api from context
         const response = await apiClient.delete(
-          api.databaseSchema.deleteResource(DatabaseTableId, resourceId),
+          API.deleteResource(DatabaseTableId, resourceId),
+          { headers: getHeaders() }
         );
         if (response.status === API_STATUS.SUCCESS) {
           setItems((prev) => prev.filter((item) => item.id !== resourceId));
-          // ✅ Use msg from context
-          addToast(msg.databaseSchema.success.resourceDeleted, TOAST_TYPE.SUCCESS);
+          addToast(FEATURE_MESSAGES.success.resourceDeleted, TOAST_TYPE.SUCCESS);
           return true;
         }
       } catch {
-        addToast(msg.databaseSchema.error.resourceDeleteFailed, TOAST_TYPE.ERROR);
+        addToast(FEATURE_MESSAGES.error.resourceDeleteFailed, TOAST_TYPE.ERROR);
       }
       return false;
     },
-    [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, addToast, getHeaders],
   );
 
   // Auto-fetch when DatabaseTableId changes

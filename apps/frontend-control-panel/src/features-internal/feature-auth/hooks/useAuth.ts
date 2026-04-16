@@ -23,11 +23,14 @@ export function useAuth() {
                 // Ini penting karena domain backend & frontend berbeda di workers.dev
                 const SESSION_ID = data.data?.token || (data as any).token;
                 if (SESSION_ID) {
-                    document.cookie = `auth_session=${SESSION_ID}; path=/; SameSite=Lax; Secure; Max-Age=${60 * 60 * 24 * 30}`;
+                    // REMOVED 'Secure' flag for local dev compatibility (often on http)
+                    document.cookie = `auth_session=${SESSION_ID}; path=/; Max-Age=${60 * 60 * 24 * 30}`;
+                    
+                    router.replace(AUTH_ROUTES.dashboard);
+                    setTimeout(() => window.location.reload(), 100);
+                } else {
+                    setStatus({ message: 'LOGIN SUCCESS BUT NO TOKEN RECEIVED', status: 'error', loading: false });
                 }
-
-                router.replace(AUTH_ROUTES.dashboard);
-                setTimeout(() => window.location.reload(), 300);
             } else {
                 const message = data.error?.message || data.message || AUTH_UI_LABELS.login.failedToConnect;
                 setStatus({ message: `LOGIN FAILED: ${message}`, status: 'error', loading: false });

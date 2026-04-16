@@ -7,18 +7,35 @@
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Badge, Card, CardContent } from '@/components/ui';
-import { TextHeading } from '@/components/ui/text-heading';
+import { 
+    Button, 
+    Badge, 
+    Card, 
+    CardHeader, 
+    CardTitle, 
+    CardDescription, 
+    CardContent, 
+    CardFooter,
+    Spinner,
+    Empty,
+    EmptyHeader,
+    EmptyTitle,
+    EmptyDescription,
+    EmptyMedia,
+    Separator,
+    TextHeading
+} from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { ConfirmDialog, useConfig } from '@/modules/_core';
+import { ConfirmDialog } from '@/modules/_core';
 import { MODULE_LABELS } from '@/lib/config/client';
 import { useRelations } from '../composables';
 import { RELATION_TYPES } from '../registry';
+import { FEATURE_ICONS as Icons } from '../constants';
 
 const L = MODULE_LABELS.databaseSchema;
 
 interface RelationBuilderProps {
-    DatabaseTableId: number;
+    DatabaseTableId: string | number;
     DatabaseTableName: string;
     onRelationsChange?: () => void;
 }
@@ -26,12 +43,10 @@ interface RelationBuilderProps {
 export const RelationBuilder = ({ DatabaseTableId, DatabaseTableName, onRelationsChange }: RelationBuilderProps) => {
     const router = useRouter();
     const params = useParams();
-    const nodeId = params.id as string;
     
-    // ✅ Pure DI: Get all dependencies from context
-    const { labels, icons: Icons } = useConfig();
-    const C = labels.common;
-
+    const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const nodeId = rawNodeId;
+    
     // All data operations from composable
     const {
         relations,
@@ -60,116 +75,125 @@ export const RelationBuilder = ({ DatabaseTableId, DatabaseTableName, onRelation
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-foreground bg-muted/10 rounded-3xl border border-dashed border-border/20">
-                <Icons.loading className="size-8 animate-spin opacity-20" />
-                <p className="text-xs font-medium lowercase italic">{L.messages.relations.loadingRelations.toLowerCase()}</p>
+            <div className="flex flex-col items-center justify-center py-24 gap-6 animate-in fade-in duration-700">
+                <Spinner size="lg" />
+                <div className="space-y-1 text-center">
+                    <p className="text-sm font-semibold tracking-tight">fetching connections</p>
+                    <p className="text-xs text-muted-foreground opacity-60">preparing your database relations...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <header className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm shadow-primary/10 transition-transform hover:scale-110">
-                        <Icons.link className="size-4" />
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <header className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm ring-1 ring-primary/20">
+                        <Icons.link className="size-5" />
                     </div>
                     <div className="space-y-0.5">
-                        <TextHeading size="h6" className="text-sm font-semibold lowercase leading-none">{L.messages.relations.title}</TextHeading>
-                        <p className="text-[10px] text-muted-foreground lowercase opacity-60">linking tables and defining connections</p>
+                        <TextHeading size="h5" className="font-semibold tracking-tight">Database Relations</TextHeading>
+                        <p className="text-sm text-muted-foreground opacity-70">Define and manage how tables connect with each other</p>
                     </div>
-                    <Badge variant="secondary" className="h-5 px-1.5 rounded-lg bg-muted text-[10px] font-black uppercase tracking-tighter border-none">{relations.length}</Badge>
+                    <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-bold">{relations.length}</Badge>
                 </div>
             </header>
 
+            <Separator className="bg-border/60" />
+
             {/* Relations List */}
             {relations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center py-20 bg-muted/20 border border-dashed border-border/40 rounded-3xl group">
-                    <div className="size-16 rounded-2xl bg-muted/40 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
-                        <Icons.linkOff className="size-8 text-muted-foreground/30" />
-                    </div>
-                    <TextHeading size="h6" className="mb-1 lowercase">{L.messages.relations.noRelations}</TextHeading>
-                    <p className="text-xs text-muted-foreground lowercase opacity-60">{L.messages.relations.addToLink.toLowerCase()}</p>
-                </div>
+                <Empty className="py-24 glass-card border-dashed">
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <Icons.linkOff className="size-6 opacity-40" />
+                        </EmptyMedia>
+                        <EmptyTitle>No relations defined</EmptyTitle>
+                        <EmptyDescription>
+                            Connect your tables to build advanced queries and data structures.
+                        </EmptyDescription>
+                    </EmptyHeader>
+                </Empty>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {relations.map(rel => {
-                        const typeColor = 
-                            rel.type === 'belongs_to' ? 'bg-blue-500' :
-                            rel.type === 'has_one' ? 'bg-emerald-500' :
-                            rel.type === 'has_many' ? 'bg-amber-500' :
-                            'bg-violet-500';
-
                         return (
                             <Card
                                 key={rel.id}
-                                className="group relative border-none shadow-sm bg-card hover:bg-muted/5 transition-all duration-300 overflow-hidden"
+                                className="glass-card hover:shadow-md transition-all duration-300"
                             >
-                                <CardContent className="p-5 flex flex-col gap-6">
-                                    <div className="flex items-center gap-5">
-                                        <div className={cn(
-                                            "size-12 rounded-2xl flex items-center justify-center text-xl transition-all duration-500 shadow-lg group-hover:scale-110 group-hover:rotate-6",
-                                            typeColor,
-                                            "text-white shadow-emerald-500/10" // Example shadow
-                                        )}>
-                                            {getTypeIcon(rel.type)}
+                                <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+                                    <div className="size-10 rounded-lg bg-muted flex items-center justify-center text-lg shadow-sm">
+                                        {getTypeIcon(rel.type)}
+                                    </div>
+                                    <div className="flex-1 space-y-0.5">
+                                        <CardTitle className="text-base font-semibold lowercase">
+                                            {getTypeLabel(rel.type)}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs uppercase tracking-tight">
+                                            Relationship Type
+                                        </CardDescription>
+                                    </div>
+                                </CardHeader>
+
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/40">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[10px] uppercase font-bold text-muted-foreground/60 leading-none">Source Table</span>
+                                            <span className="text-sm font-semibold">{DatabaseTableName}</span>
                                         </div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                <span className="font-bold text-xs lowercase truncate max-w-[120px] text-muted-foreground/40">{DatabaseTableName}</span>
-                                                <Icons.arrowRight className="size-3 text-muted-foreground/20" />
-                                                <span className="font-bold text-sm lowercase text-foreground truncate">{rel.target?.name || C.status.unknown}</span>
-                                            </div>
-
-                                            <div className="flex flex-wrap items-center gap-1.5">
-                                                <Badge className="h-5 px-2 bg-muted text-[9px] font-black uppercase tracking-tighter text-muted-foreground/60 border-none">
-                                                    {getTypeLabel(rel.type)}
-                                                </Badge>
-                                                <div className="flex items-center gap-1.5 h-5 px-2 bg-muted rounded-lg text-[9px] font-mono text-muted-foreground/60">
-                                                    <Icons.key className="size-2.5 opacity-30" />
-                                                    {rel.localKey}
-                                                </div>
-                                                {rel.alias && (
-                                                    <div className="flex items-center gap-1.5 h-5 px-2 bg-primary/10 rounded-lg text-[9px] font-bold text-primary lowercase">
-                                                        <Icons.code className="size-2.5 opacity-40" />
-                                                        {rel.alias}
-                                                    </div>
-                                                )}
-                                            </div>
+                                        <Icons.arrowRight className="size-4 text-muted-foreground/30 mx-2" />
+                                        <div className="flex flex-col gap-1 text-right">
+                                            <span className="text-[10px] uppercase font-bold text-muted-foreground/60 leading-none">Target Table</span>
+                                            <span className="text-sm font-semibold">{rel.target?.name || 'unknown'}</span>
                                         </div>
                                     </div>
 
-                                    {/* Action Reveal */}
-                                    <div className="flex items-center gap-1 justify-end pt-4 border-t border-border/5">
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted hover:text-primary transition-all"
-                                            onClick={() => {
-                                                if (rel.localKey) {
-                                                    const path = nodeId 
-                                                        ? `/target/${nodeId}/database-schema/${DatabaseTableId}/relations/${rel.localKey}/edit` 
-                                                        : `/database-schema/${DatabaseTableId}/relations/${rel.localKey}/edit`;
-                                                    router.push(path);
-                                                }
-                                            }}
-                                        >
-                                            <Icons.edit className="size-3.5 mr-2" /> edit relation
-                                        </Button>
-                                        <Button
-                                            size="icon-sm"
-                                            variant="ghost"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setDeleteTarget(rel);
-                                            }}
-                                            className="h-8 w-8 rounded-xl hover:bg-rose-500/10 hover:text-rose-600 text-muted-foreground/30 transition-all"
-                                        >
-                                            <Icons.trash className="size-3.5" />
-                                        </Button>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-secondary/50 border border-border/50">
+                                            <Icons.key className="size-3 text-muted-foreground/50" />
+                                            <span className="text-xs font-mono font-medium">{rel.localKey}</span>
+                                        </div>
+                                        {rel.alias && (
+                                            <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-primary/10 border border-primary/20">
+                                                <Icons.code className="size-3 text-primary/60" />
+                                                <span className="text-xs font-semibold text-primary">{rel.alias}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </CardContent>
+
+                                <CardFooter className="justify-end gap-2 bg-muted/10 border-t border-border/20 pt-3">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 font-semibold"
+                                        onClick={() => {
+                                            if (rel.localKey) {
+                                                const key = rel.localKey;
+                                                const path = nodeId 
+                                                    ? `/target/${nodeId}/database-schema/${DatabaseTableId}/relations/${key}/edit` 
+                                                    : `/database-schema/${DatabaseTableId}/relations/${key}/edit`;
+                                                router.push(path);
+                                            }
+                                        }}
+                                    >
+                                        <Icons.edit className="size-3.5 mr-2" />
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDeleteTarget(rel);
+                                        }}
+                                    >
+                                        <Icons.trash className="size-3.5" />
+                                    </Button>
+                                </CardFooter>
                             </Card>
                         );
                     })}
@@ -182,12 +206,13 @@ export const RelationBuilder = ({ DatabaseTableId, DatabaseTableName, onRelation
                 onClose={() => setDeleteTarget(null)}
                 onConfirm={handleDeleteRelation}
                 title="delete relation?"
-                message={`${C.messages.confirmDelete} "${deleteTarget?.target?.name}"`.toLowerCase()}
-                confirmText={C.actions.delete.toLowerCase()}
+                message={`are you sure you want to delete this relation "${deleteTarget?.target?.name}"?`.toLowerCase()}
+                confirmText="delete"
                 variant="danger"
             />
         </div>
     );
 };
+
 
 export default RelationBuilder;

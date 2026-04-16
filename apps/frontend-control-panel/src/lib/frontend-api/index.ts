@@ -17,7 +17,7 @@ export { apiFetch, apiClient, type FetchOptions } from './client';
 export { createEndpoints, createEndpointsAdvanced } from './endpoints';
 
 // React hooks
-export { useFetch, createCrudHook } from './hooks';
+export { useFetch, useCrud, createCrudHook } from './hooks';
 export type {
     UseFetchOptions,
     UseFetchReturn,

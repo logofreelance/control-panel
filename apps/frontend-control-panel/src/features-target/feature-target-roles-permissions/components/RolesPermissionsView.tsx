@@ -25,25 +25,25 @@ export const RolesPermissionsView = () => {
             <div className="relative pt-12 pb-20 space-y-8 animate-page-enter">
                 {/* Header Section */}
                 <header className="px-1">
-                    <TextHeading size="h2" className="text-3xl sm:text-4xl mb-1 lowercase">
+                    <TextHeading size="h1" className="mb-1 lowercase">
                         {L.title}
                     </TextHeading>
-                    <p className="text-base text-muted-foreground lowercase">
+                    <p className="text-base font-normal text-muted-foreground lowercase">
                         {L.subtitle}
                     </p>
                 </header>
 
                 {/* Tab Navigation */}
-                <div className="flex p-1 bg-muted/40 rounded-xl w-full max-w-sm">
+                <div className="flex p-1 bg-muted rounded-xl w-full max-w-sm">
                     <Button
                         variant={activeTab === 'roles' ? 'default' : 'ghost'}
                         onClick={() => setActiveTab('roles')}
                         className={cn(
                             "flex-1 gap-2 rounded-lg lowercase transition-all duration-300 h-10",
-                            activeTab === 'roles' ? "shadow-sm" : "text-muted-foreground"
+                            activeTab === 'roles' ? "" : "text-muted-foreground"
                         )}
                     >
-                        <Icons.shield className="size-4" />
+                        <Icons.shield className="size-5" />
                         {L.tabs.roles}
                     </Button>
                     <Button
@@ -51,10 +51,10 @@ export const RolesPermissionsView = () => {
                         onClick={() => setActiveTab('permissions')}
                         className={cn(
                             "flex-1 gap-2 rounded-lg lowercase transition-all duration-300 h-10",
-                            activeTab === 'permissions' ? "shadow-sm" : "text-muted-foreground"
+                            activeTab === 'permissions' ? "" : "text-muted-foreground"
                         )}
                     >
-                        <Icons.unlock className="size-4" />
+                        <Icons.unlock className="size-5" />
                         {L.tabs.permissions}
                     </Button>
                 </div>

@@ -124,7 +124,10 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
                     if (detailData.status === 'success') {
                         const found = detailData.data;
                         if (found) {
-                            setForm(found);
+                            // Clean internal technical fields if they exist as strings
+                            const { handler_config, ...cleanForm } = found;
+                            setForm(cleanForm);
+                            
                             // Trigger resource fetch if DS is already selected
                             if (found.dataSourceId) {
                                 fetchResources(found.dataSourceId);

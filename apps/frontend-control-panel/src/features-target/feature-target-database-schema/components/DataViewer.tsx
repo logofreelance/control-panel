@@ -1,35 +1,46 @@
 'use client';
 
-/**
- * DataViewer - Flat Luxury UI Refactor
- * Premium Responsive Table View for Data Sources
- */
+import { useState, useEffect, useMemo } from 'react';
 
-import { useState, useEffect } from 'react';
-import { Button, Select, Badge, Card, CardContent } from '@/components/ui';
+import {
+  Button,
+  Badge,
+  Card,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Checkbox,
+  NativeSelect,
+} from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
+import { PageTitle } from '@/components/ui/page-title';
 import { cn } from '@/lib/utils';
-import { ConfirmDialog, useConfig } from '@/modules/_core';
-import { Icons, MODULE_LABELS } from '@/lib/config/client';
+import { ConfirmDialog } from '@/modules/_core';
 import { useDataViewer } from '../composables';
+import { FEATURE_LABELS as L, FEATURE_ICONS as Icons } from '../constants';
+import { API } from '../api/endpoints';
 import type { DatabaseTable } from '../types';
 import { ImportDataModal } from './ImportDataModal';
 
-const L = MODULE_LABELS.databaseSchema;
 const PAGE_SIZES = [10, 20, 50, 100];
+const C = {
+    actions: { delete: 'delete', export: 'export', import: 'import' },
+    table: { id: 'id', actions: 'actions', noData: 'no records found' },
+    pagination: { limit: 'limit', items: 'items', previous: 'prev', next: 'next', page: 'page' },
+    status: { noData: 'no records found' }
+};
 
 interface DataViewerProps {
   DatabaseTable: DatabaseTable;
 }
 
 export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
-  // ✅ Pure DI: Get all dependencies from context
-  const { labels, icons: Icons, api } = useConfig();
-  const C = labels.common;
-
-  // All data operations from composable
   const {
     rows,
+    columns: physicalColumns,
     loading,
     total,
     pagination,
@@ -38,356 +49,320 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
     fetchData,
     deleteRow,
     deleteSelected,
-  } = useDataViewer(DatabaseTable.id);
+  } = useDataViewer(DatabaseTable?.id);
 
-  // UI-only state
-  const [confirmDelete, setConfirmDelete] = useState<Record<string, unknown> | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const columns = DatabaseTable.schema?.columns || [];
-  const totalPages = Math.ceil(total / pagination.limit) || 1;
+  // ✅ SAFELY RESOLVE COLUMNS: Parse schema_json string if physical columns haven't loaded yet
+  const displayColumns = useMemo(() => {
+    if (physicalColumns?.length > 0) return physicalColumns;
 
-  // Fetch data when dependencies change
+    try {
+      const jsonStr = DatabaseTable?.schema_json || DatabaseTable?.schemaJson;
+      if (jsonStr) {
+        const parsed = JSON.parse(jsonStr);
+        return parsed.columns || [];
+      }
+    } catch (e) {
+      console.error('Failed to parse schema_json', e);
+    }
+
+    return [];
+  }, [physicalColumns, DatabaseTable?.schema_json, DatabaseTable?.schemaJson]);
+
+  const totalPages = Math.ceil(total / (pagination?.limit || 10)) || 1;
+
+  // ✅ HARD-LOCK: Only fetch when primitives change
   useEffect(() => {
-    fetchData();
-    selection.deselectAll();
+    if (DatabaseTable?.id) {
+      fetchData();
+    }
   }, [
-    DatabaseTable.id,
-    pagination.page,
-    pagination.limit,
-    sorting.sortColumn,
-    sorting.sortDirection,
+    DatabaseTable?.id,
+    pagination?.page,
+    pagination?.limit,
+    sorting?.sortColumn,
+    sorting?.sortDirection,
+    // Removed fetchData and other unstable objects
   ]);
 
-  const handleSort = (colName: string) => {
-    sorting.handleSort(colName);
-  };
-
-  const handleDelete = async () => {
-    if (!confirmDelete) return;
-    await deleteRow(confirmDelete.id as number);
-    setConfirmDelete(null);
-  };
-
   const handleBulkDelete = async () => {
-    if (selection.selectedCount === 0) return;
+    if (!selection || selection.selectedCount === 0) return;
     setBulkDeleting(true);
     await deleteSelected();
     setBulkDeleting(false);
   };
 
-  return (
-    <Card className="border-none shadow-sm bg-card/40 overflow-hidden">
-      {/* Table Action Bar */}
-      <header className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/5">
-        <div className="flex items-center gap-4">
-          <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-sm shadow-primary/5">
-            <Icons.chart className="size-6" />
-          </div>
-          <div>
-            <TextHeading size="h5" className="text-base font-semibold lowercase leading-none">
-              {L.labels.tableData}
-            </TextHeading>
-            <p className="text-[11px] text-muted-foreground lowercase mt-1.5 opacity-60">
-              {L.labels.viewAndManageRecords.toLowerCase()}
-            </p>
-          </div>
-        </div>
+  const handleSingleDelete = async () => {
+    if (!deleteId) return;
+    await deleteRow(deleteId);
+    setDeleteId(null);
+  };
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {selection.selectedCount > 0 && (
+  const getExportUrl = () => {
+    try {
+      const baseUrl = API.list;
+      if (!baseUrl) return '';
+      return `${baseUrl}/${DatabaseTable?.id}/export?format=csv`;
+    } catch {
+      return '';
+    }
+  };
+
+  if (!DatabaseTable) return null;
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <Card className="overflow-hidden border-none shadow-sm bg-card/60 backdrop-blur-sm rounded-[32px]">
+        {/* Header Section */}
+        <header className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/10">
+          <div className="flex items-center gap-4">
+            <div className="size-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center transition-transform hover:rotate-6">
+              {Icons.stats ? <Icons.stats className="size-5" /> : <div className="size-5" />}
+            </div>
+            <div>
+              <TextHeading
+                size="h6"
+                className="text-base font-medium lowercase leading-none text-foreground"
+              >
+                {L?.labels?.tableData || 'table data'}
+              </TextHeading>
+              <p className="text-base text-muted-foreground lowercase mt-2 font-normal opacity-60">
+                {(L?.labels?.viewAndManageRecords || 'view and manage records').toLowerCase()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {selection?.selectedCount > 0 && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleBulkDelete}
+                isLoading={bulkDeleting}
+              >
+                <Icons.trash className="mr-2" /> {C?.actions?.delete || 'delete'} (
+                {selection.selectedCount})
+              </Button>
+            )}
+
             <Button
               size="sm"
-              variant="destructive"
-              onClick={handleBulkDelete}
-              isLoading={bulkDeleting}
-              className="h-10 px-6 rounded-xl lowercase font-bold shadow-lg shadow-rose-500/10"
-            >
-              <Icons.trash className="size-4 mr-2" /> {C.actions.delete} ({selection.selectedCount})
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() =>
-              window.open(
-                `${api.databaseSchema.list}/${DatabaseTable.id}/export?format=csv`,
-                '_blank',
-              )
-            }
-            className="h-10 px-4 rounded-xl text-xs font-bold lowercase hover:bg-muted"
-          >
-            <Icons.download className="size-4 mr-2 opacity-40" /> {C.actions.export}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsImportOpen(true)}
-            className="h-10 px-4 rounded-xl text-xs font-bold lowercase hover:bg-muted"
-          >
-            <Icons.upload className="size-4 mr-2 opacity-40" /> {C.actions.import}
-          </Button>
-          <div className="w-px h-6 bg-border/40 mx-1 hidden sm:block" />
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={fetchData}
-            isLoading={loading}
-            className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
-          >
-            <Icons.refresh className={cn('size-4', loading && 'animate-spin')} />
-          </Button>
-        </div>
-      </header>
-
-      {/* Desktop Table View */}
-      <div className="hidden md:block w-full overflow-x-auto custom-scrollbar">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-muted/30 border-b border-border/5">
-              <th className="pl-8 py-5 w-12">
-                <SelectionCheckbox
-                  checked={rows.length > 0 && selection.selectedCount === rows.length}
-                  onChange={() => selection.toggleAll(rows)}
-                />
-              </th>
-              <th className="px-6 py-5 w-20 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-                {C.table.id}
-              </th>
-              {columns.slice(0, 5).map((col) => (
-                <th
-                  key={col.name}
-                  className="px-6 py-5 cursor-pointer group"
-                  onClick={() => handleSort(col.name)}
-                >
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 group-hover:text-primary/60 transition-colors">
-                    {col.name}
-                    {sorting.sortColumn === col.name && (
-                      <span className="text-primary animate-in fade-in zoom-in-75 duration-300">
-                        {sorting.sortDirection === 'ASC' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </div>
-                </th>
-              ))}
-              {columns.length > 5 && (
-                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/20">
-                  ...
-                </th>
-              )}
-              <th className="pr-8 py-5 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-                {C.table.actions}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/5">
-            {loading && rows.length === 0 ? (
-              <tr>
-                <td colSpan={100} className="py-24 text-center">
-                  <Icons.loading className="size-8 animate-spin mx-auto opacity-20" />
-                </td>
-              </tr>
-            ) : rows.length === 0 ? (
-              <tr>
-                <td colSpan={100} className="py-24 text-center">
-                  <div className="flex flex-col items-center gap-3 opacity-30">
-                    <Icons.database className="size-12" />
-                    <p className="text-sm font-medium lowercase">{C.table.noData}</p>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              rows.map((row, i) => {
-                const isSelected = selection.isSelected(row.id as number);
-                return (
-                  <tr
-                    key={String(row.id || i)}
-                    className={cn(
-                      'group transition-all duration-300 hover:bg-muted/10',
-                      isSelected ? 'bg-primary/5' : '',
-                    )}
-                  >
-                    <td className="pl-8 py-4">
-                      <SelectionCheckbox
-                        checked={isSelected}
-                        onChange={() => selection.toggle(row.id as number)}
-                      />
-                    </td>
-                    <td className="px-6 py-4 font-mono text-[11px] text-muted-foreground/50">
-                      {String(row.id)}
-                    </td>
-                    {columns.slice(0, 5).map((col) => (
-                      <td
-                        key={col.name}
-                        className="px-6 py-4 max-w-[240px] truncate text-xs font-medium text-foreground/80 lowercase"
-                      >
-                        {typeof row[col.name] === 'object' ? (
-                          <span className="opacity-40 font-mono text-[10px]">
-                            {JSON.stringify(row[col.name])}
-                          </span>
-                        ) : (
-                          String(row[col.name] || '-')
-                        )}
-                      </td>
-                    ))}
-                    {columns.length > 5 && (
-                      <td className="px-6 py-4 text-muted-foreground/20 text-xs">...</td>
-                    )}
-                    <td className="pr-8 py-4 text-right">
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500/10 hover:text-rose-600"
-                        onClick={() => setConfirmDelete(row)}
-                      >
-                        <Icons.trash className="size-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile View Placeholder (Simplified for brevity but styled similarly) */}
-      <div className="md:hidden p-6 space-y-4">
-        {rows.map((row, i) => (
-          <div key={i} className="p-4 bg-muted/20 rounded-2xl space-y-3 ring-1 ring-border/5">
-            <div className="flex items-center justify-between">
-              <SelectionCheckbox
-                checked={selection.isSelected(row.id as number)}
-                onChange={() => selection.toggle(row.id as number)}
-              />
-              <Badge
-                variant="outline"
-                className="text-[10px] font-mono border-none bg-muted px-2 py-0.5"
-              >
-                #{String(row.id)}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {columns.slice(0, 4).map((col) => (
-                <div key={col.name} className="space-y-0.5">
-                  <label className="text-[9px] font-black uppercase tracking-tighter text-muted-foreground/40">
-                    {col.name}
-                  </label>
-                  <p className="text-xs font-medium lowercase truncate">
-                    {String(row[col.name] || '-')}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-        {rows.length === 0 && !loading && (
-          <div className="py-12 text-center text-muted-foreground/40 lowercase text-xs italic">
-            {C.table.noData}
-          </div>
-        )}
-      </div>
-
-      {/* Table Footer / Pagination */}
-      <footer className="p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-border/5 bg-muted/10">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 shrink-0">
-              Rows per page
-            </label>
-            <div className="w-20">
-              <Select
-                value={String(pagination.limit)}
-                onChange={(e) => pagination.setLimit(Number(e.target.value))}
-                size="sm"
-                fullWidth
-                className="h-8 text-[10px] font-bold"
-                options={PAGE_SIZES.map((size) => ({ label: String(size), value: String(size) }))}
-              />
-            </div>
-          </div>
-          <div className="h-4 w-px bg-border/20 hidden sm:block" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 hidden sm:block">
-            {Math.min((pagination.page - 1) * pagination.limit + 1, total)}-
-            {Math.min(pagination.page * pagination.limit, total)}{' '}
-            <span className="opacity-30 mx-1">of</span> {total} {C.pagination.items}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={pagination.page === 1}
-            onClick={() => pagination.setPage(pagination.page - 1)}
-            className="h-9 px-4 rounded-xl lowercase font-bold text-xs"
-          >
-            <Icons.chevronLeft className="size-4 mr-2" /> {C.pagination.previous}
-          </Button>
-
-          <div className="flex items-center bg-muted/40 rounded-xl px-3 h-9 ring-1 ring-border/5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mr-2">
-              {C.pagination.page}
-            </span>
-            <input
-              type="number"
-              min={1}
-              max={totalPages}
-              value={pagination.page}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                if (!isNaN(val) && val >= 1 && val <= totalPages) pagination.setPage(val);
+              variant="ghost"
+              onClick={() => {
+                const url = getExportUrl();
+                if (url) window.open(url, '_blank');
               }}
-              className="w-8 h-6 bg-transparent text-center text-[11px] font-black text-primary border-none focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 ml-1">
-              / {totalPages}
-            </span>
+            >
+              <Icons.download className="mr-2" /> {C?.actions?.export || 'export'}
+            </Button>
+
+            <Button size="sm" variant="ghost" onClick={() => setIsImportOpen(true)}>
+              <Icons.upload className="mr-2" /> {C?.actions?.import || 'import'}
+            </Button>
+
+            <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
+
+            <Button size="icon-sm" variant="ghost" onClick={fetchData} isLoading={loading}>
+              <Icons.refresh className={cn(loading && 'animate-spin text-primary')} />
+            </Button>
+          </div>
+        </header>
+
+        {/* Main Table Content */}
+        <div className="relative w-full overflow-x-auto custom-scrollbar min-h-[400px]">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/5 border-b border-border/10">
+                <TableHead className="w-12 pl-6">
+                  <Checkbox
+                    checked={
+                      (rows || []).length > 0 && selection?.selectedCount === (rows || []).length
+                    }
+                    onCheckedChange={() => selection?.toggleAll(rows || [])}
+                  />
+                </TableHead>
+                <TableHead className="w-24 text-sm font-normal lowercase text-muted-foreground/60">
+                  {C?.table?.id || C?.labels?.id || 'id'}
+                </TableHead>
+                {displayColumns?.map((col: any) => (
+                  <TableHead
+                    key={col.name}
+                    className="cursor-pointer group whitespace-nowrap"
+                    onClick={() => sorting?.toggleSort?.(col.name)}
+                  >
+                    <div className="flex items-center gap-2 text-sm font-normal lowercase text-muted-foreground/60 group-hover:text-primary transition-colors">
+                      {col.displayName || col.name}
+                      {sorting?.sortColumn === col.name && (
+                        <span className="text-primary animate-in fade-in slide-in-from-bottom-1">
+                          {sorting.sortDirection === 'ASC' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
+                <TableHead className="text-right pr-6 text-sm font-normal lowercase text-muted-foreground/60">
+                  {C?.table?.actions || C?.labels?.actions || 'actions'}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading && (rows || []).length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={100} className="h-64 text-center">
+                    <div className="sticky left-0 w-full flex flex-col items-center gap-3 opacity-20">
+                      <Icons.loading className="size-10 animate-spin text-primary" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (rows || []).length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={100} className="h-64 text-center">
+                    <div className="sticky left-0 w-full flex flex-col items-center gap-4">
+                      <div className="size-16 rounded-[24px] bg-muted flex items-center justify-center text-muted-foreground">
+                        <Icons.database className="size-8" />
+                      </div>
+                      <p className="text-base font-normal lowercase text-muted-foreground">
+                        {C?.table?.noData || C?.status?.noData || 'no records found'}
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows?.map((row, i) => {
+                  if (!row) return null;
+                  const isSelected = selection?.isSelected?.(row);
+                  return (
+                    <TableRow
+                      key={String(row.id || i)}
+                      className={cn(
+                        'group transition-colors border-b border-border/5',
+                        isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/5',
+                      )}
+                    >
+                      <TableCell className="pl-6">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => selection?.toggleSelection?.(row)}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground font-normal">
+                        {String(row.id || '-').slice(0, 8)}
+                      </TableCell>
+                      {displayColumns?.map((col: any) => (
+                        <TableCell
+                          key={`${row.id || i}-${col.name}`}
+                          className="max-w-[200px] truncate text-sm font-normal text-foreground lowercase py-5"
+                        >
+                          {typeof row[col.name] === 'object' ? (
+                            <Badge
+                              variant="outline"
+                              className="text-xs font-mono lowercase opacity-50 px-2 py-0.5"
+                            >
+                              json
+                            </Badge>
+                          ) : (
+                            String(row[col.name] ?? '-')
+                          )}
+                        </TableCell>
+                      ))}
+                      <TableCell className="text-right pr-6">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-10 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive text-muted-foreground"
+                          onClick={() => setDeleteId(row.id as number)}
+                        >
+                          <Icons.trash className="size-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Footer / Pagination */}
+        <footer className="p-4 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-border/10 order-last">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-normal lowercase text-muted-foreground/60 shrink-0">
+                {C?.pagination?.limit || 'limit'}
+              </label>
+              <NativeSelect
+                value={String(pagination?.limit || 10)}
+                onChange={(e) => pagination?.setLimit?.(Number(e.target.value))}
+                className="h-10 w-24 text-sm font-normal bg-transparent border-border rounded-xl"
+              >
+                {PAGE_SIZES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+            <div className="w-px h-6 bg-border hidden sm:block" />
+            <p className="text-sm font-normal lowercase text-muted-foreground/60 hidden sm:block">
+              {total > 0 ? (pagination?.page - 1) * pagination?.limit + 1 : 0}-
+              {Math.min(pagination?.page * pagination?.limit, total)}
+              <span className="text-border mx-2">/</span> {total} {C?.pagination?.items || 'items'}
+            </p>
           </div>
 
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={pagination.page === totalPages}
-            onClick={() => pagination.setPage(pagination.page + 1)}
-            className="h-9 px-4 rounded-xl lowercase font-bold text-xs"
-          >
-            {C.pagination.next} <Icons.chevronRight className="size-4 ml-2" />
-          </Button>
-        </div>
-      </footer>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={pagination?.page === 1 || loading}
+              onClick={() => pagination?.setPage?.(pagination.page - 1)}
+            >
+              <Icons.chevronLeft /> {C?.pagination?.previous || 'prev'}
+            </Button>
+
+            <div className="flex items-center bg-muted/40 backdrop-blur-sm rounded-xl px-4 h-10 border border-border">
+              <span className="text-sm font-normal lowercase text-muted-foreground/60 mr-3">
+                {C?.pagination?.page || 'page'}
+              </span>
+              <span className="text-lg font-normal text-primary">{pagination?.page}</span>
+              <span className="text-sm font-normal lowercase text-muted-foreground/60 ml-2">
+                / {totalPages}
+              </span>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={pagination?.page === totalPages || loading}
+              onClick={() => pagination?.setPage?.(pagination.page + 1)}
+            >
+              {C?.pagination?.next || 'next'} <Icons.chevronRight />
+            </Button>
+          </div>
+        </footer>
+      </Card>
 
       <ConfirmDialog
-        isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
-        onConfirm={handleDelete}
-        title="delete record?"
-        message={L.messages.confirm.deleteRow.toLowerCase()}
-        confirmText={C.actions.delete.toLowerCase()}
-        variant="danger"
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleSingleDelete}
+        title={(C?.actions?.delete || 'delete') + ' record?'}
+        message={(
+          L?.messages?.confirm?.deleteRow || 'are you sure you want to delete this record?'
+        ).toLowerCase()}
+        confirmText={(C?.actions?.delete || 'delete').toLowerCase()}
+        variant="destructive"
       />
 
       <ImportDataModal
         isOpen={isImportOpen}
         onClose={() => setIsImportOpen(false)}
-        DatabaseTableId={DatabaseTable.id}
+        DatabaseTableId={DatabaseTable?.id}
         onSuccess={fetchData}
       />
-    </Card>
+    </div>
   );
 };
-
-const SelectionCheckbox = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
-  <button
-    onClick={onChange}
-    className={cn(
-      'size-5 rounded-lg border-2 flex items-center justify-center transition-all duration-300',
-      checked
-        ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
-        : 'bg-muted/40 border-transparent hover:border-primary/20',
-    )}
-  >
-    {checked && <Icons.check className="size-3 stroke-4" />}
-  </button>
-);

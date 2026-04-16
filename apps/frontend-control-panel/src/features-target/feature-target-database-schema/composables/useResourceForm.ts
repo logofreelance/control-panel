@@ -11,7 +11,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useForm, useAutoSlug } from '@/lib/frontend-form-utils';
 import { useListBuilder } from '@/lib/frontend-list-builder';
-import { useConfig } from '@/modules/_core';
+import { FEATURE_MESSAGES } from '../constants';
+import { DEFAULTS } from '@/lib/config/defaults';
 import type { Resource } from '../types';
 
 export interface ResourceFormValues {
@@ -48,24 +49,21 @@ export interface JoinConfig {
 
 /**
  * Hook for managing resource form state
- * Uses Pure DI via useConfig() hook
+ * Modularized: Uses internal API and local constants
  */
 export function useResourceForm(resource?: Resource) {
-    // ✅ Pure DI: Get all dependencies from context
-    const { msg, defaults } = useConfig();
-
-    // Get defaults from context
+    // Get defaults directly
     const DEFAULT_VALUES: ResourceFormValues = useMemo(() => ({
         name: '',
         slug: '',
         description: '',
-        isPublic: defaults.databaseSchema.resourceForm.isPublic,
-        isActive: defaults.databaseSchema.resourceForm.isActive,
-        defaultLimit: defaults.databaseSchema.resourceForm.defaultLimit,
-        maxLimit: defaults.databaseSchema.resourceForm.maxLimit,
-        orderBy: defaults.databaseSchema.resourceForm.orderBy,
-        orderDirection: defaults.databaseSchema.resourceForm.orderDirection,
-    }), [defaults]);
+        isPublic: DEFAULTS.databaseSchema.resourceForm.isPublic,
+        isActive: DEFAULTS.databaseSchema.resourceForm.isActive,
+        defaultLimit: DEFAULTS.databaseSchema.resourceForm.defaultLimit,
+        maxLimit: DEFAULTS.databaseSchema.resourceForm.maxLimit,
+        orderBy: DEFAULTS.databaseSchema.resourceForm.orderBy,
+        orderDirection: DEFAULTS.databaseSchema.resourceForm.orderDirection,
+    }), []);
 
     // Main form using @repo/frontend-form-utils
     const form = useForm<ResourceFormValues>({
@@ -73,12 +71,12 @@ export function useResourceForm(resource?: Resource) {
             name: resource.name,
             slug: resource.slug || '',
             description: resource.description || '',
-            isPublic: resource.isPublic || defaults.databaseSchema.resourceForm.isPublic,
+            isPublic: resource.isPublic || DEFAULTS.databaseSchema.resourceForm.isPublic,
             isActive: resource.isActive !== false,
-            defaultLimit: resource.defaultLimit || defaults.databaseSchema.resourceForm.defaultLimit,
-            maxLimit: resource.maxLimit || defaults.databaseSchema.resourceForm.maxLimit,
-            orderBy: resource.orderBy || defaults.databaseSchema.resourceForm.orderBy,
-            orderDirection: resource.orderDirection || defaults.databaseSchema.resourceForm.orderDirection,
+            defaultLimit: resource.defaultLimit || DEFAULTS.databaseSchema.resourceForm.defaultLimit,
+            maxLimit: resource.maxLimit || DEFAULTS.databaseSchema.resourceForm.maxLimit,
+            orderBy: resource.orderBy || DEFAULTS.databaseSchema.resourceForm.orderBy,
+            orderDirection: resource.orderDirection || DEFAULTS.databaseSchema.resourceForm.orderDirection,
         } : DEFAULT_VALUES,
     });
 
@@ -176,23 +174,22 @@ export function useResourceForm(resource?: Resource) {
         };
     }, [form.values, selectedFields, filters.items, joins.items]);
 
-    // Validation using msg from context
+    // Validation
     const validate = useCallback((): { valid: boolean; errors: string[] } => {
         const errors: string[] = [];
 
         if (!form.values.name.trim()) {
-            // ✅ Use msg from context
-            errors.push(msg.databaseSchema.validation.resourceNameRequired);
+            errors.push(FEATURE_MESSAGES.validation.resourceNameRequired);
         }
         if (!form.values.slug.trim()) {
-            errors.push(msg.databaseSchema.validation.slugRequired);
+            errors.push(FEATURE_MESSAGES.validation.slugRequired);
         }
         if (selectedFields.length === 0) {
-            errors.push(msg.databaseSchema.validation.fieldsRequired);
+            errors.push(FEATURE_MESSAGES.validation.fieldsRequired);
         }
 
         return { valid: errors.length === 0, errors };
-    }, [form.values, selectedFields, msg]);
+    }, [form.values, selectedFields]);
 
     return {
         // Form values

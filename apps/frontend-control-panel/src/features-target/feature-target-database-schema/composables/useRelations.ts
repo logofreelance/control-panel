@@ -8,14 +8,17 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
-import { useToast, useConfig } from '@/modules/_core';
+import { useToast } from '@/modules/_core';
+import { API } from '../api/endpoints';
+import { TOAST_TYPE, API_STATUS } from '@/lib/config/defaults';
 
 export interface Relation {
-  id: number;
-  sourceId: number;
-  targetId: number;
+  id: string | number;
+  sourceId: string | number;
+  targetId: string | number;
   type: 'belongs_to' | 'has_one' | 'has_many' | 'many_to_many';
   localKey: string | null;
   foreignKey: string;
@@ -28,25 +31,29 @@ export interface Relation {
 }
 
 export interface RelationTarget {
-  id: number;
+  id: string | number;
   name: string;
   tableName: string;
 }
 
 export interface AddRelationPayload {
-  targetId: number;
+  targetId: string | number;
   type: Relation['type'];
   alias?: string;
 }
 
 /**
  * Hook for managing data source relations
- * Uses Pure DI via useConfig() hook
+ * Modularized: Uses internal API and local FEATURE_MESSAGES
  */
-export function useRelations(DatabaseTableId: number) {
-  // ✅ Pure DI: Get all dependencies from context
-  const { msg, api, API_STATUS, TOAST_TYPE } = useConfig();
+export function useRelations(DatabaseTableId: string | number) {
   const { addToast } = useToast();
+  const params = useParams();
+  const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const targetId = rawNodeId;
+
+  // ✅ Memoize headers
+  const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
 
   const [relations, setRelations] = useState<Relation[]>([]);
   const [targets, setTargets] = useState<RelationTarget[]>([]);
@@ -57,9 +64,9 @@ export function useRelations(DatabaseTableId: number) {
   // Fetch relations
   const fetchRelations = useCallback(async () => {
     try {
-      // ✅ Use api from context
       const response = await apiClient.get<Relation[]>(
-        api.databaseSchema.relations(DatabaseTableId),
+        API.relations(DatabaseTableId),
+        { headers }
       );
       if (response.status === API_STATUS.SUCCESS && response.data) {
         setRelations(response.data);
@@ -67,14 +74,14 @@ export function useRelations(DatabaseTableId: number) {
     } catch (err) {
       console.error('Failed to fetch relations:', err);
     }
-  }, [DatabaseTableId, api, API_STATUS]);
+  }, [DatabaseTableId, headers]);
 
   // Fetch available targets
   const fetchTargets = useCallback(async () => {
     try {
-      // ✅ Use api from context
       const response = await apiClient.get<RelationTarget[]>(
-        api.databaseSchema.availableTargets(DatabaseTableId),
+        API.availableTargets(DatabaseTableId),
+        { headers }
       );
       if (response.status === API_STATUS.SUCCESS && response.data) {
         setTargets(response.data);
@@ -82,7 +89,7 @@ export function useRelations(DatabaseTableId: number) {
     } catch (err) {
       console.error('Failed to fetch targets:', err);
     }
-  }, [DatabaseTableId, api, API_STATUS]);
+  }, [DatabaseTableId, headers]);
 
   // Initial load
   useEffect(() => {
@@ -100,41 +107,38 @@ export function useRelations(DatabaseTableId: number) {
       if (
         payload.targetId === undefined ||
         payload.targetId === null ||
-        Number.isNaN(payload.targetId)
+        (typeof payload.targetId === 'number' && Number.isNaN(payload.targetId))
       ) {
-        // ✅ Use msg from context
-        addToast(msg.databaseSchema.validation.selectTargetTable, TOAST_TYPE.ERROR);
+        addToast('Please select a target table', TOAST_TYPE.ERROR);
         return null;
       }
 
       setAdding(true);
       try {
-        // ✅ Use api from context
         const response = await apiClient.post<Relation>(
-          api.databaseSchema.addRelation(DatabaseTableId),
+          API.addRelation(DatabaseTableId),
           payload,
+          { headers }
         );
-        // ✅ Log response for debug
-        // ✅ Log response for debug - removed for production build
 
         if (response.status === API_STATUS.SUCCESS) {
-          addToast(msg.databaseSchema.success.relationAdded, TOAST_TYPE.SUCCESS);
+          addToast('Relation added successfully', TOAST_TYPE.SUCCESS);
           await fetchRelations();
-          return response.data || null; // Return data only
+          return response.data || null;
         } else {
           addToast(
-            (response as { message?: string }).message || msg.databaseSchema.error.relationFailed,
+            (response as { message?: string }).message || 'Failed to add relation',
             TOAST_TYPE.ERROR,
           );
         }
       } catch {
-        addToast(msg.error.network, TOAST_TYPE.ERROR);
+        addToast('Network error, please try again', TOAST_TYPE.ERROR);
       } finally {
         setAdding(false);
       }
       return null;
     },
-    [DatabaseTableId, fetchRelations, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, fetchRelations, addToast],
   );
 
   // Delete relation
@@ -142,29 +146,28 @@ export function useRelations(DatabaseTableId: number) {
     async (relationId: string | number): Promise<boolean> => {
       setDeleting(true);
       try {
-        // ✅ Use api from context
-        // Ensure relationId is handled correctly (backend may expect string or number depending on route)
         const response = await apiClient.delete(
-          api.databaseSchema.deleteRelation(DatabaseTableId, Number(relationId)),
+          API.deleteRelation(DatabaseTableId, relationId),
+          { headers }
         );
         if (response.status === API_STATUS.SUCCESS) {
-          addToast(msg.databaseSchema.success.relationDeleted, TOAST_TYPE.SUCCESS);
+          addToast('Relation deleted successfully', TOAST_TYPE.SUCCESS);
           await fetchRelations();
           return true;
         } else {
           addToast(
-            (response as { message?: string }).message || msg.databaseSchema.error.relationFailed,
+            (response as { message?: string }).message || 'Failed to delete relation',
             TOAST_TYPE.ERROR,
           );
         }
       } catch {
-        addToast(msg.error.network, TOAST_TYPE.ERROR);
+        addToast('Network error, please try again', TOAST_TYPE.ERROR);
       } finally {
         setDeleting(false);
       }
       return false;
     },
-    [DatabaseTableId, fetchRelations, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, fetchRelations, addToast],
   );
 
   // Update relation
@@ -174,30 +177,27 @@ export function useRelations(DatabaseTableId: number) {
       payload: { alias?: string; type?: string },
     ): Promise<boolean> => {
       try {
-        // Ensure relationId is passed correctly
         const response = await apiClient.put(
-          api.databaseSchema.updateRelation(DatabaseTableId, Number(relationId)),
+          API.updateRelation(DatabaseTableId, relationId),
           payload,
+          { headers }
         );
         if (response.status === API_STATUS.SUCCESS) {
-          addToast(
-            msg.databaseSchema.success.relationUpdated || 'Relation updated',
-            TOAST_TYPE.SUCCESS,
-          );
+          addToast('Relation updated successfully', TOAST_TYPE.SUCCESS);
           await fetchRelations();
           return true;
         } else {
           addToast(
-            (response as { message?: string }).message || msg.databaseSchema.error.relationFailed,
+            (response as { message?: string }).message || 'Failed to update relation',
             TOAST_TYPE.ERROR,
           );
         }
       } catch {
-        addToast(msg.error.network, TOAST_TYPE.ERROR);
+        addToast('Network error, please try again', TOAST_TYPE.ERROR);
       }
       return false;
     },
-    [DatabaseTableId, fetchRelations, addToast, api, msg, API_STATUS, TOAST_TYPE],
+    [DatabaseTableId, fetchRelations, addToast],
   );
 
   return {

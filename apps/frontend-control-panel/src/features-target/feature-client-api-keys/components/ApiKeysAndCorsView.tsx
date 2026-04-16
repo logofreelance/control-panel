@@ -230,25 +230,25 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
       {/* Show created key dialog if needed */}
       {createdKey && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <Card className="max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
-            <CardContent className="p-0">
-              <div className="flex flex-row gap-4 items-center mb-6">
-                <div className="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+          <Card className="max-w-md w-full animate-in zoom-in-95 duration-200">
+            <CardContent>
+              <div className="flex flex-row gap-4 items-center mb-6 pt-6">
+                <div className="size-12 rounded-xl bg-muted flex items-center justify-center">
                   <Icons.checkCircle className="size-6 text-emerald-600" />
                 </div>
                 <div>
-                  <TextHeading size="h4" className="font-semibold lowercase">
+                  <TextHeading size="h3" className="font-semibold lowercase">
                     api key created
                   </TextHeading>
-                  <p className="text-sm text-muted-foreground lowercase">
+                  <p className="text-base text-muted-foreground lowercase">
                     save this key securely now
                   </p>
                 </div>
               </div>
-              <div className="bg-muted/40 rounded-xl p-5 mb-6 select-all">
+              <div className="bg-muted rounded-xl p-5 mb-6 select-all">
                 <p className="text-base text-foreground break-all leading-relaxed">{createdKey}</p>
               </div>
-              <p className="text-sm text-rose-500 mb-6 lowercase">
+              <p className="text-base text-rose-500 mb-6 lowercase">
                 this key will not be shown again. please copy and save it immediately.
               </p>
               <div className="flex flex-row gap-3">
@@ -270,7 +270,7 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
 
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
         <div>
-          <TextHeading size="h2" className="text-2xl sm:text-3xl mb-1 lowercase">
+          <TextHeading size="h1" className="mb-1 lowercase">
             {L.title}
           </TextHeading>
           <p className="text-base text-muted-foreground lowercase">
@@ -284,10 +284,9 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
             size="icon"
             onClick={handleSync}
             disabled={isSyncing}
-            className="size-9 rounded-xl hover:bg-muted/80 text-muted-foreground transition-all"
             title="Sync Endpoints"
           >
-            <Icons.refreshCw className={`size-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            <Icons.refreshCw className={`size-5 ${isSyncing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </header>
@@ -295,85 +294,85 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
       {/* Stats Cards */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
         {loading && <LoadingOverlay />}
-        <Card className="bg-card">
-          <CardContent className="p-5">
+        <Card>
+          <CardContent>
             <div className="flex flex-row justify-between items-start mb-6">
-              <p className="text-sm font-medium text-muted-foreground lowercase">
+              <p className="text-base font-normal text-muted-foreground lowercase">
                 {L.stats.apiKeys}
               </p>
-              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-primary">
                 <Icons.key className="size-5" />
               </div>
             </div>
             <div>
-              <TextHeading size="h3" className="text-3xl font-bold lowercase">
+              <TextHeading size="h2" className="lowercase">
                 {keys.length}
               </TextHeading>
-              <p className="text-sm text-muted-foreground mt-1 lowercase">
+              <p className="text-base font-normal text-muted-foreground mt-1 lowercase">
                 {L.stats.registered}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card">
-          <CardContent className="p-5">
+        <Card>
+          <CardContent>
             <div className="flex flex-row justify-between items-start mb-6">
-              <p className="text-sm font-medium text-muted-foreground lowercase">
+              <p className="text-base font-normal text-muted-foreground lowercase">
                 {L.stats.activeKeys}
               </p>
-              <div className="size-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+              <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-emerald-600">
                 <Icons.checkCircle className="size-5" />
               </div>
             </div>
             <div>
-              <TextHeading size="h3" className="text-3xl font-bold lowercase">
+              <TextHeading size="h2" className="lowercase">
                 {keys.filter((k: ClientApiKey) => k.is_active === 1).length}
               </TextHeading>
-              <p className="text-sm text-muted-foreground mt-1 lowercase">
+              <p className="text-base font-normal text-muted-foreground mt-1 lowercase">
                 {L.stats.valid}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card">
-          <CardContent className="p-5">
+        <Card>
+          <CardContent>
             <div className="flex flex-row justify-between items-start mb-6">
-              <p className="text-sm font-medium text-muted-foreground lowercase">
+              <p className="text-base font-normal text-muted-foreground lowercase">
                 {L.stats.corsDomains}
               </p>
-              <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+              <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-blue-600">
                 <Icons.globe className="size-5" />
               </div>
             </div>
             <div>
-              <TextHeading size="h3" className="text-3xl font-bold lowercase">
+              <TextHeading size="h2" className="lowercase">
                 {domains.length}
               </TextHeading>
-              <p className="text-sm text-muted-foreground mt-1 lowercase">
+              <p className="text-base font-normal text-muted-foreground mt-1 lowercase">
                 {L.stats.allowed}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card">
-          <CardContent className="p-5">
+        <Card>
+          <CardContent>
             <div className="flex flex-row justify-between items-start mb-6">
-              <p className="text-sm font-medium text-muted-foreground lowercase">
+              <p className="text-base font-normal text-muted-foreground lowercase">
                 {L.stats.activeNodes}
               </p>
-              <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+              <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
                 <Icons.rocket className="size-5" />
               </div>
             </div>
             <div className="flex flex-row justify-between items-end">
               <div>
-                <TextHeading size="h3" className="text-3xl font-bold lowercase">
+                <TextHeading size="h2" className="lowercase">
                   {targetApiUrls.length}
                 </TextHeading>
-                <p className="text-sm text-muted-foreground mt-1 lowercase">
+                <p className="text-base font-normal text-muted-foreground mt-1 lowercase">
                   {L.stats.apiEndpoint}
                 </p>
               </div>
@@ -385,185 +384,185 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
       {/* API Keys & CORS Domains */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* API Keys Section */}
-        <Card className="bg-card relative h-fit">
+        <Card>
           {keysLoading && <LoadingOverlay />}
-          <div className="p-5 border-b border-border/10 flex items-center justify-between">
+          <div className="p-6 border-b border-border flex items-center justify-between">
             <div className="flex flex-row gap-4 items-center">
               <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
                 <Icons.key className="size-5" />
               </div>
               <div>
-                <TextHeading size="h4" className="font-semibold text-base lowercase">
+                <TextHeading size="h4" className="lowercase">
                   {L.sections.apiAccessKeys}
-                </TextHeading>
-                <p className="text-sm text-muted-foreground lowercase">
+                 </TextHeading>
+                <p className="text-base font-normal text-muted-foreground lowercase">
                   {L.labels.keys}
                 </p>
               </div>
             </div>
             <div className="flex flex-row gap-3 items-center">
-              <Badge variant="outline" className="hidden sm:inline-flex lowercase">
+              <Badge variant="secondary" className="hidden sm:inline-flex lowercase">
                 {keys.length} keys
               </Badge>
               <Button
                 variant="outline"
-                size="sm"
-                className="size-10 p-0 rounded-xl"
+                size="icon"
                 onClick={() => setIsKeyModalOpen(true)}
               >
                 <Icons.plus className="size-5" />
               </Button>
             </div>
           </div>
-          <div className="p-5 space-y-3">
-            {keys.map((k: ClientApiKey) => (
-              <div
-                key={k.id}
-                className="flex items-center justify-between p-4 bg-muted/20 rounded-xl group transition-all duration-300 hover:bg-muted/40"
-              >
-                <div className="flex flex-row gap-4 items-center min-w-0">
-                  <div className="size-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 font-bold text-sm shrink-0">
-                    key
+          <CardContent>
+            <div className="space-y-4">
+              {keys.map((k: ClientApiKey) => (
+                <div
+                  key={k.id}
+                  className="flex items-center justify-between p-4 bg-muted rounded-xl group transition-all"
+                >
+                  <div className="flex flex-row gap-4 items-center min-w-0">
+                    <div className="size-10 rounded-xl bg-background flex items-center justify-center text-amber-600 font-semibold text-base shrink-0">
+                      key
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-normal text-base text-foreground truncate lowercase">{k.name}</p>
+                      <p className="text-base text-muted-foreground truncate max-w-[120px] sm:max-w-[200px] lowercase">
+                        {k.key_hash || "********"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-base truncate lowercase">{k.name}</p>
-                    <p className="text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-[200px] lowercase">
-                      {k.key_hash || "********"}
-                    </p>
+                  <div className="flex flex-row gap-2 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copyToClipboard(k.key_hash || '', 'key copied!')}
+                    >
+                      <Icons.copy className="size-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleKey(k.id, k.is_active === 0)}
+                      className={cn(k.is_active === 1 ? 'text-emerald-600' : 'text-muted-foreground')}
+                    >
+                      {k.is_active === 1 ? <Icons.toggleOn className="size-6" /> : <Icons.toggleOff className="size-6" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openDeleteDialog('api-key', k.id, k.name)}
+                      className="text-destructive"
+                    >
+                      <Icons.trash2 className="size-5" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex flex-row gap-2 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(k.key_hash || '', 'key copied!')}
-                    className="size-9 p-0 rounded-lg"
-                  >
-                    <Icons.copy className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleKey(k.id, k.is_active === 0)}
-                    className={cn("size-9 p-0 rounded-lg", k.is_active === 1 ? 'text-emerald-600' : 'text-muted-foreground')}
-                  >
-                    {k.is_active === 1 ? <Icons.toggleOn className="size-5" /> : <Icons.toggleOff className="size-5" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openDeleteDialog('api-key', k.id, k.name)}
-                    className="size-9 p-0 rounded-lg text-rose-500"
-                  >
-                    <Icons.trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
 
         {/* CORS Domains Section */}
-        <Card className="bg-card relative h-fit">
+        <Card>
           {domainsLoading && <LoadingOverlay />}
-          <div className="p-5 border-b border-border/10 flex items-center justify-between">
+          <div className="p-6 border-b border-border flex items-center justify-between">
             <div className="flex flex-row gap-4 items-center">
               <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
                 <Icons.globe className="size-5" />
               </div>
               <div>
-                <TextHeading size="h4" className="font-semibold text-base lowercase">
+                <TextHeading size="h4" className="lowercase">
                   {L.sections.corsDomainsTitle}
                 </TextHeading>
-                <p className="text-sm text-muted-foreground lowercase">
+                <p className="text-base font-normal text-muted-foreground lowercase">
                   {L.labels.domains}
                 </p>
               </div>
             </div>
             <div className="flex flex-row gap-3 items-center">
-              <Badge variant="outline" className="hidden sm:inline-flex lowercase">
+              <Badge variant="secondary" className="hidden sm:inline-flex lowercase">
                 {domains.length} domains
               </Badge>
               <Button
                 variant="outline"
-                size="sm"
-                className="size-10 p-0 rounded-xl"
+                size="icon"
                 onClick={() => setIsDomainModalOpen(true)}
               >
                 <Icons.plus className="size-5" />
               </Button>
             </div>
           </div>
-          <div className="p-5 space-y-3">
-            {domains.map((d: CorsDomain) => (
-              <div
-                key={d.id}
-                className="flex items-center justify-between p-4 bg-muted/20 rounded-xl group transition-all duration-300 hover:bg-muted/40"
-              >
-                <div className="flex flex-row gap-4 items-center min-w-0">
-                  <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Icons.globe className="size-4" />
+          <CardContent>
+            <div className="space-y-4">
+              {domains.map((d: CorsDomain) => (
+                <div
+                  key={d.id}
+                  className="flex items-center justify-between p-4 bg-muted rounded-xl group transition-all"
+                >
+                  <div className="flex flex-row gap-4 items-center min-w-0">
+                    <div className="size-10 rounded-xl bg-background flex items-center justify-center text-primary shrink-0">
+                      <Icons.globe className="size-5" />
+                    </div>
+                    <p className="text-base font-normal text-foreground truncate lowercase">
+                      {d.domain_url}
+                    </p>
                   </div>
-                  <p className="text-base font-medium text-foreground truncate lowercase">
-                    {d.domain_url}
-                  </p>
+                  <div className="flex flex-row gap-2 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleDomain(d.id, d.is_active === 0)}
+                      className={cn(d.is_active === 1 ? 'text-emerald-600' : 'text-muted-foreground')}
+                    >
+                      {d.is_active === 1 ? <Icons.toggleOn className="size-6" /> : <Icons.toggleOff className="size-6" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openDeleteDialog('cors', d.id, d.domain_url)}
+                      className="text-destructive"
+                    >
+                      <Icons.trash2 className="size-5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex flex-row gap-2 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleDomain(d.id, d.is_active === 0)}
-                    className={cn("size-9 p-0 rounded-lg", d.is_active === 1 ? 'text-emerald-600' : 'text-muted-foreground')}
-                  >
-                    {d.is_active === 1 ? <Icons.toggleOn className="size-5" /> : <Icons.toggleOff className="size-5" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openDeleteDialog('cors', d.id, d.domain_url)}
-                    className="size-9 p-0 rounded-lg text-rose-500"
-                  >
-                    <Icons.trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
       </div>
 
       {/* Target API URLs List Section */}
       <section className="space-y-4">
         <div className="flex items-center gap-3 px-1 text-muted-foreground">
-          <Icons.link2 className="size-4" />
-          <h3 className="text-sm font-semibold uppercase tracking-wider">{L.stats.apiEndpoint}</h3>
+          <Icons.link2 className="size-5" />
+          <h3 className="text-base font-normal uppercase tracking-wider">{L.stats.apiEndpoint}</h3>
         </div>
         
-        <Card className="bg-card overflow-hidden h-fit border-none shadow-none bg-transparent">
-          <CardContent className="p-0">
+        <Card>
+          <CardContent>
             <div className="flex flex-col gap-1">
               {targetApiUrls.map((url, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5 px-1 hover:bg-muted/30 rounded-xl transition-colors group">
+                <div key={i} className="flex items-center justify-between py-2 px-2 hover:bg-muted rounded-xl transition-colors group">
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary/20 transition-colors">
-                      <Icons.link2 className="size-4" />
+                    <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-primary shrink-0 transition-colors">
+                      <Icons.link2 className="size-5" />
                     </div>
-                    <span className="text-base font-normal text-foreground truncate selection:bg-primary/20">
+                    <span className="text-base font-normal text-foreground truncate">
                       {url}
                     </span>
                   </div>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
                     onClick={() => copyToClipboard(url, L.messages.urlCopied)}
-                    className="size-9 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all shrink-0"
                   >
-                    <Icons.copy className="size-4" />
+                    <Icons.copy className="size-5" />
                   </Button>
                 </div>
               ))}
               {targetApiUrls.length === 0 && (
-                <div className="p-6 text-center text-muted-foreground text-sm lowercase">
+                <div className="p-6 text-center text-muted-foreground text-base font-normal lowercase">
                   no api endpoints discovered
                 </div>
               )}
@@ -592,11 +591,10 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
       >
         <form onSubmit={handleCreateKey} className="space-y-4 pt-2">
           <div>
-            <p className="text-sm text-muted-foreground mb-2 lowercase">
+            <p className="text-base font-normal text-muted-foreground mb-2 lowercase">
               {L.placeholders.keyName}
             </p>
             <Input
-              className="w-full h-12 rounded-xl border-muted bg-muted/20"
               placeholder="e.g. production key, mobile app"
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
@@ -623,11 +621,10 @@ export const ApiKeysAndCorsView = ({ targetId }: ApiKeysAndCorsViewProps) => {
       >
         <form onSubmit={handleAddDomain} className="space-y-4 pt-2">
           <div>
-            <p className="text-sm text-muted-foreground mb-2 lowercase">
+            <p className="text-base font-normal text-muted-foreground mb-2 lowercase">
               {L.placeholders.domain}
             </p>
             <Input
-              className="w-full h-12 rounded-xl border-muted bg-muted/20"
               placeholder="https://example.com"
               value={newDomain}
               onChange={(e) => setNewDomain(e.target.value)}

@@ -24,7 +24,7 @@ export const DatabaseSchemaTrashView = () => {
     const { items, loading, restore, destroy } = useTrash();
 
     const [confirmDialog, setConfirmDialog] = useState<{
-        id: number;
+        id: string | number;
         name: string;
         action: 'restore' | 'destroy';
     } | null>(null);

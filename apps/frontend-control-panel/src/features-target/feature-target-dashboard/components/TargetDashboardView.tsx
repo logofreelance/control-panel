@@ -37,22 +37,22 @@ export function TargetDashboardView() {
       users: {
         icon: <Icons.users className="size-5" />,
         sub: 'active connections',
-        color: 'text-chart-1 bg-chart-1/10',
+        color: 'text-primary bg-background border border-border',
       },
       routes: {
         icon: <Icons.routes className="size-5" />,
         sub: 'active endpoints',
-        color: 'text-chart-2 bg-chart-2/10',
+        color: 'text-primary bg-background border border-border',
       },
       apikeys: {
         icon: <Icons.key className="size-5" />,
         sub: 'active credentials',
-        color: 'text-chart-3 bg-chart-3/10',
+        color: 'text-primary bg-background border border-border',
       },
       schema: {
         icon: <Icons.table className="size-5" />,
         sub: 'entities detected',
-        color: 'text-chart-4 bg-chart-4/10',
+        color: 'text-primary bg-background border border-border',
       },
     };
 
@@ -60,7 +60,7 @@ export function TargetDashboardView() {
       const config = cardConfigs[m.key] || {
         icon: <Icons.circle className="size-5" />,
         sub: '',
-        color: 'text-muted-foreground bg-muted',
+        color: 'text-muted-foreground bg-background border border-border',
       };
       return { ...m, ...config };
     });
@@ -69,16 +69,16 @@ export function TargetDashboardView() {
   if (loading)
     return (
       <TargetLayout>
-        <div className="w-full max-w-7xl mx-auto py-12 md:py-20 px-6 lg:px-10 flex flex-col gap-14">
+        <div className="w-full max-w-7xl mx-auto py-8 md:py-10 px-6 lg:px-10 flex flex-col gap-8">
           <div className="flex flex-col gap-6">
             <Skeleton className="h-6 w-32 rounded-full" />
             <Skeleton className="h-12 w-96 rounded-xl" />
             <Skeleton className="h-4 w-64" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="bg-card/50 backdrop-blur-sm">
-                <CardContent className="p-10 flex flex-col gap-8">
+              <Card key={i}>
+                <CardContent className="p-6 flex flex-col gap-6">
                   <div className="flex justify-between">
                     <Skeleton className="h-3 w-20" />
                     <Skeleton className="size-10 rounded-lg" />
@@ -99,23 +99,20 @@ export function TargetDashboardView() {
     return (
       <TargetLayout>
         <div className="max-w-2xl mx-auto mt-20 px-6">
-          <Alert
-            variant="destructive"
-            className="border-none bg-destructive/10 backdrop-blur-sm p-8 rounded-3xl"
-          >
+          <Alert variant="destructive">
             <div className="flex items-start gap-4">
               <Icons.alertTriangle className="size-6 text-destructive mt-1" />
               <div className="flex flex-col gap-2">
-                <AlertTitle className="text-xl font-medium text-destructive leading-none lowercase">
+                <AlertTitle className="text-xl font-semibold text-destructive leading-none lowercase">
                   connection failure detected
                 </AlertTitle>
-                <AlertDescription className="text-destructive/80 leading-relaxed font-instrument lowercase">
+                <AlertDescription className="text-base text-destructive font-instrument lowercase">
                   the requested instance node could not be synchronized. this might be due to
                   network latency or an invalid reference key.
                 </AlertDescription>
                 <Button
-                  variant="outline"
-                  className="mt-4 w-fit rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10"
+                  variant="destructive"
+                  className="mt-4 w-fit rounded-xl lowercase"
                   onClick={() => window.location.reload()}
                 >
                   <Icons.refresh className="size-4 mr-2" />
@@ -138,14 +135,14 @@ export function TargetDashboardView() {
               variant="outline"
               onClick={handleCheckHealth}
               disabled={checkingHealth}
-              className="group h-10 sm:h-12 px-3 sm:px-4 rounded-xl font-medium border-border bg-background/50 backdrop-blur-sm transition-all active:scale-95 text-foreground/80 hover:text-foreground flex items-center gap-0 hover:gap-2 shadow-none"
+              className="group h-12 px-4 rounded-xl border-border transition-all text-foreground flex items-center gap-0 hover:gap-2 font-normal"
             >
               <Icons.refresh
                 className={cn('size-4 text-primary', checkingHealth && 'animate-spin')}
               />
               <span
                 className={cn(
-                  'max-w-0 opacity-0 overflow-hidden transition-all duration-500 whitespace-nowrap text-sm sm:text-base',
+                  'max-w-0 opacity-0 overflow-hidden transition-all duration-500 whitespace-nowrap text-base lowercase',
                   'group-hover:max-w-xs group-hover:opacity-100',
                 )}
               >
@@ -155,15 +152,12 @@ export function TargetDashboardView() {
           </header>
 
           {/* FLAT LUXURY SUMMARY CARDS */}
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {summaryCards.map((metric) => (
-              <Card
-                key={metric.key}
-                className="bg-card p-0 transition-all duration-300 hover:bg-muted/5 shadow-none"
-              >
-                <CardContent className="p-6 flex flex-col gap-5">
+              <Card key={metric.key}>
+                <CardContent className="flex flex-col gap-5">
                   <div className="flex items-start justify-between">
-                    <span className="text-sm text-muted-foreground font-normal lowercase">
+                    <span className="text-base text-muted-foreground font-normal lowercase">
                       {metric.label}
                     </span>
                     <div
@@ -176,9 +170,9 @@ export function TargetDashboardView() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5 mt-auto">
-                    <span className="text-3xl sm:text-4xl font-bold text-foreground lowercase leading-none">
+                    <TextHeading size="h1" className="lowercase leading-none">
                       {metric.value || '0'}
-                    </span>
+                    </TextHeading>
                     <span className="text-base font-normal text-muted-foreground lowercase">
                       {metric.sub}
                     </span>
@@ -195,7 +189,7 @@ export function TargetDashboardView() {
                 <Icons.clock className="size-4 text-muted-foreground" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground font-normal lowercase">
+                <span className="text-base text-muted-foreground font-normal lowercase">
                   system uptime
                 </span>
                 <span className="text-base text-foreground font-normal lowercase">
@@ -208,7 +202,7 @@ export function TargetDashboardView() {
                 <Icons.zap className="size-4 text-primary" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground font-normal lowercase">
+                <span className="text-base text-muted-foreground font-normal lowercase">
                   latency
                 </span>
                 <span className="text-base text-foreground font-normal lowercase">
@@ -218,10 +212,10 @@ export function TargetDashboardView() {
             </div>
             <div className="flex items-center gap-3">
               <div className="size-9 rounded-xl bg-muted flex items-center justify-center border border-border">
-                <Icons.shieldCheck className="size-4 text-chart-2" />
+                <Icons.shieldCheck className="size-4 text-primary" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground font-normal lowercase">
+                <span className="text-base text-muted-foreground font-normal lowercase">
                   security
                 </span>
                 <span className="text-base text-foreground font-normal lowercase">ssl 256-bit active</span>

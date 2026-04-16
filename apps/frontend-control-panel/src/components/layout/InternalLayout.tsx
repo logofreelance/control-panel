@@ -1,14 +1,13 @@
 'use client';
 
 /**
- * InternalLayout - Refactor following Elite Minimalist Rules
- * 
- * STICKING TO RULES:
- * - No tracking-* (Strictly using default spacing)
- * - No text size < text-xs
- * - No text color opacity (Removed /60, opacity-*)
- * - Standard Button usage only (Removed manual className styling where possible)
- * - Lowercase Consistency: Enforced lowercase across all navigation and profile labels.
+ * InternalLayout - Refactored sesuai Aturan Refactor UI
+ *
+ * - Text minimal text-base, standar text-lg / md:text-xl
+ * - font-normal untuk non-heading, heading maks font-semibold
+ * - Tidak ada opacity pada warna teks/bg/border
+ * - Tidak ada tracking-*
+ * - Spacing wajar (tidak berlebihan)
  */
 
 import { useState, useCallback, ReactNode } from 'react';
@@ -64,7 +63,7 @@ export function InternalLayout({
     <div className="relative flex flex-col min-h-screen w-full overflow-hidden bg-background font-instrument">
       {/* THE LUXURY FLOATING CAPSULE */}
       <header className="sticky top-0 z-50 w-full px-2 md:px-4 pt-2 md:pt-4 pointer-events-none transition-all duration-300">
-        <div className="mx-auto w-full max-w-7xl bg-background/80 backdrop-blur-md border border-border/40 h-14 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-between px-3 md:px-6 pointer-events-auto transition-all shadow-none">
+        <div className="mx-auto w-full max-w-7xl bg-background backdrop-blur-md border border-border h-14 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-between px-3 md:px-6 pointer-events-auto transition-all">
           <div className="flex items-center gap-3 md:gap-6">
              {/* SITE LOGO AND NAME */}
              <Link href="/" className="flex items-center gap-2 md:gap-4 group px-1">
@@ -78,7 +77,7 @@ export function InternalLayout({
                 </div>
              </Link>
              
-             <div className="h-4 md:h-6 w-px bg-border/20 mx-1 hidden sm:block" />
+             <div className="h-4 md:h-6 w-px bg-border mx-1 hidden sm:block" />
              
              {leftActions}
           </div>
@@ -101,18 +100,18 @@ export function InternalLayout({
                         size="default" 
                         className="rounded-xl flex items-center gap-4 bg-transparent border-none p-0 h-auto"
                     >
-                        <div className="size-8 md:size-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
+                        <div className="size-8 md:size-10 rounded-xl bg-muted text-primary flex items-center justify-center transition-transform group-hover:scale-105 duration-300">
                            <Icons.shield className="size-4 md:size-5" />
                         </div>
                         <div className="flex-col items-start hidden sm:flex text-left gap-1">
-                          <span className="text-sm md:text-base font-medium text-foreground leading-none lowercase">master operator</span>
-                          <span className="text-xs md:text-sm font-normal text-muted-foreground leading-none lowercase">access protocol</span>
+                          <span className="text-base font-normal text-foreground leading-none lowercase">master operator</span>
+                          <span className="text-base font-normal text-muted-foreground leading-none lowercase">access protocol</span>
                         </div>
                     </Button>
                   } />
-                  <DropdownMenuContent align="end" className="w-64 mt-3 rounded-xl border border-border/40 p-2 animate-in fade-in slide-in-from-top-2 bg-background shadow-2xl font-instrument flex flex-col gap-1">
-                    <div className="p-4 mb-1 bg-muted/40 rounded-lg border border-border/10">
-                      <p className="text-xs text-muted-foreground font-normal mb-2 lowercase">authentication status</p>
+                  <DropdownMenuContent align="end" className="w-64 mt-3 rounded-xl border border-border p-2 animate-in fade-in slide-in-from-top-2 bg-background font-instrument flex flex-col gap-1">
+                    <div className="p-4 mb-1 bg-muted rounded-lg border border-border">
+                      <p className="text-base text-muted-foreground font-normal mb-2 lowercase">authentication status</p>
                       <p className="text-base font-normal text-foreground leading-none lowercase">root operator active</p>
                     </div>
                     
@@ -132,11 +131,11 @@ export function InternalLayout({
                         <span>preferences</span>
                     </DropdownMenuItem>
                     
-                    <div className="h-px bg-border/40 my-1 mx-1" />
+                    <div className="h-px bg-border my-1 mx-1" />
                     
                     <DropdownMenuItem
                       onClick={handleLogout}
-                      className="rounded-lg flex items-center gap-3 py-3 px-3 text-destructive cursor-pointer hover:bg-destructive/10 transition-colors font-medium text-base lowercase"
+                      className="rounded-lg flex items-center gap-3 py-3 px-3 text-destructive cursor-pointer hover:bg-destructive transition-colors font-normal text-base lowercase hover:text-destructive-foreground"
                     >
                       <Icons.logout className="size-4" />
                       <span>logout account</span>

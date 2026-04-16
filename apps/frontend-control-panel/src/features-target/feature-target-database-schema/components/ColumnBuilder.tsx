@@ -70,13 +70,15 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
 
             {columns.length === 0 ? (
                 <div 
-                    className="text-center py-24 border border-dashed rounded-xl cursor-pointer hover:bg-muted/5 transition-all" 
+                    className="flex flex-col items-center justify-center text-center py-24 border border-dashed rounded-xl cursor-pointer hover:bg-muted/5 transition-all gap-4" 
                     onClick={addColumn}
                 >
-                    <Icons.sparkles className="size-12 text-muted-foreground/20 mx-auto mb-4" />
-                    <TextHeading size="h6" className="mb-2 text-base font-semibold">{L.forms.startBuildingSchema}</TextHeading>
-                    <p className="text-sm text-muted-foreground mb-8">{L.forms.addColumnsToDefine}</p>
-                    <Button type="button" variant="outline">
+                    <Icons.sparkles className="size-12 opacity-20" />
+                    <div className="space-y-1">
+                        <TextHeading size="h6" weight="semibold">{L.forms.startBuildingSchema}</TextHeading>
+                        <p className="text-muted-foreground">{L.forms.addColumnsToDefine}</p>
+                    </div>
+                    <Button type="button">
                         {L.forms.addFirstColumn}
                     </Button>
                 </div>
@@ -89,10 +91,6 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                         return (
                             <Card
                                 key={index}
-                                className={cn(
-                                    "group border-none shadow-sm transition-all duration-300 bg-card",
-                                    isFocused && "ring-1 ring-primary/30 shadow-md"
-                                )}
                                 onFocus={() => setFocusedIndex(index)}
                                 onBlur={(e) => {
                                     if (!e.currentTarget.contains(e.relatedTarget)) {
@@ -103,18 +101,15 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                                 <CardContent className="px-5 py-4">
                                     <div className="flex flex-col md:flex-row gap-x-8 gap-y-4 md:items-start">
                                         <div className="flex items-center justify-between md:flex-col gap-4">
-                                        <div className={cn(
-                                            "size-12 rounded-xl flex items-center justify-center shrink-0",
-                                            isFocused ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                                        )}>
+                                        <div className="p-3 bg-muted text-muted-foreground rounded-xl">
                                             {typeInfo?.Icon ? <typeInfo.Icon className="size-6" /> : <Icons.fileText className="size-6" />}
                                         </div>
                                         <div className="flex flex-col gap-1">
-                                            <Button size="icon-xs" variant="ghost" onClick={() => moveColumn(index, 'up')} disabled={index === 0}>
-                                                <Icons.chevronUp className="size-4" />
+                                            <Button onClick={() => moveColumn(index, 'up')} disabled={index === 0}>
+                                                <Icons.chevronUp />
                                             </Button>
-                                            <Button size="icon-xs" variant="ghost" onClick={() => moveColumn(index, 'down')} disabled={index === columns.length - 1}>
-                                                <Icons.chevronDown className="size-4" />
+                                            <Button onClick={() => moveColumn(index, 'down')} disabled={index === columns.length - 1}>
+                                                <Icons.chevronDown />
                                             </Button>
                                         </div>
                                     </div>
@@ -147,16 +142,16 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                                                         checked={!!col.required}
                                                         onCheckedChange={(val: boolean) => updateColumn(index, 'required', val)}
                                                     />
-                                                    <Label htmlFor={`required-${index}`} className="text-sm font-medium cursor-pointer">REQUIRED</Label>
+                                                    <Label htmlFor={`required-${index}`}>required</Label>
                                                 </div>
-
+ 
                                                 <div className="flex items-center gap-2">
                                                     <Checkbox
                                                         id={`unique-${index}`}
                                                         checked={!!col.unique}
                                                         onCheckedChange={(val: boolean) => updateColumn(index, 'unique', val)}
                                                     />
-                                                    <Label htmlFor={`unique-${index}`} className="text-sm font-medium cursor-pointer">UNIQUE</Label>
+                                                    <Label htmlFor={`unique-${index}`}>unique</Label>
                                                 </div>
                                             </div>
                                         </div>
@@ -208,22 +203,17 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                                     </div>
                                 </div>
 
-                                <div className="mt-2 flex items-center justify-between gap-4">
-                                    <div className="px-1">
-                                        <p className="text-xs text-muted-foreground/60 italic">
-                                            {col.type === 'slug' && L.forms.slugHint}
-                                            {col.type === 'string' && L.forms.stringHint}
-                                            {col.type === 'relation' && L.forms.relationHint}
-                                        </p>
-                                    </div>
+                                <div className="mt-8 pt-4 border-t border-border/30 flex items-center justify-between gap-4">
+                                    <p className="text-sm text-muted-foreground italic">
+                                        {col.type === 'slug' && L.forms.slugHint}
+                                        {col.type === 'string' && L.forms.stringHint}
+                                        {col.type === 'relation' && L.forms.relationHint}
+                                    </p>
 
                                     <Button
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        className="text-muted-foreground hover:text-destructive transition-colors"
                                         onClick={() => removeColumn(index)}
                                     >
-                                        <Icons.trash className="size-4" />
+                                        <Icons.trash />
                                     </Button>
                                 </div>
                             </CardContent>
@@ -234,12 +224,10 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                 <div className="pt-2">
                     <Button
                         type="button"
-                        variant="outline"
-                        className="w-full h-12 border-dashed hover:border-solid transition-all"
                         onClick={addColumn}
                     >
-                        <Icons.plus className="size-5 sm:mr-2" />
-                        <span className="hidden sm:inline">{L.forms.addColumn}</span>
+                        <Icons.plus />
+                        <span>{L.forms.addColumn}</span>
                     </Button>
                 </div>
                 </div>

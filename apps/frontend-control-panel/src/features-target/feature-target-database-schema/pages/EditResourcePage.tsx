@@ -32,18 +32,31 @@ export function EditResourcePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Resolve IDs from URL params
+    const rawTableId = Array.isArray(params.tableId) ? params.tableId[0] : params.tableId;
+    const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const isTargetRoute = !!rawTableId;
+    const nodeId = isTargetRoute ? rawNodeId : undefined;
+    const tableId = rawTableId || rawNodeId;
+    const resourceId = params.resourceId as string;
+
     // Fetch data source and resource details
     useEffect(() => {
-        if (!params.id || !params.resourceId) return;
+        if (!tableId || !resourceId) return;
 
         const fetchDetails = async () => {
             try {
+                const headers: Record<string, string> = {};
+                if (nodeId) {
+                    headers['x-target-id'] = nodeId;
+                }
+
                 // Fetch Source
-                const sourceRes = await fetch(api.databaseSchema.detail(Number(params.id)));
+                const sourceRes = await fetch(api.databaseSchema.detail(tableId), { headers });
                 const sourceData = await sourceRes.json();
 
                 // Fetch Resources
-                const resRes = await fetch(api.databaseSchema.resources(Number(params.id)));
+                const resRes = await fetch(api.databaseSchema.resources(tableId), { headers });
                 const resData = await resRes.json();
 
                 if (sourceData.status === API_STATUS.SUCCESS) {
@@ -51,7 +64,8 @@ export function EditResourcePage() {
                 }
 
                 if (resData.status === API_STATUS.SUCCESS) {
-                    const found = resData.data.find((r: Resource) => r.id === Number(params.resourceId));
+                    // Resource IDs are usually still numbers in the DB, but they might be strings in params
+                    const found = resData.data.find((r: Resource) => String(r.id) === resourceId);
                     if (found) {
                         setResource(found);
                     } else {
@@ -67,7 +81,7 @@ export function EditResourcePage() {
         };
 
         fetchDetails();
-    }, [params.id, params.resourceId, api, API_STATUS, L]);
+    }, [tableId, resourceId, nodeId, api, API_STATUS, L]);
 
     // Loading state
     if (loading) {

@@ -1,18 +1,13 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-} from "@/components/ui";
-import { TextHeading } from "@/components/ui/text-heading";
-import { Icons, MODULE_LABELS } from "@/lib/config/client";
-import { useEndpointDetail } from "../composables/useEndpointDetail";
-import { cn } from "@/lib/utils";
+import { useState } from 'react';
+import { Card, CardContent, Button, Badge } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
+import { useEndpointDetail } from '../composables/useEndpointDetail';
+import { cn } from '@/lib/utils';
 
-const JSON_CONTENT_TYPE = "application/json";
+const JSON_CONTENT_TYPE = 'application/json';
 
 interface EndpointDetailViewProps {
   targetId: string;
@@ -28,19 +23,11 @@ export const EndpointDetailView = ({
   onBack,
 }: EndpointDetailViewProps) => {
   const L = MODULE_LABELS.routeBuilder;
-  const {
-    loading,
-    endpoint,
-    dataSource,
-    resource,
-    getFullUrl,
-    getCodeExamples,
-  } = useEndpointDetail(targetId, endpointId);
+  const { loading, endpoint, dataSource, resource, getFullUrl, getCodeExamples } =
+    useEndpointDetail(targetId, endpointId);
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [activeCodeTab, setActiveCodeTab] = useState<
-    "curl" | "javascript" | "python"
-  >("curl");
+  const [activeCodeTab, setActiveCodeTab] = useState<'curl' | 'javascript' | 'python'>('curl');
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -56,7 +43,9 @@ export const EndpointDetailView = ({
         <div className="size-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-6">
           <Icons.warning className="w-8 h-8 text-muted-foreground/40" />
         </div>
-        <p className="text-muted-foreground/60 lowercase">{L.misc?.noEndpointsOne || "endpoint not found"}</p>
+        <p className="text-muted-foreground/60 lowercase">
+          {L.misc?.noEndpointsOne || 'endpoint not found'}
+        </p>
       </div>
     );
   }
@@ -64,18 +53,18 @@ export const EndpointDetailView = ({
   const fullUrl = getFullUrl();
   const codeExamples = getCodeExamples();
   const methodStyles: Record<string, string> = {
-    GET: "bg-blue-500/10 text-blue-600",
-    POST: "bg-emerald-500/10 text-emerald-600",
-    PUT: "bg-amber-500/10 text-amber-600",
-    PATCH: "bg-purple-500/10 text-purple-600",
-    DELETE: "bg-red-500/10 text-red-600",
+    GET: 'bg-primary/10 text-primary',
+    POST: 'bg-primary/10 text-primary',
+    PUT: 'bg-primary/10 text-primary',
+    PATCH: 'bg-primary/10 text-primary',
+    DELETE: 'bg-destructive/10 text-destructive',
   };
 
   const getRoleLevelLabel = (level: number) => {
-    if (level === 0) return L.options?.public || "public";
-    if (level < 50) return L.options?.login || "login required";
-    if (level < 90) return L.options?.moderator || "moderator";
-    return L.options?.admin || "admin only";
+    if (level === 0) return L.options?.public || 'public';
+    if (level < 50) return L.options?.login || 'login required';
+    if (level < 90) return L.options?.moderator || 'moderator';
+    return L.options?.admin || 'admin only';
   };
 
   const parseJsonArray = (str?: string): string[] => {
@@ -102,74 +91,63 @@ export const EndpointDetailView = ({
 
   return (
     <div className="space-y-6 pb-20 animate-page-enter">
-      {/* Header - Flat Luxury */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-2 mb-2">
+          <div className="flex flex-col gap-2 mb-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className={cn("rounded-lg px-2.5 py-0.5 text-xs font-medium lowercase", methodStyles[endpoint.method] || "bg-muted")}>
+              <Badge variant="secondary">
                 {endpoint.method.toLowerCase()}
               </Badge>
-              {endpoint.isActive ? (
-                <Badge variant="secondary" className="bg-chart-2/10 text-chart-2 rounded-lg text-xs lowercase font-medium border-none">
-                  {L.labels?.active || "active"}
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="bg-muted text-muted-foreground rounded-lg text-xs lowercase font-medium border-none">
-                  {L.labels?.inactive || "inactive"}
-                </Badge>
-              )}
+              <Badge variant={endpoint.isActive ? "default" : "outline"}>
+                {endpoint.isActive ? L.labels?.active : L.labels?.inactive}
+              </Badge>
             </div>
-            <div className="text-2xl sm:text-3xl text-foreground font-bold bg-muted px-3 py-1 rounded-xl w-fit">
+            <TextHeading as="h1" size="h3" className="lowercase">
               {endpoint.path}
-            </div>
+            </TextHeading>
           </div>
           {endpoint.description && (
-            <p className="text-base text-muted-foreground max-w-2xl leading-relaxed lowercase">
+            <p className="text-base text-muted-foreground max-w-2xl lowercase">
               {endpoint.description}
             </p>
           )}
         </div>
-        <div className="flex flex-row items-center gap-3">
+        <div className="flex flex-row items-center gap-2">
           <Button
             variant="outline"
             onClick={() => onBack?.()}
-            className="rounded-xl lowercase font-medium"
           >
-            <Icons.arrowLeft className="size-4" />
-            {L.buttons?.back || "back"}
+            <Icons.arrowLeft className="size-4 mr-2" />
+            {L.buttons?.back || 'back'}
           </Button>
           <Button
             variant="default"
-            onClick={() => onNavigate?.("editor", endpointId)}
-            className="rounded-xl lowercase font-medium"
+            onClick={() => onNavigate?.('editor', endpointId)}
           >
-            <Icons.edit className="size-4" />
-            {L.buttons?.edit || "edit"}
+            <Icons.edit className="size-4 mr-2" />
+            {L.buttons?.edit || 'edit'}
           </Button>
         </div>
       </div>
 
-      {/* Quick Copy URL - Premium Flat */}
-      <Card className="bg-muted">
-        <CardContent className="py-4 px-6">
-          <div className="flex flex-row items-center justify-between gap-4">
+      {/* Quick Copy URL */}
+      <Card size="sm">
+        <CardContent>
+          <div className="flex flex-row items-center justify-between gap-4 py-2">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-normal text-muted-foreground mb-0.5 lowercase">
-                {L.detail?.fullUrl || "full access url"}
+              <p className="text-base font-normal text-muted-foreground mb-1 lowercase">
+                {L.detail?.fullUrl || 'access url'}
               </p>
-              <div className="text-base text-foreground break-all">
-                {fullUrl}
-              </div>
+              <div className="text-base text-foreground break-all">{fullUrl}</div>
             </div>
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(fullUrl, "url")}
-              className="rounded-xl hover:bg-background text-muted-foreground hover:text-foreground transition-all"
+              onClick={() => copyToClipboard(fullUrl, 'url')}
             >
-              {copiedField === "url" ? (
-                <Icons.check className="size-4 text-chart-2" />
+              {copiedField === 'url' ? (
+                <Icons.check className="size-4 text-primary" />
               ) : (
                 <Icons.copy className="size-4" />
               )}
@@ -179,41 +157,39 @@ export const EndpointDetailView = ({
       </Card>
 
       {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left Column */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Request Info */}
-          <Card className="bg-card overflow-hidden">
-            <CardContent className="py-5 px-6">
+          <Card>
+            <CardContent>
               <div className="flex flex-row items-center gap-3 mb-6">
-                <div className="size-10 rounded-xl bg-chart-1/10 flex items-center justify-center">
-                  <Icons.send className="size-5 text-chart-1" />
-                </div>
-                <TextHeading size="h4" className="lowercase text-foreground">
-                  {L.detail?.requestInfo || "request information"}
+                <Icons.send className="size-5 text-primary" />
+                <TextHeading as="h3" size="h4" className="lowercase">
+                  {L.detail?.requestInfo || 'request info'}
                 </TextHeading>
               </div>
               <div className="space-y-4">
-                <div className="flex flex-row justify-between items-center">
-                  <p className="text-sm text-muted-foreground font-normal lowercase">
-                    {L.detail?.method || "method"}
+                <div className="flex flex-row justify-between items-center gap-2">
+                  <p className="text-base text-muted-foreground lowercase">
+                    {L.detail?.method || 'method'}
                   </p>
-                  <Badge variant="outline" className={cn("rounded-lg px-3 py-1 text-xs font-semibold lowercase", methodStyles[endpoint.method] || "bg-muted")}>
+                  <Badge variant="secondary">
                     {endpoint.method.toLowerCase()}
                   </Badge>
                 </div>
-                <div className="flex flex-row justify-between items-center">
-                  <p className="text-sm text-muted-foreground font-normal lowercase">
-                    {L.detail?.contentType || "content type"}
+                <div className="flex flex-row justify-between items-center gap-2">
+                  <p className="text-base text-muted-foreground lowercase">
+                    {L.detail?.contentType || 'content type'}
                   </p>
-                  <span className="text-base text-foreground bg-muted px-2 py-1 rounded-lg">
+                  <span className="text-base text-foreground lowercase">
                     {JSON_CONTENT_TYPE}
                   </span>
                 </div>
                 {dataSource && (
-                  <div className="flex flex-row justify-between items-center">
-                    <p className="text-sm text-muted-foreground font-normal lowercase">
-                      {L.labels?.dataSource || "data source"}
+                  <div className="flex flex-row justify-between items-center gap-2 border-t border-border pt-4">
+                    <p className="text-base text-muted-foreground lowercase">
+                      {L.labels?.dataSource || 'source'}
                     </p>
                     <p className="text-base font-normal text-foreground lowercase">
                       {dataSource.name}
@@ -221,9 +197,9 @@ export const EndpointDetailView = ({
                   </div>
                 )}
                 {resource && (
-                  <div className="flex flex-row justify-between items-center">
-                    <p className="text-sm text-muted-foreground font-normal lowercase">
-                      {L.labels?.resource || "logic resource"}
+                  <div className="flex flex-row justify-between items-center gap-2 border-t border-border pt-4">
+                    <p className="text-base text-muted-foreground lowercase">
+                      {L.labels?.resource || 'resource'}
                     </p>
                     <p className="text-base font-normal text-foreground lowercase">
                       {resource.name}
@@ -235,36 +211,33 @@ export const EndpointDetailView = ({
           </Card>
 
           {/* Security */}
-          <Card className="bg-card overflow-hidden">
-            <CardContent className="py-5 px-6">
+          <Card>
+            <CardContent>
               <div className="flex flex-row items-center gap-3 mb-6">
-                <div className="size-10 rounded-xl bg-chart-4/10 flex items-center justify-center">
-                  <Icons.lock className="size-5 text-chart-4" />
-                </div>
-                <TextHeading size="h4" className="lowercase text-foreground">
-                  {L.detail?.security || "security & permissions"}
+                <Icons.lock className="size-5 text-primary" />
+                <TextHeading as="h3" size="h4" className="lowercase">
+                  {L.detail?.security || 'security'}
                 </TextHeading>
               </div>
               <div className="space-y-6">
-                <div className="flex flex-row justify-between items-center">
-                  <p className="text-sm text-muted-foreground font-normal lowercase">
-                    {L.misc?.accessLevel || "access level"}
+                <div className="flex flex-row justify-between items-center gap-2">
+                  <p className="text-base text-muted-foreground lowercase">
+                    {L.misc?.accessLevel || 'access'}
                   </p>
                   <p className="text-base font-normal text-foreground lowercase">
                     {getRoleLevelLabel(endpoint.minRoleLevel ?? 0)}
                   </p>
                 </div>
                 {endpoint.roles && (
-                  <div className="space-y-3">
-                    <p className="text-sm font-normal text-muted-foreground lowercase">
-                      {L.labels?.roles || "authorized roles"}
+                  <div className="space-y-3 border-t border-border pt-4">
+                    <p className="text-base font-normal text-muted-foreground lowercase">
+                      {L.labels?.roles || 'roles'}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {endpoint.roles.split(",").map((role: string) => (
+                      {endpoint.roles.split(',').map((role: string) => (
                         <Badge
                           key={role}
                           variant="secondary"
-                          className="bg-chart-3/10 text-chart-3 border-none rounded-xl px-3 py-1.5 text-xs font-medium lowercase"
                         >
                           {role.trim()}
                         </Badge>
@@ -273,16 +246,15 @@ export const EndpointDetailView = ({
                   </div>
                 )}
                 {endpoint.permissions && (
-                  <div className="space-y-3">
-                    <p className="text-sm font-normal text-muted-foreground lowercase">
-                      {L.labels?.permissions || "required permissions"}
+                  <div className="space-y-3 border-t border-border pt-4">
+                    <p className="text-base font-normal text-muted-foreground lowercase">
+                      {L.labels?.permissions || 'permissions'}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {endpoint.permissions.split(",").map((perm: string) => (
+                      {endpoint.permissions.split(',').map((perm: string) => (
                         <Badge
                           key={perm}
                           variant="secondary"
-                          className="bg-chart-5/10 text-chart-5 border-none rounded-xl px-3 py-1.5 text-xs font-medium lowercase"
                         >
                           {perm.trim()}
                         </Badge>
@@ -296,90 +268,84 @@ export const EndpointDetailView = ({
         </div>
 
         {/* Right Column */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Code Examples */}
-          <Card className="bg-card overflow-hidden">
-            <CardContent className="py-5 px-6">
+          <Card>
+            <CardContent>
               <div className="flex flex-row items-center gap-3 mb-6">
-                <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center">
-                  <Icons.code className="size-5 text-chart-3" />
-                </div>
-                <TextHeading size="h4" className="lowercase text-foreground">
-                  {L.detail?.codeExamples || "implementation examples"}
+                <Icons.code className="size-5 text-primary" />
+                <TextHeading as="h3" size="h4" className="lowercase">
+                  {L.detail?.codeExamples || 'examples'}
                 </TextHeading>
               </div>
 
               {/* Tab Buttons */}
-              <div className="flex flex-row gap-1 bg-muted p-1 rounded-2xl mb-5">
-                {(["curl", "javascript", "python"] as const).map(tab => (
+              <div className="flex flex-row gap-1 bg-muted p-1 rounded-xl mb-4">
+                {(['curl', 'javascript', 'python'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveCodeTab(tab)}
                     className={cn(
-                      "flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all lowercase",
+                      'flex-1 px-3 py-2 rounded-lg text-base transition-all lowercase',
                       activeCodeTab === tab
-                        ? "bg-background text-foreground shadow-none"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? 'bg-background text-primary font-normal shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground',
                     )}
                   >
-                    {tab === "curl"
-                      ? "curl"
-                      : tab === "javascript"
-                        ? "javascript"
-                        : "python"}
+                    {tab}
                   </button>
                 ))}
               </div>
 
               {/* Code Block */}
               <div className="relative group">
-                <div className="bg-muted rounded-2xl p-5 overflow-hidden">
-                  <div className="text-sm text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
+                <div className="bg-muted p-4 rounded-xl overflow-hidden border border-border">
+                  <div className="text-base text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
                     {codeExamples[activeCodeTab]}
                   </div>
                 </div>
-                <button
-                  onClick={() =>
-                    copyToClipboard(codeExamples[activeCodeTab], activeCodeTab)
-                  }
-                  className="absolute top-4 right-4 size-10 flex items-center justify-center bg-background hover:bg-foreground hover:text-background rounded-xl transition-all opacity-0 group-hover:opacity-100 shadow-none border-none"
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(codeExamples[activeCodeTab], activeCodeTab)}
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all bg-background"
                 >
                   {copiedField === activeCodeTab ? (
-                    <Icons.check className="size-4 text-chart-2" />
+                    <Icons.check className="size-4 text-primary" />
                   ) : (
                     <Icons.copy className="size-4" />
                   )}
-                </button>
+                </Button>
               </div>
             </CardContent>
           </Card>
 
           {/* Response Template */}
           {endpoint.responseData && (
-            <Card className="bg-card overflow-hidden">
-              <CardContent className="py-5 px-6">
+            <Card>
+              <CardContent>
                 <div className="flex flex-row items-center gap-3 mb-6">
-                  <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center">
-                    <Icons.file className="size-5 text-chart-2" />
-                  </div>
-                  <TextHeading size="h4" className="lowercase text-foreground">
-                    {L.detail?.responseTemplate || "json response schema"}
+                  <Icons.file className="size-5 text-primary" />
+                  <TextHeading as="h3" size="h4" className="lowercase">
+                    {L.detail?.responseTemplate || 'response schema'}
                   </TextHeading>
                 </div>
-                <div className="bg-muted p-5 rounded-2xl relative group">
-                  <div className="text-sm text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
+                <div className="bg-muted p-4 rounded-xl relative group border border-border">
+                  <div className="text-base text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
                     {endpoint.responseData}
                   </div>
-                  <button
-                    onClick={() => copyToClipboard(endpoint.responseData || "", "schema")}
-                    className="absolute top-4 right-4 size-10 flex items-center justify-center bg-background hover:bg-foreground hover:text-background rounded-xl transition-all opacity-0 group-hover:opacity-100 shadow-none border-none"
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyToClipboard(endpoint.responseData || '', 'schema')}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all bg-background"
                   >
-                    {copiedField === "schema" ? (
-                      <Icons.check className="size-4 text-chart-2" />
+                    {copiedField === 'schema' ? (
+                      <Icons.check className="size-4 text-primary" />
                     ) : (
                       <Icons.copy className="size-4" />
                     )}
-                  </button>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

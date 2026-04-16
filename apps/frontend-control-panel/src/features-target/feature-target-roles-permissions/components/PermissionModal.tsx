@@ -36,19 +36,18 @@ export const PermissionModal = ({
             <form onSubmit={onSubmit} className="space-y-8 pt-4 px-1">
                 <div className="space-y-6">
                     <div className="flex items-center gap-3 mb-2 px-1">
-                        <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                            <Icons.info className="size-4" />
+                        <div className="size-10 rounded-xl bg-muted flex items-center justify-center text-primary">
+                            <Icons.info className="size-5" />
                         </div>
-                        <TextHeading size="h6" className="text-base font-semibold lowercase">
+                        <TextHeading size="h4" className="lowercase">
                             permission details
                         </TextHeading>
                     </div>
 
                     <div className="space-y-6 pl-1">
                         <div className="space-y-2">
-                            <label className="text-sm text-muted-foreground lowercase px-1 font-medium">{L.modal.nameLabel}</label>
+                            <label className="text-base font-normal text-muted-foreground lowercase px-1">{L.modal.nameLabel}</label>
                             <Input 
-                                className="h-12 rounded-xl lowercase bg-muted/20 border-none focus-visible:ring-1 focus-visible:ring-primary/20"
                                 placeholder={L.labels.namePlaceholder || 'e.g. create_post'} 
                                 value={form.name} 
                                 onChange={(e) => setForm({ ...form, name: e.target.value.toLowerCase().replace(/\s+/g, '_') })} 
@@ -56,18 +55,16 @@ export const PermissionModal = ({
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm text-muted-foreground lowercase px-1 font-medium">{L.modal.groupLabel}</label>
+                            <label className="text-base font-normal text-muted-foreground lowercase px-1">{L.modal.groupLabel}</label>
                             <Input 
-                                className="h-12 rounded-xl lowercase bg-muted/20 border-none focus-visible:ring-1 focus-visible:ring-primary/20"
                                 placeholder={L.labels.groupPlaceholder || 'e.g. content_management'} 
                                 value={form.group} 
                                 onChange={(e) => setForm({ ...form, group: e.target.value })} 
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm text-muted-foreground lowercase px-1 font-medium">{L.modal.descriptionLabel}</label>
+                            <label className="text-base font-normal text-muted-foreground lowercase px-1">{L.modal.descriptionLabel}</label>
                             <Input 
-                                className="h-12 rounded-xl lowercase bg-muted/20 border-none focus-visible:ring-1 focus-visible:ring-primary/20"
                                 placeholder={L.labels.descriptionPlaceholder || 'short description...'} 
                                 value={form.description} 
                                 onChange={(e) => setForm({ ...form, description: e.target.value })} 
@@ -80,14 +77,14 @@ export const PermissionModal = ({
                     <Button 
                         type="button" 
                         variant="ghost" 
-                        className="flex-1 h-12 lowercase rounded-xl hover:bg-muted/50" 
+                        className="flex-1 lowercase" 
                         onClick={onClose}
                     >
                         {L.buttons.cancel}
                     </Button>
                     <Button 
                         type="submit" 
-                        className="flex-1 h-12 lowercase rounded-xl shadow-lg shadow-primary/20"
+                        className="flex-1 lowercase"
                     >
                         {permission ? L.buttons.save : L.buttons.create}
                     </Button>

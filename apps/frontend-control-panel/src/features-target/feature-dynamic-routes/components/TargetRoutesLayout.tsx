@@ -7,10 +7,7 @@ import { RouteBuilderView } from './builder/components/RouteBuilderView';
 import { EndpointEditor } from './builder/components/EndpointEditor';
 import { EndpointDetailView } from './builder/components/EndpointDetailView';
 import { ApiTesterView } from './tester/components/ApiTesterView';
-import { AuthRoutesView } from './auth/components/AuthRoutesView';
-import { AuthRouteDetailView } from './auth/components/AuthRouteDetailView';
 import { ErrorTemplatesView } from './templates/components/ErrorTemplatesView';
-import { ApiExplorerView } from './explorer/components/ApiExplorerView';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 
 interface TargetRoutesLayoutProps {
@@ -23,9 +20,7 @@ export function TargetRoutesLayout({ targetId }: TargetRoutesLayoutProps) {
 
     const tabs = [
         { id: 'builder', label: 'route builder', icon: Icons.plus },
-        { id: 'explorer', label: 'explorer', icon: Icons.search },
         { id: 'tester', label: 'tester', icon: Icons.zap },
-        { id: 'auth', label: 'security & auth', icon: Icons.lock },
         { id: 'templates', label: 'error templates', icon: Icons.fileText },
     ];
 
@@ -78,14 +73,9 @@ export function TargetRoutesLayout({ targetId }: TargetRoutesLayoutProps) {
                         <EndpointDetailView targetId={targetId} endpointId={subView.id} onNavigate={handleNavigate} onBack={handleBack} />
                     )}
 
-                    {activeTab === 'auth' && !subView && (
-                        <AuthRoutesView targetId={targetId} onNavigate={handleNavigate} />
-                    )}
-                    {activeTab === 'auth' && subView?.view === 'auth_detail' && subView.id && (
-                        <AuthRouteDetailView targetId={targetId} routeId={subView.id} onBack={handleBack} onNavigate={handleNavigate} />
-                    )}
 
-                    {activeTab === 'explorer' && <ApiExplorerView targetId={targetId} />}
+
+
                     {activeTab === 'tester' && <ApiTesterView targetId={targetId} />}
                     {activeTab === 'templates' && <ErrorTemplatesView targetId={targetId} />}
                 </div>

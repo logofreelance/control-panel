@@ -10,7 +10,7 @@
 
 import { useMemo } from 'react';
 import { useListBuilder } from '@/lib/frontend-list-builder';
-import { useConfig } from '@/modules/_core';
+import { DEFAULTS } from '@/lib/config/defaults';
 import type { ColumnDefinition } from '../types';
 import { COLUMN_TYPES } from '../registry';
 
@@ -21,20 +21,18 @@ export interface UseColumnBuilderOptions {
 
 /**
  * Hook for managing column definitions in schema builder
- * Uses Pure DI via useConfig() hook
+ * Modularized: Uses internal API and local constants
  */
 export function useColumnBuilder(options: UseColumnBuilderOptions = {}) {
     const { initialColumns = [] } = options;
-    // ✅ Pure DI: Get all dependencies from context
-    const { msg, defaults } = useConfig();
 
-    // Create a new empty column definition using defaults from context
+    // Create a new empty column definition using defaults
     const createColumn = useMemo(() => (): ColumnDefinition => ({
         name: '',
-        type: defaults.databaseSchema.columnBuilder.defaultType,
+        type: DEFAULTS.databaseSchema.columnBuilder.defaultType,
         required: false,
         unique: false,
-    }), [defaults]);
+    }), []);
 
     const list = useListBuilder<ColumnDefinition>({
         initialItems: initialColumns,
@@ -52,18 +50,17 @@ export function useColumnBuilder(options: UseColumnBuilderOptions = {}) {
 
         list.items.forEach((col: any, index: any) => {
             if (!col.name.trim()) {
-                // ✅ Use msg from context
-                errors.push(`${msg.databaseSchema.validation.columnNameRequired} (Column ${index + 1})`);
+                errors.push(`column name is required (column ${index + 1})`);
             }
             if (!col.type) {
-                errors.push(`${msg.databaseSchema.validation.columnTypeRequired} (Column ${index + 1})`);
+                errors.push(`column type is required (column ${index + 1})`);
             }
             const typeInfo = getTypeInfo(col.type);
             if (typeInfo?.requiresValues && (!col.values || col.values.length === 0)) {
-                errors.push(msg.databaseSchema.validation.columnValuesRequired(col.name, typeInfo.label));
+                errors.push(`values are required for ${typeInfo.label} column "${col.name}"`);
             }
             if (typeInfo?.requiresTarget && !col.target) {
-                errors.push(msg.databaseSchema.validation.columnTargetRequired(col.name, typeInfo.label));
+                errors.push(`target table is required for ${typeInfo.label} column "${col.name}"`);
             }
         });
 
@@ -71,7 +68,7 @@ export function useColumnBuilder(options: UseColumnBuilderOptions = {}) {
         const names = list.items.map(c => c.name.toLowerCase()).filter(n => n);
         const duplicates = names.filter((n: any, i: any) => names.indexOf(n) !== i);
         if (duplicates.length > 0) {
-            errors.push(msg.databaseSchema.validation.duplicateColumnNames([...new Set(duplicates)]));
+            errors.push(`duplicate column names found: ${[...new Set(duplicates)].join(', ')}`);
         }
 
         return { valid: errors.length === 0, errors };

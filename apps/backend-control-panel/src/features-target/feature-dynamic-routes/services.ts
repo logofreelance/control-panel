@@ -78,6 +78,14 @@ async function checkAndCreateTableIfNotExists(
         await queryHelper(db, `DROP TABLE \`${tableName}\``);
         // Fall through to create
       } else {
+        // Feature specific auto-patches
+        if (tableName === TARGET_TABLES.ENDPOINTS) {
+            const catCol = columns.find((c: any) => (c.Field || c.column_name) === "category_id");
+            if (catCol && catCol.Type && catCol.Type.toLowerCase().includes("int")) {
+                // Migrate category_id to VARCHAR(36) to support UUIDs
+                await queryHelper(db, `ALTER TABLE \`${tableName}\` MODIFY \`category_id\` VARCHAR(36)`);
+            }
+        }
         return true;
       }
     }
@@ -121,6 +129,16 @@ async function checkAndCreateTableIfNotExists(
                 \`handler\` TEXT NOT NULL,
                 \`description\` TEXT,
                 \`metadata\` TEXT,
+                \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+        break;
+      case TARGET_TABLES.LOGS:
+        createSql = `
+            CREATE TABLE \`${tableName}\` (
+                \`id\` VARCHAR(36) PRIMARY KEY,
+                \`log_type\` VARCHAR(50) NOT NULL,
+                \`message\` TEXT NOT NULL,
                 \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `;
@@ -296,8 +314,15 @@ export const EndpointService = {
     const description = body.description || "";
     const handler_type = body.handlerType || body.handler_type || 'proxy';
     
-    // Store everything else in handler_config so we don't lose data
-    const handler_config = JSON.stringify(body.handler_config || body);
+    // Clean body: remove technical fields that we don't want to double-persist in JSON
+    const cleanBody = { ...body };
+    delete cleanBody.handler_config;
+    delete cleanBody.handler_type;
+    delete cleanBody.id;
+    delete cleanBody.endpoint;
+    delete cleanBody.method;
+    
+    const handler_config = JSON.stringify(cleanBody);
 
     return queryHelper(
       db,

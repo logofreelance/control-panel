@@ -11,7 +11,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
-import { useToast, useConfig } from '@/modules/_core';
+import { useToast } from '@/modules/_core';
+import { API } from '../api/endpoints';
+import { FEATURE_MESSAGES } from '../constants';
+import { TOAST_TYPE, API_STATUS } from '@/lib/config/defaults';
 import type { ColumnDefinition, DatabaseTable } from '../types';
 
 export interface CreateSchemaPayload {
@@ -44,11 +47,9 @@ export interface Template {
 
 /**
  * Hook for managing database schema creation
- * Uses Pure DI via useConfig() hook
+ * Modularized: Uses internal API and local FEATURE_MESSAGES
  */
 export function useCreateSchema() {
-    // ✅ Pure DI: Get all dependencies from context
-    const { msg, defaults, api, API_STATUS, TOAST_TYPE } = useConfig();
     const { addToast } = useToast();
     const params = useParams();
     const targetId = params?.id as string;
@@ -57,6 +58,7 @@ export function useCreateSchema() {
     const [submitting, setSubmitting] = useState(false);
     const [validating, setValidating] = useState(false);
     const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+    
     // Default templates to ensure UI is not empty
     const DEFAULT_TEMPLATES: Template[] = [
         {
@@ -125,7 +127,7 @@ export function useCreateSchema() {
     ];
 
     const [templates, setTemplates] = useState<Template[]>(DEFAULT_TEMPLATES);
-    const [loadingTemplates, setLoadingTemplates] = useState(false); // Start false since we have defaults
+    const [loadingTemplates, setLoadingTemplates] = useState(false);
     const [availableSources, setAvailableSources] = useState<{ label: string; value: string }[]>([]);
 
     // Fetch templates on mount
@@ -133,27 +135,24 @@ export function useCreateSchema() {
         const fetchTemplates = async () => {
             setLoadingTemplates(true);
             try {
-                // ✅ Use api from context
-                const response = await apiClient.get<Template[]>(`${api.databaseSchema.list}/templates`, { headers: getHeaders() });
+                const response = await apiClient.get<Template[]>(`${API.list}/templates`, { headers: getHeaders() });
                 if (response.status === API_STATUS.SUCCESS && Array.isArray(response.data) && response.data.length > 0) {
                     setTemplates(response.data);
                 }
             } catch (err) {
                 console.error('Failed to fetch templates:', err);
-                // Keep default templates on error
             } finally {
                 setLoadingTemplates(false);
             }
         };
         fetchTemplates();
-    }, [api, API_STATUS, getHeaders]);
+    }, [getHeaders]);
 
     // Fetch available sources for relation column targets
     useEffect(() => {
         const fetchSources = async () => {
             try {
-                // ✅ Use api from context
-                const response = await apiClient.get<DatabaseTable[]>(api.databaseSchema.list, { headers: getHeaders() });
+                const response = await apiClient.get<DatabaseTable[]>(API.list, { headers: getHeaders() });
                 if (response.status === API_STATUS.SUCCESS && response.data) {
                     setAvailableSources(
                         response.data.map((s: any) => ({
@@ -167,7 +166,7 @@ export function useCreateSchema() {
             }
         };
         fetchSources();
-    }, [api, API_STATUS]);
+    }, [getHeaders]);
 
     // Validate table name and schema
     const validate = useCallback(async (
@@ -182,15 +181,11 @@ export function useCreateSchema() {
 
         setValidating(true);
         try {
-            // ✅ Use api from context
-            // Note: /validate endpoint returns the result directly, not wrapped in {data: ...}
-            const response = await apiClient.post<ValidationResult>(api.databaseSchema.validate, {
+            const response = await apiClient.post<ValidationResult>(API.validate, {
                 tableName,
                 schema: { columns, ...options },
             }, { headers: getHeaders() });
 
-            // The response IS the validation result (may have data wrapper or not)
-            // Use type guard or check property existence
             const result = 'data' in response && response.data ? (response.data as ValidationResult) : (response as unknown as ValidationResult);
             setValidationResult(result);
             return result;
@@ -200,42 +195,31 @@ export function useCreateSchema() {
         } finally {
             setValidating(false);
         }
-    }, [api]);
+    }, [getHeaders]);
 
     // Create database schema
     const create = useCallback(async (payload: CreateSchemaPayload): Promise<DatabaseTable | null> => {
-        // Client-side validation using msg from context
-        if (!payload.name.trim()) {
-            addToast(msg.databaseSchema.validation.resourceNameRequired, TOAST_TYPE.ERROR);
-            return null;
-        }
-        if (!payload.tableName.trim()) {
-            addToast(msg.databaseSchema.validation.tableNameRequired, TOAST_TYPE.ERROR);
-            return null;
-        }
-        if (payload.schema.columns.length === 0) {
-            addToast(msg.databaseSchema.validation.minOneColumn, TOAST_TYPE.ERROR);
+        if (!payload.name.trim() || !payload.tableName.trim() || payload.schema.columns.length === 0) {
+            addToast('Please fill all required fields and add at least one column', TOAST_TYPE.ERROR);
             return null;
         }
 
         setSubmitting(true);
         try {
-            // ✅ Use api from context
-            const response = await apiClient.post<DatabaseTable>(api.databaseSchema.save, payload, { headers: getHeaders() });
+            const response = await apiClient.post<DatabaseTable>(API.save, payload, { headers: getHeaders() });
             if (response.status === API_STATUS.SUCCESS && response.data) {
-                // ✅ Use msg from context
-                addToast(msg.databaseSchema.success.sourceCreated, TOAST_TYPE.SUCCESS);
+                addToast(FEATURE_MESSAGES.success.sourceCreated, TOAST_TYPE.SUCCESS);
                 return response.data;
             } else {
-                addToast((response as { message?: string }).message || msg.error.generic, TOAST_TYPE.ERROR);
+                addToast((response as { message?: string }).message || 'Failed to create schema', TOAST_TYPE.ERROR);
             }
         } catch {
-            addToast(msg.error.network, TOAST_TYPE.ERROR);
+            addToast('Network error, please try again', TOAST_TYPE.ERROR);
         } finally {
             setSubmitting(false);
         }
         return null;
-    }, [addToast, msg, api, API_STATUS, TOAST_TYPE]);
+    }, [addToast, getHeaders]);
 
     // Generate table name from display name
     const generateTableName = useCallback((displayName: string): string => {
@@ -260,10 +244,10 @@ export function useCreateSchema() {
         create,
         generateTableName,
 
-        // Defaults from context
+        // Default options
         defaultOptions: {
-            timestamps: defaults.databaseSchema.schema.timestamps,
-            softDelete: defaults.databaseSchema.schema.softDelete,
+            timestamps: true,
+            softDelete: true,
         },
     };
 }

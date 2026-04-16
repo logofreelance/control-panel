@@ -62,7 +62,7 @@ export function TargetLayout({
     <div className="flex flex-col gap-8 pb-12 pt-6">
       {navigation.map((group) => (
         <div key={group.group} className="flex flex-col gap-2">
-          <p className="text-xs text-muted-foreground font-normal px-4 mb-2">
+          <p className="text-base text-muted-foreground font-normal px-4 mb-2 lowercase">
             {group.group}
           </p>
           <nav className="flex flex-col gap-1">
@@ -74,13 +74,13 @@ export function TargetLayout({
                   href={item.href}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 font-normal text-base",
+                    "flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-normal text-base",
                     isActive 
-                      ? "bg-muted text-foreground font-medium" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      ? "bg-muted text-foreground" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
-                  <item.icon className={cn("size-5 transition-colors", isActive ? "text-primary" : "")} />
+                  <item.icon className={cn("size-5", isActive ? "text-primary" : "")} />
                   {item.label}
                 </Link>
               )
@@ -94,24 +94,24 @@ export function TargetLayout({
   return (
     <div className="relative flex flex-col h-screen w-full overflow-hidden bg-background font-instrument">
       {/* GLOBAL HEADER */}
-      <header className="z-50 w-full px-2 md:px-4 pt-2 md:pt-4 pointer-events-none transition-all duration-300 shrink-0">
-        <div className="mx-auto w-full max-w-7xl bg-background/80 backdrop-blur-md border border-border/40 h-14 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-between px-3 md:px-8 pointer-events-auto transition-all shadow-none">
+      <header className="z-50 w-full px-2 md:px-4 pt-2 md:pt-4 pointer-events-none transition-all shrink-0">
+        <div className="mx-auto w-full max-w-7xl bg-background border border-border h-16 rounded-2xl flex items-center justify-between px-3 md:px-8 pointer-events-auto shadow-none">
           
           <div className="flex items-center gap-2 md:gap-4">
              {/* MOBILE MENU TRIGGER */}
              <div className="lg:hidden">
                <Sheet open={open} onOpenChange={setOpen}>
                  <SheetTrigger render={
-                   <Button variant="ghost" size="icon" className="size-9 rounded-xl hover:bg-muted">
+                   <Button variant="ghost" size="icon">
                       <Icons.menu className="size-5" />
                    </Button>
                  } />
-                 <SheetContent side="left" className="w-72 p-6 bg-background border-r border-border/40 overflow-y-auto no-scrollbar font-instrument">
+                 <SheetContent side="left" className="w-72 p-6 bg-background border-r border-border overflow-y-auto no-scrollbar font-instrument">
                     <div className="mb-10 pl-2 flex items-center gap-3">
-                       <div className="size-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
+                       <div className="size-8 rounded-lg bg-muted flex items-center justify-center text-primary">
                           <Icons.rocket className="size-4" />
                        </div>
-                       <span className="text-lg font-medium">Navigation</span>
+                       <span className="text-xl font-semibold lowercase">navigation</span>
                     </div>
                     <NavContent />
                  </SheetContent>
@@ -120,31 +120,22 @@ export function TargetLayout({
 
             {/* SITE LOGO AND NAME */}
             <Link href="/" className="flex items-center gap-3 px-1">
-              <div className="size-9 md:size-10 shrink-0 rounded-xl bg-primary flex items-center justify-center text-primary-foreground hidden lg:flex">
-                <Icons.rocket className="size-4 md:size-5" />
+              <div className="size-10 shrink-0 rounded-xl bg-muted flex items-center justify-center text-primary hidden lg:flex">
+                <Icons.rocket className="size-5" />
               </div>
-              <span className="text-lg md:text-xl font-medium text-foreground tracking-tight">
-                Backend Engine
+              <span className="text-xl font-semibold text-foreground tracking-tight lowercase">
+                backend engine
               </span>
             </Link>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
             {/* NOTIFICATION */}
-            <Button variant="ghost" size="icon" className="size-9 md:size-11 rounded-xl text-muted-foreground hover:bg-muted transition-all border-none">
-              <Icons.bell className="size-4 md:size-5" />
+            <Button variant="ghost" size="icon">
+              <Icons.bell className="size-5" />
             </Button>
 
-            {/* MAIN DASHBOARD BUTTON */}
-            <Button 
-              variant="default"
-              className="size-9 md:size-auto md:h-11 md:px-6 rounded-xl text-sm md:text-base font-medium text-primary-foreground transition-all shadow-sm group flex items-center justify-center shrink-0"
-              onClick={() => router.push('/')}
-              title="Main Dashboard"
-            >
-              <Icons.layout className="size-4 md:size-5 md:mr-2.5" />
-              <span className="hidden md:inline">Main Dashboard</span>
-            </Button>
+
           </div>
         </div>
       </header>

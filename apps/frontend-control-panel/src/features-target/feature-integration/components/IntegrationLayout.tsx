@@ -5,6 +5,7 @@ import { useIntegrationDocs } from '../hooks/useIntegrationDocs';
 import { INTEGRATION_LABELS } from '../constants/ui-labels';
 import { Icons } from '@/lib/config/client';
 import { Card, CardContent, Button, Checkbox, Badge, Select } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { env } from '@/lib/env';
 import { useParams } from 'next/navigation';
@@ -269,13 +270,21 @@ export function IntegrationLayout() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getBadgeVariant = (m: string) => {
+    const method = m.toUpperCase();
+    if (method === 'POST') return 'default';
+    if (method === 'DELETE') return 'destructive';
+    if (method === 'PUT' || method === 'PATCH') return 'outline';
+    return 'secondary';
+  };
+
   if (isLoading) {
     return (
       <TargetLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
           <Icons.loading className="w-8 h-8 text-primary animate-spin" />
-          <p className="text-muted-foreground animate-pulse leading-none lowercase">
-            generating ai context definitions...
+          <p className="text-muted-foreground animate-pulse text-xl">
+            Generating AI context definitions...
           </p>
         </div>
       </TargetLayout>
@@ -285,22 +294,22 @@ export function IntegrationLayout() {
   if (error || !docs) {
     return (
       <TargetLayout>
-        <div className="p-8">
-          <Card className="bg-destructive/10 border-none shadow-none">
-            <CardContent className="p-10 flex flex-col items-center gap-6 text-center">
-              <Icons.alertTriangle className="size-16 text-destructive" />
-              <div className="space-y-4">
-                <h3 className="font-semibold text-2xl lowercase leading-none">
-                  failed to load specifications
-                </h3>
-                <p className="text-muted-foreground text-lg lowercase">{error}</p>
+        <div className="py-6">
+          <Card className="bg-muted border border-border">
+            <CardContent className="p-6 flex flex-col items-center gap-4 text-center">
+              <Icons.alertTriangle className="size-12 text-destructive" />
+              <div className="space-y-2">
+                <TextHeading size="h4" className="text-foreground">
+                  Failed to load specifications
+                </TextHeading>
+                <p className="text-muted-foreground text-base">{error}</p>
               </div>
               <Button
                 variant="outline"
                 onClick={fetchDocs}
-                className="lowercase rounded-xl text-destructive border-transparent bg-destructive/20 hover:bg-destructive/30"
+                className="text-base"
               >
-                try again
+                Try Again
               </Button>
             </CardContent>
           </Card>
@@ -316,47 +325,46 @@ export function IntegrationLayout() {
   return (
     <TargetLayout>
       <div className="relative font-instrument min-h-screen">
-        <div className="flex flex-col xl:flex-row h-full w-full max-w-7xl mx-auto gap-8 p-4 md:p-8 pb-32 items-start">
+        <div className="flex flex-col xl:flex-row h-full w-full max-w-7xl mx-auto gap-4 p-4 md:p-6 pb-24 items-start">
           {/* Left Column: Configuration & Selection */}
-          <div className="flex flex-col gap-6 w-full xl:w-80 shrink-0 sticky top-24">
+          <div className="flex flex-col gap-4 w-full xl:w-80 shrink-0 sticky top-24">
             <header className="flex flex-col gap-2">
-              <h1 className="text-3xl font-bold tracking-tight text-foreground lowercase flex items-center gap-3">
+              <TextHeading size="h3" className="flex items-center gap-3">
                 <Icons.terminal className="size-8 text-primary" />
-                ai context
-              </h1>
-              <p className="text-muted-foreground text-sm lowercase mt-1 leading-relaxed">
-                pilih endpoint yang ingin diintegrasikan. token ai terbatas, jadi pilih yang
-                diperlukan saja.
+                AI Context
+              </TextHeading>
+              <p className="text-muted-foreground text-base leading-relaxed">
+                Pilih endpoint yang ingin diintegrasikan. Token AI terbatas, jadi pilih yang diperlukan saja.
               </p>
             </header>
 
-            <Card className="shadow-none overflow-hidden rounded-2xl">
+            <Card className="shadow-none border border-border">
               <CardContent className="p-0">
                 {targetApiUrls.length > 1 && (
-                  <div className="p-3 border-b border-border/40 bg-background/50 flex flex-col gap-2">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold px-1">
+                  <div className="p-4 border-b border-border bg-muted flex flex-col gap-2">
+                    <label className="text-base text-muted-foreground font-normal px-1">
                       Target Base URL
                     </label>
                     <Select
                       value={selectedApiUrl}
                       onChange={(e) => setSelectedApiUrl(e.target.value)}
                       options={targetApiUrls.map((url) => ({ label: url, value: url }))}
-                      className="w-full h-10 bg-muted/40 font-mono text-sm"
+                      className="text-base"
                     />
                   </div>
                 )}
-                <div className="p-3 bg-muted/40 border-b border-border/40 flex items-center gap-3">
+                <div className="p-4 bg-muted border-b border-border flex items-center gap-3">
                   <Checkbox checked={allChecked} onCheckedChange={handleToggleAll} id="check-all" />
                   <label
                     htmlFor="check-all"
-                    className="text-sm font-medium lowercase cursor-pointer"
+                    className="text-base font-normal cursor-pointer"
                   >
-                    select all endpoints
+                    Select All Endpoints
                   </label>
                 </div>
                 <div className="flex flex-col max-h-[60vh] overflow-y-auto p-1 custom-scrollbar">
                   {allRoutes.length === 0 && (
-                    <div className="p-4 text-center text-sm text-muted-foreground">No routes</div>
+                    <div className="p-4 text-center text-base text-muted-foreground">No routes</div>
                   )}
 
                   {/* Categorized Static Routes */}
@@ -371,7 +379,7 @@ export function IntegrationLayout() {
                         }, {}),
                       ).map(([category, routes]: [string, any]) => (
                         <div key={category} className="mb-4">
-                          <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 bg-muted/20 rounded-md mb-2">
+                          <div className="px-4 py-2 text-base font-normal uppercase text-muted-foreground bg-muted border-l-2 border-primary mb-2">
                             {category}
                           </div>
                           {routes.map((r: any) => {
@@ -380,16 +388,11 @@ export function IntegrationLayout() {
                             );
                             const method = (r.method || 'GET').toUpperCase();
                             const path = r.route_path || r.endpoint || '/';
-                            let methodColor = 'bg-primary/10 text-primary';
-                            if (method === 'POST') methodColor = 'bg-green-500/10 text-green-600';
-                            if (method === 'PUT' || method === 'PATCH')
-                              methodColor = 'bg-yellow-500/10 text-yellow-600';
-                            if (method === 'DELETE') methodColor = 'bg-red-500/10 text-red-600';
 
                             return (
                               <div
                                 key={r.id || path}
-                                className="flex items-start gap-2.5 p-2 hover:bg-muted/30 rounded-lg transition-colors group"
+                                className="flex items-start gap-2.5 p-2 hover:bg-muted rounded-lg transition-colors group"
                               >
                                 <Checkbox
                                   checked={selectedIndexes.has(globalIdx)}
@@ -403,15 +406,12 @@ export function IntegrationLayout() {
                                 >
                                   <div className="flex items-center gap-2">
                                     <Badge
-                                      variant="outline"
-                                      className={cn(
-                                        'text-[8px] font-mono leading-none px-1 py-0 border-transparent',
-                                        methodColor,
-                                      )}
+                                      variant={getBadgeVariant(method)}
+                                      className="text-base font-normal"
                                     >
                                       {method}
                                     </Badge>
-                                    <span className="text-xs font-mono truncate">{path}</span>
+                                    <span className="text-base font-normal truncate">{path}</span>
                                   </div>
                                 </label>
                               </div>
@@ -425,23 +425,18 @@ export function IntegrationLayout() {
                   {/* Dynamic Routes Section */}
                   {docs.routes.dynamic.length > 0 && (
                     <div>
-                      <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 bg-muted/20 rounded-md mb-2">
+                      <div className="px-4 py-2 text-base font-normal uppercase text-muted-foreground bg-muted border-l-2 border-primary mb-2">
                         Dynamic Routes (Database)
                       </div>
                       {docs.routes.dynamic.map((r, i) => {
                         const idx = docs.routes.static.length + i; // Index in allRoutes
                         const method = (r.method || 'GET').toUpperCase();
                         const path = r.route_path || r.endpoint || '/';
-                        let methodColor = 'bg-primary/10 text-primary';
-                        if (method === 'POST') methodColor = 'bg-green-500/10 text-green-600';
-                        if (method === 'PUT' || method === 'PATCH')
-                          methodColor = 'bg-yellow-500/10 text-yellow-600';
-                        if (method === 'DELETE') methodColor = 'bg-red-500/10 text-red-600';
 
                         return (
                           <div
                             key={`dynamic-${i}`}
-                            className="flex items-start gap-2.5 p-2 hover:bg-muted/30 rounded-lg transition-colors group"
+                            className="flex items-start gap-2.5 p-2 hover:bg-muted rounded-lg transition-colors group"
                           >
                             <Checkbox
                               checked={selectedIndexes.has(idx)}
@@ -455,15 +450,12 @@ export function IntegrationLayout() {
                             >
                               <div className="flex items-center gap-2">
                                 <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    'text-[8px] font-mono leading-none px-1 py-0 border-transparent',
-                                    methodColor,
-                                  )}
+                                  variant={getBadgeVariant(method)}
+                                  className="text-base font-normal"
                                 >
                                   {method}
                                 </Badge>
-                                <span className="text-xs font-mono truncate">{path}</span>
+                                <span className="text-base font-normal truncate">{path}</span>
                               </div>
                             </label>
                           </div>
@@ -483,10 +475,8 @@ export function IntegrationLayout() {
                 onClick={handleCopyAll}
                 size="lg"
                 disabled={selectedIndexes.size === 0}
-                className={cn(
-                  'rounded-xl flex-shrink-0 h-12 px-6 shadow-sm transition-all lowercase w-full sm:w-auto',
-                  copied ? 'bg-green-500 text-white hover:bg-green-600' : '',
-                )}
+                variant={copied ? "secondary" : "default"}
+                className="text-base font-normal w-full sm:w-auto"
               >
                 {copied ? (
                   <Icons.check className="size-4 mr-2" />
@@ -499,21 +489,21 @@ export function IntegrationLayout() {
 
             <Card className="w-full shadow-none overflow-hidden h-full flex flex-col">
               <CardContent className="p-0 flex-1 flex flex-col">
-                <div className="flex items-center px-4 py-3 bg-muted/50 border-b border-border/40 gap-2 shrink-0">
+                <div className="flex items-center px-4 py-3 bg-muted border-b border-border gap-2 shrink-0">
                   <div className="size-3 rounded-full bg-border" />
                   <div className="size-3 rounded-full bg-border" />
                   <div className="size-3 rounded-full bg-border" />
-                  <span className="ml-4 font-mono text-xs text-muted-foreground mr-auto">
+                  <span className="ml-4 text-base text-muted-foreground mr-auto">
                     system_context.prompt
                   </span>
                   {selectedIndexes.size === 0 && (
-                    <Badge variant="secondary" className="text-xs font-mono text-destructive">
+                    <Badge variant="destructive" className="text-base font-normal">
                       No routes selected
                     </Badge>
                   )}
                 </div>
-                <div className="p-6 overflow-x-auto min-h-[50vh] max-h-[80vh] custom-scrollbar bg-background">
-                  <pre className="font-mono text-sm leading-relaxed text-foreground whitespace-pre-wrap selection:bg-primary/20">
+                <div className="p-6 overflow-x-auto min-h-[50vh] max-h-[80vh] bg-background">
+                  <pre className="text-base leading-relaxed text-foreground whitespace-pre-wrap">
                     {aiPrompt}
                   </pre>
                 </div>

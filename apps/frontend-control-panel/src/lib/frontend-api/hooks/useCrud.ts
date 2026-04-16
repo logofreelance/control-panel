@@ -40,123 +40,133 @@ export interface UseCrudReturn<T> {
 }
 
 /**
+ * Generic CRUD hook
+ */
+export function useCrud<T extends { id: number | string }>(
+    endpoints: CrudEndpoints,
+    options: UseCrudOptions<T> = {}
+): UseCrudReturn<T> {
+    const {
+        initialData = [],
+        skipInitialFetch = false,
+        onSuccess,
+        onError,
+        headers,
+    } = options;
+
+    const [items, setItems] = useState<T[]>(initialData);
+    const [loading, setLoading] = useState(!skipInitialFetch);
+    const [error, setError] = useState<Error | null>(null);
+
+    const handleError = useCallback((err: unknown, action: string) => {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+        onError?.(error, action);
+    }, [onError]);
+
+    const fetchAll = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await apiClient.get<T[]>(endpoints.list, { headers });
+            if (response.status === 'success' && response.data) {
+                setItems(response.data);
+            }
+        } catch (err) {
+            handleError(err, 'fetchAll');
+        } finally {
+            setLoading(false);
+        }
+    }, [endpoints.list, headers, handleError]);
+
+    const fetchOne = useCallback(async (id: number | string): Promise<T | null> => {
+        try {
+            const response = await apiClient.get<T>(endpoints.detail(id), { headers });
+            if (response.status === 'success' && response.data) {
+                return response.data;
+            }
+        } catch (err) {
+            handleError(err, 'fetchOne');
+        }
+        return null;
+    }, [endpoints.detail, headers, handleError]);
+
+    const create = useCallback(async (data: Partial<T>): Promise<T | null> => {
+        try {
+            const response = await apiClient.post<T>(endpoints.create, data, { headers });
+            if (response.status === 'success' && response.data) {
+                setItems(prev => [...prev, response.data!]);
+                onSuccess?.('create', response.data);
+                return response.data;
+            }
+        } catch (err) {
+            handleError(err, 'create');
+        }
+        return null;
+    }, [endpoints.create, headers, onSuccess, handleError]);
+
+    const update = useCallback(async (id: number | string, data: Partial<T>): Promise<T | null> => {
+        try {
+            const response = await apiClient.put<T>(endpoints.update(id), data, { headers });
+            if (response.status === 'success' && response.data) {
+                setItems(prev => prev.map(item =>
+                    item.id === id ? { ...item, ...response.data } : item
+                ));
+                onSuccess?.('update', response.data);
+                return response.data;
+            }
+        } catch (err) {
+            handleError(err, 'update');
+        }
+        return null;
+    }, [endpoints.update, headers, onSuccess, handleError]);
+
+    const remove = useCallback(async (id: number | string): Promise<boolean> => {
+        try {
+            const response = await apiClient.delete(endpoints.delete(id), { headers });
+            if (response.status === 'success') {
+                setItems(prev => prev.filter(item => item.id !== id));
+                onSuccess?.('delete', { id });
+                return true;
+            }
+        } catch (err) {
+            handleError(err, 'delete');
+        }
+        return false;
+    }, [endpoints.delete, headers, onSuccess, handleError]);
+
+    const findById = useCallback((id: number | string) => {
+        return items.find(item => item.id === id);
+    }, [items]);
+
+    useEffect(() => {
+        if (!skipInitialFetch) {
+            fetchAll();
+        }
+    }, [fetchAll, skipInitialFetch]);
+
+    return {
+        items,
+        loading,
+        error,
+        fetchAll,
+        fetchOne,
+        create,
+        update,
+        remove,
+        findById,
+        setItems,
+    };
+}
+
+/**
  * Factory function to create a CRUD hook for any entity
  */
 export function createCrudHook<T extends { id: number | string }>(
     endpoints: CrudEndpoints
 ) {
-    return function useCrud(options: UseCrudOptions<T> = {}): UseCrudReturn<T> {
-        const {
-            initialData = [],
-            skipInitialFetch = false,
-            onSuccess,
-            onError,
-            headers,
-        } = options;
-
-        const [items, setItems] = useState<T[]>(initialData);
-        const [loading, setLoading] = useState(!skipInitialFetch);
-        const [error, setError] = useState<Error | null>(null);
-
-        const handleError = useCallback((err: unknown, action: string) => {
-            const error = err instanceof Error ? err : new Error(String(err));
-            setError(error);
-            onError?.(error, action);
-        }, [onError]);
-
-        const fetchAll = useCallback(async () => {
-            setLoading(true);
-            setError(null);
-
-            try {
-                const response = await apiClient.get<T[]>(endpoints.list, { headers });
-                if (response.status === 'success' && response.data) {
-                    setItems(response.data);
-                }
-            } catch (err) {
-                handleError(err, 'fetchAll');
-            } finally {
-                setLoading(false);
-            }
-        }, [endpoints.list]);
-
-        const fetchOne = useCallback(async (id: number | string): Promise<T | null> => {
-            try {
-                const response = await apiClient.get<T>(endpoints.detail(id), { headers });
-                if (response.status === 'success' && response.data) {
-                    return response.data;
-                }
-            } catch (err) {
-                handleError(err, 'fetchOne');
-            }
-            return null;
-        }, [endpoints.detail]);
-
-        const create = useCallback(async (data: Partial<T>): Promise<T | null> => {
-            try {
-                const response = await apiClient.post<T>(endpoints.create, data, { headers });
-                if (response.status === 'success' && response.data) {
-                    setItems(prev => [...prev, response.data!]);
-                    onSuccess?.('create', response.data);
-                    return response.data;
-                }
-            } catch (err) {
-                handleError(err, 'create');
-            }
-            return null;
-        }, [endpoints.create, onSuccess]);
-
-        const update = useCallback(async (id: number | string, data: Partial<T>): Promise<T | null> => {
-            try {
-                const response = await apiClient.put<T>(endpoints.update(id), data, { headers });
-                if (response.status === 'success' && response.data) {
-                    setItems(prev => prev.map(item =>
-                        item.id === id ? { ...item, ...response.data } : item
-                    ));
-                    onSuccess?.('update', response.data);
-                    return response.data;
-                }
-            } catch (err) {
-                handleError(err, 'update');
-            }
-            return null;
-        }, [endpoints.update, onSuccess]);
-
-        const remove = useCallback(async (id: number | string): Promise<boolean> => {
-            try {
-                const response = await apiClient.delete(endpoints.delete(id), { headers });
-                if (response.status === 'success') {
-                    setItems(prev => prev.filter(item => item.id !== id));
-                    onSuccess?.('delete', { id });
-                    return true;
-                }
-            } catch (err) {
-                handleError(err, 'delete');
-            }
-            return false;
-        }, [endpoints.delete, onSuccess]);
-
-        const findById = useCallback((id: number | string) => {
-            return items.find(item => item.id === id);
-        }, [items]);
-
-        useEffect(() => {
-            if (!skipInitialFetch) {
-                fetchAll();
-            }
-        }, []);
-
-        return {
-            items,
-            loading,
-            error,
-            fetchAll,
-            fetchOne,
-            create,
-            update,
-            remove,
-            findById,
-            setItems,
-        };
+    return function useGeneratedCrud(options: UseCrudOptions<T> = {}): UseCrudReturn<T> {
+        return useCrud<T>(endpoints, options);
     };
 }

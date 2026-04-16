@@ -12,12 +12,12 @@ import { useConfig } from '@/modules/_core';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { useImportData } from '../composables';
 
-const L = MODULE_LABELS.databaseSchema;
+// Remove top-level L to avoid undefined crashes
 
 interface ImportDataModalProps {
     isOpen: boolean;
     onClose: () => void;
-    DatabaseTableId: number;
+    DatabaseTableId: string | number;
     onSuccess: () => void;
 }
 
@@ -28,7 +28,8 @@ export function ImportDataModal({
     onSuccess
 }: ImportDataModalProps) {
     const { labels, icons: Icons } = useConfig();
-    const C = labels.common;
+    const C = labels?.common || {};
+    const L = labels?.mod?.databaseSchema || {};
 
     const [inputData, setInputData] = useState('');
     const { importing, error, importData } = useImportData(DatabaseTableId);
@@ -62,8 +63,8 @@ export function ImportDataModal({
                                 <Icons.upload className="size-6" />
                             </div>
                             <div>
-                                <TextHeading size="h5" className="text-base font-semibold lowercase leading-none">{L.buttons.importData}</TextHeading>
-                                <p className="text-[11px] text-muted-foreground lowercase mt-1.5 opacity-60">bulk import records via json data structure</p>
+                                <TextHeading size="h5" className="text-base font-medium lowercase leading-none">{L?.buttons?.importData || 'import data'}</TextHeading>
+                                <p className="text-sm text-muted-foreground lowercase mt-2 opacity-60">bulk import records via json data structure</p>
                             </div>
                         </div>
                         <Button 
@@ -80,40 +81,38 @@ export function ImportDataModal({
                         <div className="relative group">
                             <textarea
                                 id="json-input"
-                                placeholder={L.buttons.importPlaceholder || 'paste your json array here...'}
-                                className="w-full h-[320px] font-mono text-[11px] p-6 rounded-3xl bg-muted/20 border-none focus:ring-1 focus:ring-primary/20 outline-none transition-all resize-none lowercase custom-scrollbar"
+                                placeholder={L?.buttons?.importPlaceholder || 'paste your json array here...'}
+                                className="w-full h-[320px] font-mono text-sm p-6 rounded-3xl bg-muted/20 border-none focus:ring-1 focus:ring-primary/20 outline-none transition-all resize-none lowercase custom-scrollbar"
                                 value={inputData}
                                 onChange={(e) => setInputData(e.target.value)}
                             />
                             <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                                <Badge variant="secondary" className="bg-background text-[9px] font-black uppercase tracking-tighter border-none px-2 py-0.5 opacity-40">JSON ARRAY</Badge>
+                                <Badge variant="secondary" className="bg-background text-xs font-normal lowercase border-none px-3 py-1 opacity-40">json array</Badge>
                             </div>
                         </div>
                         
                         {error && (
                             <div className="p-4 rounded-2xl bg-rose-500/5 ring-1 ring-rose-500/10 flex items-start gap-4 animate-in slide-in-from-top-2">
                                 <Icons.warning className="size-4 text-rose-500 mt-0.5" />
-                                <p className="text-xs font-medium text-rose-600/80 lowercase italic">{error}</p>
+                                <p className="text-sm font-normal text-rose-600/80 lowercase">{error}</p>
                             </div>
                         )}
                     </div>
 
-                    <footer className="flex items-center justify-end gap-3 pt-2">
+                    <footer className="flex items-center justify-end gap-3 pt-4">
                         <Button
                             variant="ghost"
                             onClick={onClose}
                             disabled={importing}
-                            className="h-11 px-8 rounded-xl lowercase font-bold text-muted-foreground hover:bg-muted"
                         >
-                            {C.actions.cancel}
+                            {C?.actions?.cancel || 'cancel'}
                         </Button>
                         <Button
                             onClick={handleImport}
                             disabled={importing || !inputData.trim()}
                             isLoading={importing}
-                            className="h-11 px-10 rounded-xl lowercase shadow-lg shadow-primary/20 font-bold"
                         >
-                            {L.buttons.importData.toLowerCase()}
+                            {(L?.buttons?.importData || 'import data').toLowerCase()}
                         </Button>
                     </footer>
                 </div>

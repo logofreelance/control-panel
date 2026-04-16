@@ -41,22 +41,22 @@ export const RolesTab = () => {
             {/* Roles Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {roles.map((role: Role) => (
-                    <Card key={role.id} className="bg-card group overflow-hidden relative border-none shadow-sm">
-                        <CardContent className="p-6 sm:p-8 space-y-6">
+                    <Card key={role.id} className="group relative">
+                        <CardContent className="space-y-6">
                             {/* Role Header */}
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className={cn(
                                         "size-14 rounded-xl flex items-center justify-center transition-transform duration-500",
-                                        role.level >= 90 ? "bg-amber-500/10 text-amber-600" : "bg-primary/10 text-primary"
+                                        role.level >= 90 ? "bg-muted text-amber-600" : "bg-muted text-primary"
                                     )}>
                                         {role.is_super ? <Icons.crown className="size-8" /> : <Icons.shield className="size-8" />}
                                     </div>
                                     <div>
-                                        <TextHeading size="h5" className="font-semibold text-lg leading-tight lowercase">
+                                        <TextHeading size="h4" className="lowercase">
                                             {role.display_name || role.name}
                                         </TextHeading>
-                                        <p className="text-sm text-muted-foreground lowercase">
+                                        <p className="text-base font-normal text-muted-foreground lowercase">
                                             {role.name}
                                         </p>
                                     </div>
@@ -68,17 +68,17 @@ export const RolesTab = () => {
                             </div>
 
                             {/* Description */}
-                            <p className="text-sm text-muted-foreground min-h-[40px] leading-relaxed lowercase italic">
+                            <p className="text-base font-normal text-muted-foreground min-h-[40px] leading-relaxed lowercase italic">
                                 {role.description ? `"${role.description}"` : "no description provided"}
                             </p>
 
                             {/* Level Bar */}
-                            <div className="bg-muted/30 p-4 rounded-xl">
+                            <div className="bg-muted p-4 rounded-xl">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-semibold text-muted-foreground lowercase">
+                                    <span className="text-base font-normal text-muted-foreground lowercase">
                                         {L.labels.level}
                                     </span>
-                                    <span className="text-sm font-bold text-foreground">
+                                    <span className="text-base font-normal text-foreground">
                                         {role.level} / 100
                                     </span>
                                 </div>
@@ -99,29 +99,27 @@ export const RolesTab = () => {
                                     <>
                                         <Button 
                                             variant="secondary" 
-                                            size="sm" 
                                             onClick={() => handleEdit(role)} 
-                                            className="flex-1 gap-2 rounded-lg lowercase bg-muted/50 hover:bg-muted"
+                                            className="flex-1 gap-2 rounded-lg lowercase"
                                         >
-                                            <Icons.pencil className="size-4" /> edit
+                                            <Icons.pencil className="size-5" /> edit
                                         </Button>
                                         <Button 
                                             variant="ghost" 
-                                            size="sm" 
+                                            size="icon" 
                                             onClick={() => deleteRole(role)}
-                                            className="size-9 p-0 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+                                            className="text-destructive"
                                         >
-                                            <Icons.trash className="size-4" />
+                                            <Icons.trash className="size-5" />
                                         </Button>
                                     </>
                                 ) : (
                                     <Button 
                                         variant="secondary" 
-                                        size="sm" 
                                         onClick={() => handleEdit(role)} 
-                                        className="flex-1 gap-2 rounded-lg lowercase bg-muted/50 hover:bg-muted"
+                                        className="flex-1 gap-2 rounded-lg lowercase"
                                     >
-                                        <Icons.pencil className="size-4" /> configure system role
+                                        <Icons.pencil className="size-5" /> configure system role
                                     </Button>
                                 )}
                             </div>
@@ -130,9 +128,9 @@ export const RolesTab = () => {
                 ))}
 
                 {roles.length === 0 && (
-                    <div className="col-span-full py-20 text-center bg-muted/10 rounded-3xl border border-dashed border-border/20">
-                        <Icons.info className="size-12 mx-auto mb-4 text-muted-foreground/30" />
-                        <p className="text-muted-foreground lowercase">{L.messages.empty}</p>
+                    <div className="col-span-full py-20 text-center bg-muted rounded-3xl border border-dashed border-border flex flex-col items-center">
+                        <Icons.info className="size-12 mb-4 text-muted-foreground" />
+                        <p className="text-base font-normal text-muted-foreground lowercase">{L.messages.empty}</p>
                     </div>
                 )}
             </div>

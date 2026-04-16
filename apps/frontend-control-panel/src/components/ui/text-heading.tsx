@@ -7,19 +7,16 @@ const textHeadingVariants = cva(
   {
     variants: {
       size: {
-        h1: "text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.05]",
+        h1: "text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.05]",
         h2: "text-2xl md:text-4xl lg:text-5xl leading-tight",
         h3: "text-xl md:text-3xl lg:text-4xl leading-tight",
         h4: "text-lg md:text-2xl lg:text-3xl leading-snug",
         h5: "text-base md:text-lg lg:text-xl leading-snug",
-        h6: "text-sm md:text-base lg:text-lg leading-snug",
+        h6: "text-base md:text-base lg:text-lg leading-snug",
       },
       weight: {
         normal: "font-normal",
-        medium: "font-medium",
         semibold: "font-semibold",
-        bold: "font-bold",
-        extrabold: "font-extrabold",
       },
     },
     defaultVariants: {

@@ -21,7 +21,7 @@ export interface databaseSchemachema {
 }
 
 export interface DatabaseTable {
-    id: number;
+    id: string | number;
     name: string;
     tableName: string;
     description?: string;
@@ -40,7 +40,7 @@ export interface DatabaseTable {
 
 export interface Resource {
     id: number;
-    DatabaseTableId: number;
+    DatabaseTableId: string | number;
     name: string;
     slug?: string;
     description?: string;

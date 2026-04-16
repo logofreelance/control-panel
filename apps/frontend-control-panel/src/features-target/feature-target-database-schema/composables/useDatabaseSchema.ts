@@ -10,51 +10,58 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { createCrudHook, apiClient } from '@/lib/frontend-api';
-import { useToast, useConfig } from '@/modules/_core';
+import { useCrud, apiClient } from '@/lib/frontend-api';
+import { useToast } from '@/modules/_core';
+import { API } from '../api/endpoints';
+import { FEATURE_MESSAGES } from '../constants';
+import { TOAST_TYPE } from '@/lib/config/defaults'; // Minimal infrastructure import
 import type { DatabaseTable } from '../types';
 
 /**
  * Extended database schema hook with additional actions
- * Uses Pure DI via useConfig() hook
+ * Modularized: Uses local FEATURE_MESSAGES and internal API
  */
 export function useDatabaseSchema() {
-    // ✅ Pure DI: Get all dependencies from context
-    const { msg, api, TOAST_TYPE } = useConfig();
     const { addToast } = useToast();
     const params = useParams();
     const targetId = params?.id as string;
-    const headers = targetId ? { 'x-target-id': targetId } : undefined;
+    
+    // Create headers memoized
+    const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : undefined, [targetId]);
 
-    // Create endpoints from context
+    // ✅ Use Internal API Endpoints directly
     const endpoints = useMemo(() => ({
-        list: api.databaseSchema.list,
-        create: api.databaseSchema.save,
-        detail: (id: string | number) => api.databaseSchema.detail?.(String(id)) || `${api.databaseSchema.list}/${id}`,
-        update: (id: string | number) => api.databaseSchema.update?.(String(id)) || `${api.databaseSchema.list}/${id}`,
-        delete: (id: string | number) => api.databaseSchema.delete(String(id)),
-    }), [api]);
+        list: API.list,
+        create: API.save,
+        detail: (id: string | number) => API.detail(id),
+        update: (id: string | number) => API.update(id),
+        delete: (id: string | number) => API.delete(id),
+    }), []);
 
-    // Create CRUD hook with dynamic endpoints
-    const useCrud = useMemo(() => createCrudHook<DatabaseTable>(endpoints), [endpoints]);
+    // ✅ Memoize Callbacks to prevent infinite loops in useCrud useEffect
+    const handleSuccess = useCallback((action: any) => {
+        const messages: Record<string, string> = {
+            create: FEATURE_MESSAGES.success.sourceCreated,
+            delete: FEATURE_MESSAGES.success.sourceDeleted,
+        };
+        if (messages[action]) {
+            addToast(messages[action], TOAST_TYPE.SUCCESS);
+        }
+    }, [addToast]);
 
-    const crud = useCrud({
-        onSuccess: (action: any) => {
-            // ✅ Use msg from context
-            const messages: Record<string, string> = {
-                create: msg.databaseSchema.success.sourceCreated,
-                delete: msg.databaseSchema.success.sourceDeleted,
-            };
-            if (messages[action]) {
-                addToast(messages[action], TOAST_TYPE.SUCCESS);
-            }
-        },
-        onError: (error: any) => {
-            // ✅ Use msg from context
-            addToast(error.message || msg.databaseSchema.error.loadFailed, TOAST_TYPE.ERROR);
-        },
+    const handleError = useCallback((error: any) => {
+        addToast(error.message || FEATURE_MESSAGES.error.loadFailed, TOAST_TYPE.ERROR);
+    }, [addToast]);
+
+    // ✅ Memoize Options object
+    const options = useMemo(() => ({
+        onSuccess: handleSuccess,
+        onError: handleError,
         headers,
-    });
+    }), [handleSuccess, handleError, headers]);
+
+    // ✅ Call useCrud with stable options
+    const crud = useCrud<DatabaseTable>(endpoints, options);
 
     return crud;
 }
@@ -64,8 +71,6 @@ export function useDatabaseSchema() {
  * Uses Pure DI via useConfig() hook
  */
 export function useSchemaActions() {
-    // ✅ Pure DI: Get all dependencies from context
-    const { msg, api, API_STATUS, TOAST_TYPE } = useConfig();
     const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
     const params = useParams();
@@ -75,56 +80,53 @@ export function useSchemaActions() {
     const clone = useCallback(async (id: string | number): Promise<DatabaseTable | null> => {
         setLoading(true);
         try {
-            // ✅ Use api from context
-            const response = await apiClient.post<DatabaseTable>(`${api.databaseSchema.list}/${id}/clone`, undefined, { headers: getHeaders() });
-            if (response.status === API_STATUS.SUCCESS) {
-                // ✅ Use msg from context
-                addToast(msg.databaseSchema.success.sourceCloned, TOAST_TYPE.SUCCESS);
+            // ✅ Use Internal API
+            const response = await apiClient.post<DatabaseTable>(`${API.list}/${id}/clone`, undefined, { headers: getHeaders() });
+            if (response.status === 'success') {
+                addToast(FEATURE_MESSAGES.success.sourceCloned, TOAST_TYPE.SUCCESS);
                 return response.data || null;
             }
         } catch {
-            addToast(msg.databaseSchema.error.cloneFailed, TOAST_TYPE.ERROR);
+            addToast(FEATURE_MESSAGES.error.cloneFailed, TOAST_TYPE.ERROR);
         } finally {
             setLoading(false);
         }
         return null;
-    }, [addToast, api, msg, API_STATUS, TOAST_TYPE]);
+    }, [addToast, getHeaders]);
 
     const archive = useCallback(async (id: string | number): Promise<boolean> => {
         setLoading(true);
         try {
-            // ✅ Use api from context
-            const response = await apiClient.delete(api.databaseSchema.archive?.(String(id)) || `${api.databaseSchema.list}/${id}/archive`, { headers: getHeaders() });
-            if (response.status === API_STATUS.SUCCESS) {
-                // ✅ Use msg from context
-                addToast(msg.databaseSchema.success.sourceArchived, TOAST_TYPE.SUCCESS);
+            // ✅ Use Internal API
+            const response = await apiClient.delete(API.archive?.(id) || `${API.list}/${id}/archive`, { headers: getHeaders() });
+            if (response.status === 'success') {
+                addToast(FEATURE_MESSAGES.success.sourceArchived, TOAST_TYPE.SUCCESS);
                 return true;
             }
         } catch {
-            addToast(msg.databaseSchema.error.archiveFailed, TOAST_TYPE.ERROR);
+            addToast(FEATURE_MESSAGES.error.archiveFailed, TOAST_TYPE.ERROR);
         } finally {
             setLoading(false);
         }
         return false;
-    }, [addToast, api, msg, API_STATUS, TOAST_TYPE]);
+    }, [addToast, getHeaders]);
 
     const restore = useCallback(async (id: string | number): Promise<boolean> => {
         setLoading(true);
         try {
-            // ✅ Use api from context
-            const response = await apiClient.post(api.databaseSchema.restore?.(String(id)) || `${api.databaseSchema.list}/${id}/restore`, undefined, { headers: getHeaders() });
-            if (response.status === API_STATUS.SUCCESS) {
-                // ✅ Use msg from context
-                addToast(msg.databaseSchema.success.sourceRestored, TOAST_TYPE.SUCCESS);
+            // ✅ Use Internal API
+            const response = await apiClient.post(API.restore?.(id) || `${API.list}/${id}/restore`, undefined, { headers: getHeaders() });
+            if (response.status === 'success') {
+                addToast(FEATURE_MESSAGES.success.sourceRestored, TOAST_TYPE.SUCCESS);
                 return true;
             }
         } catch {
-            addToast(msg.databaseSchema.error.restoreFailed, TOAST_TYPE.ERROR);
+            addToast(FEATURE_MESSAGES.error.restoreFailed, TOAST_TYPE.ERROR);
         } finally {
             setLoading(false);
         }
         return false;
-    }, [addToast, api, msg, API_STATUS, TOAST_TYPE]);
+    }, [addToast, getHeaders]);
 
     return {
         loading,

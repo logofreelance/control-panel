@@ -665,7 +665,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                   <div className="space-y-6">
                     <MultiSelect
                       label="required permissions"
-                      options={availablePermissions.map((p) => p.code)}
+                      options={availablePermissions}
                       value={form.permissions || ''}
                       onChange={(val) => setForm({ ...form, permissions: val })}
                       placeholder="select permissions..."
@@ -683,7 +683,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                     status templates
                   </TextHeading>
                   <p className="text-base text-muted-foreground lowercase">
-                    {L.misc?.errorTemplatesHint ||
+                    {L.misc?.errorResponseHint ||
                       'customize json responses for specific http status codes.'}
                   </p>
 
@@ -741,8 +741,11 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                 <div className="pt-6 border-t border-border/10">
                   <DataLineageHelper
                     targetId={targetId}
-                    path={form.path || ''}
-                    method={form.method || 'GET'}
+                    dataSourceId={form.dataSourceId}
+                    onInsert={(variable) => {
+                      const text = form.responseData || '';
+                      setForm({ ...form, responseData: text + variable });
+                    }}
                   />
                 </div>
               </div>

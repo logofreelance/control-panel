@@ -52,8 +52,12 @@ export interface Template {
 export function useCreateSchema() {
     const { addToast } = useToast();
     const params = useParams();
-    const targetId = params?.id as string;
-    const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+    const targetId = (params?.id as string) || '';
+    const getHeaders = useCallback(() => {
+        const h: Record<string, string> = {};
+        if (targetId) h['x-target-id'] = targetId;
+        return h;
+    }, [targetId]);
 
     const [submitting, setSubmitting] = useState(false);
     const [validating, setValidating] = useState(false);

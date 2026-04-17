@@ -1,17 +1,23 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
-import { TextHeading } from '@/components/ui/text-heading';
+import { 
+  Card, 
+  CardContent, 
+  Input, 
+  Button, 
+  Select, 
+  Badge, 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger,
+  Modal,
+  TextHeading
+} from '@/components/ui';
 import { Icons } from '../../../config/icons';
 import { DYNAMIC_ROUTES_LABELS } from '../../../constants/ui-labels';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ConfirmDialog, FullPageLoading as LoadingOverlay } from '@/modules/_core';
 import { cn } from '@/lib/utils';
-import { Modal } from '@/components/ui/modal';
 import { useRouteBuilder } from '../composables/useRouteBuilder';
 
 interface RouteBuilderViewProps {
@@ -192,7 +198,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                 <PopoverTrigger>
                   <Button variant="outline">
                     <Icons.plus className="size-5 rotate-45 mr-3" />
-                    {L.buttons.filter || 'filter'}
+                    {'filter'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-64">

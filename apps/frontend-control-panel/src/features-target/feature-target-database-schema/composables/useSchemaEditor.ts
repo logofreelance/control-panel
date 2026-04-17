@@ -33,7 +33,11 @@ export function useSchemaEditor(DatabaseTableId: string | number): UseSchemaEdit
     // Resolve target ID for headers
     const params = useParams();
     const targetId = params?.id as string;
-    const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+    const headers = useMemo((): Record<string, string> => {
+        const h: Record<string, string> = {};
+        if (targetId) h['x-target-id'] = String(targetId);
+        return h;
+    }, [targetId]);
 
     const addColumn = useCallback(async (column: ColumnDefinition): Promise<boolean> => {
         setLoading(true);

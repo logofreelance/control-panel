@@ -12,6 +12,7 @@ const L = MODULE_LABELS.users;
 
 interface UsersTableProps {
     users: User[];
+    loading?: boolean;
     onEdit: (user: User) => void;
     onDelete: (user: User) => void;
 }

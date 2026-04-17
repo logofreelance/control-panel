@@ -53,7 +53,11 @@ export function useRelations(DatabaseTableId: string | number) {
   const targetId = rawNodeId;
 
   // ✅ Memoize headers
-  const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+  const headers = useMemo((): Record<string, string> => {
+    const h: Record<string, string> = {};
+    if (targetId) h['x-target-id'] = String(Array.isArray(targetId) ? targetId[0] : targetId);
+    return h;
+  }, [targetId]);
 
   const [relations, setRelations] = useState<Relation[]>([]);
   const [targets, setTargets] = useState<RelationTarget[]>([]);

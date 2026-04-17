@@ -20,7 +20,11 @@ export function useTrash() {
     const targetId = rawNodeId;
     
     // ✅ Memoize headers to prevent infinite loops
-    const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+    const headers = useMemo((): Record<string, string> => {
+        const h: Record<string, string> = {};
+        if (targetId) h['x-target-id'] = String(targetId);
+        return h;
+    }, [targetId]);
 
     const [items, setItems] = useState<DatabaseTable[]>([]);
     const [loading, setLoading] = useState(true);

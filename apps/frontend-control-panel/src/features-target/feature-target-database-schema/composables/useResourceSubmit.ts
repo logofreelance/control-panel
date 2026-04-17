@@ -41,7 +41,11 @@ export function useResourceSubmit(DatabaseTableId: string | number) {
   const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
   const targetId = rawNodeId;
 
-  const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+  const headers = useMemo((): Record<string, string> => {
+    const h: Record<string, string> = {};
+    if (targetId) h['x-target-id'] = String(Array.isArray(targetId) ? targetId[0] : targetId);
+    return h;
+  }, [targetId]);
 
   // Validate payload before submit
   const validate = useCallback(

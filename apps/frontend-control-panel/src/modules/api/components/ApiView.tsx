@@ -33,7 +33,11 @@ export const ApiView = () => {
         getConfirmDialogMessage,
     } = useApi();
 
-
+    const LoadingOverlay = () => (
+        <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center rounded-xl backdrop-blur-[1px]">
+            <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin shadow-sm" />
+        </div>
+    );
 
     return (
         <div className="space-y-6 animate-page-enter">

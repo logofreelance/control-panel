@@ -55,7 +55,7 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
         alias: '',
     });
 
-    const handleSelectTarget = (id: number) => {
+    const handleSelectTarget = (id: string | number) => {
         setNewRelation(prev => {
             if (id === 0 && ['has_one', 'has_many'].includes(prev.type)) {
                 return { ...prev, targetId: id, type: 'belongs_to' };

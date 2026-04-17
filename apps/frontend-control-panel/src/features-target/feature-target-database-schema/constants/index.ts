@@ -20,6 +20,8 @@ export const FEATURE_LABELS = {
         trash: 'trash',
         viewResources: 'view resources',
         hideResources: 'hide resources',
+        backToDataSources: 'back to database list',
+        manageRowsFor: 'manage rows for',
         tableData: 'table data',
         viewAndManageRecords: 'view and manage records',
         schema: 'schema',
@@ -43,6 +45,7 @@ export const FEATURE_LABELS = {
         editSchema: 'edit schema',
         createResource: 'create resource',
         addRelation: 'add relation',
+        goBack: 'back',
     },
     empty: {
         title: 'no schemas found',
@@ -52,6 +55,7 @@ export const FEATURE_LABELS = {
         confirm: {
             deleteSource: 'are you sure you want to delete this database schema? this will not delete the physical table but will remove the configuration.',
             deleteResource: 'are you sure you want to delete this API resource endpoint?',
+            deleteRow: 'are you sure you want to delete this record?',
         },
         relations: {
             title: 'Relations',
@@ -88,6 +92,13 @@ export const FEATURE_MESSAGES = {
         rowInsertFailed: 'failed to add record',
         rowUpdateFailed: 'failed to update record',
         rowDeleteFailed: 'failed to delete record',
+    },
+    validation: {
+        resourceNameRequired: 'resource name is required',
+        slugRequired: 'slug is required',
+        fieldsRequired: 'select at least one field to expose',
+        tableNameRequired: 'table name is required',
+        columnsRequired: 'add at least one column to the table',
     }
 };
 

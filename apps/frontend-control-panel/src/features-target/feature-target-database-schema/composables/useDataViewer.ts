@@ -33,7 +33,11 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
   const rawTableId = Array.isArray(params.tableId) ? params.tableId[0] : params.tableId;
   const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
   const targetId = rawTableId ? rawNodeId : undefined;
-  const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+  const getHeaders = useCallback(() => {
+    const h: Record<string, string> = {};
+    if (targetId) h['x-target-id'] = String(Array.isArray(targetId) ? targetId[0] : targetId);
+    return h;
+  }, [targetId]);
 
   const { defaultLimit = DEFAULTS.databaseSchema.dataViewer.limit } = options;
 

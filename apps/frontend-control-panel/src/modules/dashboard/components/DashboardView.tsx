@@ -123,7 +123,7 @@ export const DashboardView = () => {
                         <div className="divide-y divide-slate-50 flex-1">
                             {(stats?.recentLogs?.length || 0) > 0 ? (
                                 stats?.recentLogs?.map((log, idx: number) => (
-                                    <div key={log.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-all duration-300 group animate-in slide-in-from-left-4" style={{ animationDelay: `${idx * 50}${MS}` }}>
+                                    <div key={log.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-all duration-300 group animate-in slide-in-from-left-4" style={{ animationDelay: `${idx * 50}ms` }}>
                                         <div className="flex items-center gap-3">
                                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-semibold text-[10px] ${log.statusCode < 400 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
                                                 {log.statusCode}
@@ -136,7 +136,7 @@ export const DashboardView = () => {
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-[9px] text-slate-400">{new Date(log.createdAt).toLocaleTimeString()}</p>
                                                     <span className="w-0.5 h-0.5 rounded-full bg-slate-300"></span>
-                                                    <p className="text-[9px] text-slate-400">{log.durationMs}{MS}</p>
+                                                    <p className="text-[9px] text-slate-400">{log.durationMs}ms</p>
                                                 </div>
                                             </div>
                                         </div>

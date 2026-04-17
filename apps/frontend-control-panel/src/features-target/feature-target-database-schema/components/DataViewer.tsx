@@ -60,17 +60,17 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
     if (physicalColumns?.length > 0) return physicalColumns;
 
     try {
-      const jsonStr = DatabaseTable?.schema_json || DatabaseTable?.schemaJson;
+      const jsonStr = DatabaseTable?.schemaJson;
       if (jsonStr) {
         const parsed = JSON.parse(jsonStr);
         return parsed.columns || [];
       }
     } catch (e) {
-      console.error('Failed to parse schema_json', e);
+      console.error('Failed to parse schemaJson', e);
     }
 
     return [];
-  }, [physicalColumns, DatabaseTable?.schema_json, DatabaseTable?.schemaJson]);
+  }, [physicalColumns, DatabaseTable?.schemaJson]);
 
   const totalPages = Math.ceil(total / (pagination?.limit || 10)) || 1;
 
@@ -185,13 +185,13 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                   />
                 </TableHead>
                 <TableHead className="w-24 text-sm font-normal lowercase text-muted-foreground/60">
-                  {C?.table?.id || C?.labels?.id || 'id'}
+                  {C?.table?.id || 'id'}
                 </TableHead>
                 {displayColumns?.map((col: any) => (
                   <TableHead
                     key={col.name}
                     className="cursor-pointer group whitespace-nowrap"
-                    onClick={() => sorting?.toggleSort?.(col.name)}
+                    onClick={() => sorting?.handleSort?.(col.name)}
                   >
                     <div className="flex items-center gap-2 text-sm font-normal lowercase text-muted-foreground/60 group-hover:text-primary transition-colors">
                       {col.displayName || col.name}
@@ -204,7 +204,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                   </TableHead>
                 ))}
                 <TableHead className="text-right pr-6 text-sm font-normal lowercase text-muted-foreground/60">
-                  {C?.table?.actions || C?.labels?.actions || 'actions'}
+                  {C?.table?.actions || 'actions'}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -233,7 +233,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
               ) : (
                 rows?.map((row, i) => {
                   if (!row) return null;
-                  const isSelected = selection?.isSelected?.(row);
+                  const isSelected = selection?.isSelected?.((row as any).id);
                   return (
                     <TableRow
                       key={String(row.id || i)}
@@ -245,7 +245,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                       <TableCell className="pl-6">
                         <Checkbox
                           checked={isSelected}
-                          onCheckedChange={() => selection?.toggleSelection?.(row)}
+                          onCheckedChange={() => selection?.toggle?.((row as any).id)}
                         />
                       </TableCell>
                       <TableCell className="font-mono text-sm text-muted-foreground font-normal">
@@ -354,7 +354,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
           L?.messages?.confirm?.deleteRow || 'are you sure you want to delete this record?'
         ).toLowerCase()}
         confirmText={(C?.actions?.delete || 'delete').toLowerCase()}
-        variant="destructive"
+        variant="danger"
       />
 
       <ImportDataModal

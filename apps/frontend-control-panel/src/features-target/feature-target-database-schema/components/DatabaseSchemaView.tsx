@@ -382,7 +382,7 @@ function ExpandedResourcesPanel({
           desc={L.labels.viewAndManageRecords}
           icon={Icons.table}
           label={L.buttons.viewData}
-          actionIcon={Icons.externalLink}
+          actionIcon={Icons.external}
           action={() =>
             router.push(
               nodeId

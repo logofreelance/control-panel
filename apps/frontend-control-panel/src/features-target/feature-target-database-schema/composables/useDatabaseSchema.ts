@@ -75,7 +75,11 @@ export function useSchemaActions() {
     const [loading, setLoading] = useState(false);
     const params = useParams();
     const targetId = params?.id as string;
-    const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+    const getHeaders = useCallback(() => {
+        const h: Record<string, string> = {};
+        if (targetId) h['x-target-id'] = String(targetId);
+        return h;
+    }, [targetId]);
 
     const clone = useCallback(async (id: string | number): Promise<DatabaseTable | null> => {
         setLoading(true);

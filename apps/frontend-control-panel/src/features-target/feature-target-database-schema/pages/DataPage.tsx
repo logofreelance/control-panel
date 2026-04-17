@@ -97,11 +97,10 @@ export function DataPage() {
             </Button>
             <PageTitle
               title={source.name}
-              weight="bold"
               subtitle={
                 <>
                   {L.labels.manageRowsFor || 'manage rows for'}{' '}
-                  <span className="text-primary">{source.table_name || source.tableName}</span>
+                  <span className="text-primary">{source.tableName}</span>
                 </>
               }
             />

@@ -27,10 +27,10 @@ export interface UseResourcesReturn {
   loading: boolean;
   error: Error | null;
   fetchAll: () => Promise<void>;
-  fetchOne: (resourceId: number) => Promise<Resource | null>;
+  fetchOne: (resourceId: string | number) => Promise<Resource | null>;
   create: (data: Partial<Resource>) => Promise<Resource | null>;
-  update: (resourceId: number, data: Partial<Resource>) => Promise<Resource | null>;
-  remove: (resourceId: number) => Promise<boolean>;
+  update: (resourceId: string | number, data: Partial<Resource>) => Promise<Resource | null>;
+  remove: (resourceId: string | number) => Promise<boolean>;
 }
 
 /**
@@ -51,7 +51,11 @@ export function useResources(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const getHeaders = useCallback(() => targetId ? { 'x-target-id': targetId } : {}, [targetId]);
+  const getHeaders = useCallback(() => {
+    const h: Record<string, string> = {};
+    if (targetId) h['x-target-id'] = String(Array.isArray(targetId) ? targetId[0] : targetId);
+    return h;
+  }, [targetId]);
 
   const fetchAll = useCallback(async () => {
     if (!DatabaseTableId) return;
@@ -76,7 +80,7 @@ export function useResources(
   }, [DatabaseTableId, addToast, getHeaders]);
 
   const fetchOne = useCallback(
-    async (resourceId: number): Promise<Resource | null> => {
+    async (resourceId: string | number): Promise<Resource | null> => {
       if (!DatabaseTableId) return null;
 
       try {
@@ -119,7 +123,7 @@ export function useResources(
   );
 
   const update = useCallback(
-    async (resourceId: number, data: Partial<Resource>): Promise<Resource | null> => {
+    async (resourceId: string | number, data: Partial<Resource>): Promise<Resource | null> => {
       if (!DatabaseTableId) return null;
 
       try {
@@ -144,7 +148,7 @@ export function useResources(
   );
 
   const remove = useCallback(
-    async (resourceId: number): Promise<boolean> => {
+    async (resourceId: string | number): Promise<boolean> => {
       if (!DatabaseTableId) return false;
 
       try {

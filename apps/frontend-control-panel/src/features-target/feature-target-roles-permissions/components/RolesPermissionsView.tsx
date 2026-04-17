@@ -16,54 +16,51 @@ import { cn } from '@/lib/utils';
 
 const L = MODULE_LABELS.rolesPermissions;
 
-
 export const RolesPermissionsView = () => {
-    const [activeTab, setActiveTab] = useState<'roles' | 'permissions'>('roles');
+  const [activeTab, setActiveTab] = useState<'roles' | 'permissions'>('roles');
 
-    return (
-        <TargetLayout>
-            <div className="relative pt-12 pb-20 space-y-8 animate-page-enter">
-                {/* Header Section */}
-                <header className="px-1">
-                    <TextHeading size="h1" className="mb-1 lowercase">
-                        {L.title}
-                    </TextHeading>
-                    <p className="text-base font-normal text-muted-foreground lowercase">
-                        {L.subtitle}
-                    </p>
-                </header>
+  return (
+    <TargetLayout>
+      <div className="relative space-y-6 animate-page-enter">
+        {/* Header Section */}
+        <header className="px-1">
+          <TextHeading size="h3" className="mb-1 lowercase">
+            {L.title}
+          </TextHeading>
+          <p className="text-base font-normal text-muted-foreground lowercase">{L.subtitle}</p>
+        </header>
 
-                {/* Tab Navigation */}
-                <div className="flex p-1 bg-muted rounded-xl w-full max-w-sm">
-                    <Button
-                        variant={activeTab === 'roles' ? 'default' : 'ghost'}
-                        onClick={() => setActiveTab('roles')}
-                        className={cn(
-                            "flex-1 gap-2 rounded-lg lowercase transition-all duration-300 h-10",
-                            activeTab === 'roles' ? "" : "text-muted-foreground"
-                        )}
-                    >
-                        <Icons.shield className="size-5" />
-                        {L.tabs.roles}
-                    </Button>
-                    <Button
-                        variant={activeTab === 'permissions' ? 'default' : 'ghost'}
-                        onClick={() => setActiveTab('permissions')}
-                        className={cn(
-                            "flex-1 gap-2 rounded-lg lowercase transition-all duration-300 h-10",
-                            activeTab === 'permissions' ? "" : "text-muted-foreground"
-                        )}
-                    >
-                        <Icons.unlock className="size-5" />
-                        {L.tabs.permissions}
-                    </Button>
-                </div>
+        {/* Tab Navigation */}
+        <div className="flex p-1 bg-muted rounded-xl w-full max-w-sm">
+          <Button
+            variant={activeTab === 'roles' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('roles')}
+            className={cn(
+              'flex-1 gap-2 rounded-lg lowercase transition-all duration-300 h-10',
+              activeTab === 'roles' ? '' : 'text-muted-foreground',
+            )}
+          >
+            <Icons.shield className="size-5" />
+            {L.tabs.roles}
+          </Button>
+          <Button
+            variant={activeTab === 'permissions' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('permissions')}
+            className={cn(
+              'flex-1 gap-2 rounded-lg lowercase transition-all duration-300 h-10',
+              activeTab === 'permissions' ? '' : 'text-muted-foreground',
+            )}
+          >
+            <Icons.unlock className="size-5" />
+            {L.tabs.permissions}
+          </Button>
+        </div>
 
-                {/* Content Area */}
-                <div className="min-h-[400px]">
-                    {activeTab === 'roles' ? <RolesTab /> : <PermissionsTab />}
-                </div>
-            </div>
-        </TargetLayout>
-    );
+        {/* Content Area */}
+        <div className="min-h-[400px]">
+          {activeTab === 'roles' ? <RolesTab /> : <PermissionsTab />}
+        </div>
+      </div>
+    </TargetLayout>
+  );
 };

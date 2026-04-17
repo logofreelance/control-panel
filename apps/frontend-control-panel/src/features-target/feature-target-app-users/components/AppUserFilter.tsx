@@ -83,7 +83,7 @@ export const AppUserFilter = ({
             className="text-base"
             options={[
               { label: 'All Roles', value: 'all' },
-              ...roles.map((role) => ({ label: role.display_name, value: role.name })),
+              ...(roles || []).map((role) => ({ label: role.display_name, value: role.name })),
             ]}
           />
         </div>

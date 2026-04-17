@@ -68,7 +68,7 @@ export const AppUserModal = ({
 
   if (!isOpen) return null;
 
-  const selectedRole = roles.find((r) => r.name === form.role);
+  const selectedRole = (roles || []).find((r) => r.name === form.role);
 
   return (
     <Modal
@@ -120,8 +120,8 @@ export const AppUserModal = ({
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value as AppUserRole })}
                 options={
-                  roles.length > 0
-                    ? roles.map((role) => ({ label: role.display_name, value: role.name }))
+                  (roles || []).length > 0
+                    ? (roles || []).map((role) => ({ label: role.display_name, value: role.name }))
                     : [{ label: 'Searching roles...', value: 'user' }]
                 }
                 fullWidth
@@ -133,7 +133,7 @@ export const AppUserModal = ({
               <div className="flex flex-wrap gap-2 px-1">
                 <Badge variant="secondary" className="h-7 px-3 rounded-full font-normal text-base uppercase">
                   <Icons.shield className="size-4 mr-2" />
-                  {L.modal.level(selectedRole.level)}
+                  {L.modal.level(selectedRole.level || 0)}
                 </Badge>
                 {selectedRole.is_super && (
                   <Badge variant="default" className="h-7 px-3 rounded-full font-normal text-base uppercase">

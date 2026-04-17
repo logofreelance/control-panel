@@ -66,11 +66,10 @@ export function TargetDashboardView() {
     });
   }, [metrics]);
 
-
   if (!target)
     return (
       <TargetLayout>
-        <div className="max-w-2xl mx-auto mt-20 px-6">
+        <div className="max-w-2xl mx-auto text-center">
           <Alert variant="destructive">
             <div className="flex items-start gap-4">
               <Icons.alertTriangle className="size-6 text-destructive mt-1" />
@@ -99,15 +98,15 @@ export function TargetDashboardView() {
 
   return (
     <TargetLayout>
-      <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden pb-20">
-        <div className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-8">
+      <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden">
+        <div className="relative z-10 w-full flex flex-col gap-8">
           {/* FLAT LUXURY HEADER */}
           <header className="flex items-center justify-end">
             <Button
               variant="outline"
               onClick={handleCheckHealth}
               disabled={checkingHealth}
-              className="group h-12 px-4 rounded-xl border-border transition-all text-foreground flex items-center gap-0 hover:gap-2 font-normal"
+              className="group h-12 px-4 rounded-xl transition-all flex items-center gap-0 hover:gap-2"
             >
               <Icons.refresh
                 className={cn('size-4 text-primary', checkingHealth && 'animate-spin')}
@@ -124,12 +123,12 @@ export function TargetDashboardView() {
           </header>
 
           {/* FLAT LUXURY SUMMARY CARDS */}
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             {summaryCards.map((metric) => (
               <Card key={metric.key}>
-                <CardContent className="flex flex-col gap-5">
+                <CardContent className="flex flex-col gap-3">
                   <div className="flex items-start justify-between">
-                    <span className="text-base text-muted-foreground font-normal lowercase">
+                    <span className="text-sm text-muted-foreground font-normal lowercase">
                       {metric.label}
                     </span>
                     <div
@@ -190,7 +189,9 @@ export function TargetDashboardView() {
                 <span className="text-base text-muted-foreground font-normal lowercase">
                   security
                 </span>
-                <span className="text-base text-foreground font-normal lowercase">ssl 256-bit active</span>
+                <span className="text-base text-foreground font-normal lowercase">
+                  ssl 256-bit active
+                </span>
               </div>
             </div>
           </footer>

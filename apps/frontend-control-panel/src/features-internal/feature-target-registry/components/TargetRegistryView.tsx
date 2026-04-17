@@ -2,7 +2,7 @@
 
 /**
  * TargetRegistryView - Elite Minimalist Refactor
- * 
+ *
  * STICKING TO RULES:
  * - No tracking-* (Removed tracking-tight)
  * - No text size < text-xs (Changed text-[10px] to text-xs)
@@ -85,11 +85,7 @@ export function TargetRegistryView() {
                 </span>
               </div>
 
-              <TextHeading
-                as="h1"
-                size="h1"
-                className="mb-4 lowercase"
-              >
+              <TextHeading as="h1" size="h2" className="mb-4 lowercase">
                 system registry
               </TextHeading>
 
@@ -106,7 +102,7 @@ export function TargetRegistryView() {
               <div className="flex-1 w-full relative group">
                 <Icons.search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground transition-colors group-focus-within:text-primary z-10" />
                 <Input
-                  className="pl-11 pr-14 h-12 bg-background rounded-2xl border-border text-base font-normal shadow-none"
+                  className="pl-11 pr-14 h-13 bg-backgroun border-border shadow-none bg-background"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -170,7 +166,7 @@ export function TargetRegistryView() {
                 variant="default"
                 size="lg"
                 onClick={handleAdd}
-                className="w-full md:w-auto rounded-2xl px-10 lowercase"
+                className="w-full md:w-auto lowercase"
               >
                 <Icons.plus className="size-5 mr-3" />
                 register system
@@ -206,18 +202,18 @@ export function TargetRegistryView() {
                 <Card
                   key={target.id}
                   onClick={() => router.push(TARGET_ROUTES.target(target.id))}
-                  className="cursor-pointer hover:border-primary/50 transition-colors"
+                  className="cursor-pointer"
                 >
                   <CardHeader>
-                    <div className="flex gap-4 items-start min-w-0">
+                    <div className="flex gap-4 items-center min-w-0">
                       <div className="size-14 rounded-2xl bg-muted text-primary flex items-center justify-center shrink-0 border border-border">
                         <Icons.network className="size-7" />
                       </div>
                       <div className="flex flex-col gap-1 min-w-0 text-left">
-                        <TextHeading size="h3" className="truncate lowercase">
+                        <TextHeading size="h5" className="truncate lowercase">
                           {target.name}
                         </TextHeading>
-                        <div className="flex flex-wrap items-center gap-3 mt-1">
+                        <div className="flex flex-wrap items-center gap-3">
                           <Badge
                             variant={cfg.variant === 'destructive' ? 'destructive' : 'secondary'}
                             className="rounded-full px-3 py-0.5 border-none lowercase"
@@ -232,8 +228,8 @@ export function TargetRegistryView() {
                             />
                             {target.status}
                           </Badge>
-                          <span className="text-base text-muted-foreground font-normal truncate leading-tight lowercase">
-                            seen {timeAgo(target.lastHealthCheck)}
+                          <span className="text-sm text-muted-foreground font-normal truncate leading-tight lowercase">
+                            refresh {timeAgo(target.lastHealthCheck)}
                           </span>
                         </div>
                       </div>
@@ -282,11 +278,10 @@ export function TargetRegistryView() {
                       disabled={deletingId === target.id}
                       className="size-9 rounded-xl hover:text-destructive-foreground hover:bg-destructive transition-all"
                     >
-                      <Icons.trash className="size-4 text-muted-foreground" />
+                      <Icons.trash className="size-4 text-background" />
                     </Button>
                   </CardFooter>
                 </Card>
-
               );
             })}
           </div>

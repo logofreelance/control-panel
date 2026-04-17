@@ -38,12 +38,12 @@ export const MonitorDatabaseView = () => {
 
   return (
     <TargetLayout>
-      <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden pb-10 sm:pb-20">
-        <main className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-10 md:gap-14">
+      <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden">
+        <main className="relative z-10 w-full flex flex-col gap-6 md:gap-8">
           {/* BOLD COLOR HEADER - CLEAN TYPO */}
           <header className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <TextHeading as="h1" size="h1">
+              <TextHeading as="h1" size="h3">
                 {MODULE_LABELS.monitorDatabase?.title}
               </TextHeading>
               <span className="text-base text-muted-foreground font-normal lowercase">
@@ -61,7 +61,9 @@ export const MonitorDatabaseView = () => {
                 }}
                 disabled={loading}
               >
-                <Icons.refresh className={cn('size-4 text-muted-foreground', loading && 'animate-spin')} />
+                <Icons.refresh
+                  className={cn('size-4 text-muted-foreground', loading && 'animate-spin')}
+                />
               </Button>
 
               <Button
@@ -79,11 +81,7 @@ export const MonitorDatabaseView = () => {
           <DatabaseStatsCard stats={stats} />
 
           {/* Tables List */}
-          <MonitorTablesList
-            tables={stats.tables}
-            dropping={dropping}
-            onDelete={dropTable}
-          />
+          <MonitorTablesList tables={stats.tables} dropping={dropping} onDelete={dropTable} />
         </main>
       </div>
     </TargetLayout>

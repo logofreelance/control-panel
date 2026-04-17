@@ -99,7 +99,7 @@ export const AppUserManagementView = () => {
     {
       id: 'active',
       label: L.filter.active,
-      value: users.filter((u) => u.isActive).length,
+      value: (users || []).filter((u) => u?.isActive).length,
       icon: Icons.activity,
       color: 'text-foreground',
       bg: 'bg-primary',
@@ -107,7 +107,7 @@ export const AppUserManagementView = () => {
     {
       id: 'roles',
       label: 'System Roles',
-      value: roles.length,
+      value: (roles || []).length,
       icon: Icons.shield,
       color: 'text-foreground',
       bg: 'bg-secondary',
@@ -116,8 +116,8 @@ export const AppUserManagementView = () => {
       id: 'recent',
       label: 'Recently Active',
       value: `+${
-        users.filter((u) => {
-          if (!u.updatedAt) return false;
+        (users || []).filter((u) => {
+          if (!u || !u.updatedAt) return false;
           const updatedDate = new Date(u.updatedAt).getTime();
           const sevenDaysAgo = new Date().getTime() - 7 * 24 * 60 * 60 * 1000;
           return updatedDate > sevenDaysAgo;
@@ -131,17 +131,15 @@ export const AppUserManagementView = () => {
 
   return (
     <TargetLayout>
-      <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden pb-6">
-        <main className="relative z-10 w-full max-w-7xl mx-auto py-4 md:py-6 px-4 md:px-6 flex flex-col gap-4">
+      <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden">
+        <main className="relative z-10 w-full mx-auto flex flex-col gap-4">
           {/* PAGE HEADER */}
           <header className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-            <TextHeading as="h1" size="h3">
+              <TextHeading as="h1" size="h3">
                 {L.view.title}
               </TextHeading>
-              <span className="text-base text-muted-foreground font-normal">
-                {L.view.subtitle}
-              </span>
+              <span className="text-base text-muted-foreground font-normal">{L.view.subtitle}</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -172,20 +170,17 @@ export const AppUserManagementView = () => {
                       <m.icon className="size-5" />
                     </div>
                   </div>
-                    <div className="flex flex-col gap-0.5">
-                      <TextHeading
-                        size="h3"
-                        className="text-foreground"
-                      >
-                        {loading ? '...' : m.value}
-                      </TextHeading>
-                      <div className="flex items-center gap-2">
-                        <div className={cn('size-1.5 rounded-full', m.bg)} />
-                        <span className="text-base font-normal text-muted-foreground">
-                          Live Status
-                        </span>
-                      </div>
+                  <div className="flex flex-col gap-0.5">
+                    <TextHeading size="h3" className="text-foreground">
+                      {loading ? '...' : m.value}
+                    </TextHeading>
+                    <div className="flex items-center gap-2">
+                      <div className={cn('size-1.5 rounded-full', m.bg)} />
+                      <span className="text-base font-normal text-muted-foreground">
+                        Live Status
+                      </span>
                     </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}

@@ -14,7 +14,7 @@ export function AppHeader({ userInitials, siteName, onProfileClick }: AppHeaderP
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 shadow-sm">
       <SidebarTrigger className="-ml-1" />
-      
+
       <div className="flex flex-1 items-center gap-2 md:hidden">
         <span className="font-bold truncate text-foreground">{siteName}</span>
       </div>

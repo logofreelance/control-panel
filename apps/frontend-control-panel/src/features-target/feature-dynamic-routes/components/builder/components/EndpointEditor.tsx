@@ -156,7 +156,6 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
   const isWriteOp = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(form.method || 'GET');
 
-
   return (
     <div className="space-y-6 pb-24 animate-page-enter">
       {/* Header */}
@@ -165,21 +164,13 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
           <TextHeading as="h1" size="h3" className="lowercase">
             {endpointId ? L.buttons.edit : L.buttons.newEndpoint}
           </TextHeading>
-          <p className="text-base text-muted-foreground lowercase">
-            {L.subtitle}
-          </p>
+          <p className="text-base text-muted-foreground lowercase">{L.subtitle}</p>
         </div>
         <div className="flex flex-row items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onBack?.()}
-          >
+          <Button variant="outline" onClick={() => onBack?.()}>
             {L.buttons.cancel}
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-          >
+          <Button onClick={handleSave} disabled={saving}>
             {saving ? 'saving...' : L.buttons.save}
           </Button>
         </div>
@@ -190,9 +181,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex flex-row items-center gap-4 flex-1 min-w-0 w-full">
-              <Badge variant="secondary">
-                {(form.method || 'GET').toLowerCase()}
-              </Badge>
+              <Badge variant="secondary">{(form.method || 'GET').toLowerCase()}</Badge>
               <div className="text-base text-foreground break-all flex-1 min-w-0 truncate py-2.5 px-4 bg-muted/30 rounded-xl border border-border/5">
                 {form.path || '/your-endpoint'}
               </div>
@@ -201,10 +190,10 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
             <div className="flex flex-row items-center gap-4 w-full sm:w-auto sm:pl-4 sm:border-l border-border/10">
               {/* Access Level */}
               <Badge variant="secondary">
-                {(form.minRoleLevel ?? 0) === 0 
+                {(form.minRoleLevel ?? 0) === 0
                   ? L.misc?.bypass || 'public'
-                  : (form.minRoleLevel ?? 0) < 90 
-                    ? L.misc?.loginRequired || 'login' 
+                  : (form.minRoleLevel ?? 0) < 90
+                    ? L.misc?.loginRequired || 'login'
                     : L.misc?.adminOnly || 'admin'}
               </Badge>
 
@@ -237,7 +226,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                 'flex-shrink-0 transition-all flex items-center justify-center lowercase border-b-2 bg-transparent gap-2 px-5 py-4',
                 isActive
                   ? 'text-base font-semibold text-primary border-primary'
-                  : 'text-base font-normal text-muted-foreground border-transparent hover:text-foreground'
+                  : 'text-base font-normal text-muted-foreground border-transparent hover:text-foreground',
               )}
             >
               <TabIcon className="size-4 shrink-0" />
@@ -254,9 +243,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
               <div className="space-y-6 animate-page-enter">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div className="col-span-1">
-                    <Label className="lowercase mb-2 block px-1">
-                      method
-                    </Label>
+                    <Label className="lowercase mb-2 block px-1">method</Label>
                     <Select
                       value={form.method}
                       onChange={(e) =>
@@ -276,9 +263,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                     />
                   </div>
                   <div className="col-span-1 sm:col-span-3">
-                    <Label className="lowercase mb-2 block px-1">
-                      endpoint path
-                    </Label>
+                    <Label className="lowercase mb-2 block px-1">endpoint path</Label>
                     <Input
                       placeholder="/api/v1/resource"
                       value={form.path || ''}
@@ -293,15 +278,15 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                       <p className="text-base text-destructive mt-1 lowercase px-1">{pathError}</p>
                     )}
                     {duplicateWarning && (
-                      <p className="text-base text-primary mt-1 lowercase px-1">{duplicateWarning}</p>
+                      <p className="text-base text-primary mt-1 lowercase px-1">
+                        {duplicateWarning}
+                      </p>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <Label className="lowercase mb-2 block px-1">
-                    description
-                  </Label>
+                  <Label className="lowercase mb-2 block px-1">description</Label>
                   <textarea
                     className="w-full px-4 py-3 rounded-xl border-2 border-border/70 bg-background/50 focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all text-base min-h-[120px] placeholder:text-muted-foreground/50 outline-none"
                     value={form.description || ''}
@@ -312,9 +297,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                 </div>
 
                 <div className="max-w-md">
-                  <Label className="lowercase mb-2 block px-1">
-                    category group
-                  </Label>
+                  <Label className="lowercase mb-2 block px-1">category group</Label>
                   <Select
                     value={String(form.categoryId || '')}
                     onChange={(e) => setForm({ ...form, categoryId: e.target.value || undefined })}
@@ -340,9 +323,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label className="lowercase mb-2 block px-1">
-                      database source
-                    </Label>
+                    <Label className="lowercase mb-2 block px-1">database source</Label>
                     <Select
                       value={String(form.dataSourceId || '')}
                       onChange={handleDataSourceChange}
@@ -359,9 +340,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
                   {form.dataSourceId && (
                     <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                      <Label className="lowercase mb-2 block px-1">
-                        resource logic
-                      </Label>
+                      <Label className="lowercase mb-2 block px-1">resource logic</Label>
                       <Select
                         value={String(form.resourceId || '')}
                         onChange={(e) =>
@@ -382,7 +361,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
                 {form.dataSourceId && (
                   <div className="p-4 rounded-xl bg-muted/20">
-                    <TextHeading as="h3" size="h4" className="lowercase mb-1">
+                    <TextHeading as="h3" size="h5" className="lowercase mb-1">
                       data lineage preview
                     </TextHeading>
                     <p className="text-base text-muted-foreground lowercase">
@@ -402,9 +381,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                 </p>
 
                 <div className="max-w-md">
-                  <Label className="lowercase mb-2 block px-1">
-                    operation type
-                  </Label>
+                  <Label className="lowercase mb-2 block px-1">operation type</Label>
                   <Select
                     value={form.operationType || 'create'}
                     onChange={(e) =>
@@ -444,9 +421,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
                   {form.allowOwnerOnly !== false && (
                     <div className="max-w-md animate-in slide-in-from-top-2 duration-300">
-                      <Label className="lowercase mb-2 block px-1">
-                        owner reference column
-                      </Label>
+                      <Label className="lowercase mb-2 block px-1">owner reference column</Label>
                       <Input
                         placeholder="e.g. user_id"
                         value={form.ownershipColumn || ''}
@@ -528,11 +503,11 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                               onClick={toggleColumn}
                               className={cn(
                                 'px-4 py-2 rounded-xl text-base transition-all flex items-center gap-2 border',
-                                isProtected 
+                                isProtected
                                   ? 'bg-destructive/5 text-destructive border-destructive/10'
                                   : isAutoPopulate || isWritable
                                     ? 'bg-primary/5 text-primary border-primary/10'
-                                    : 'bg-muted/30 text-muted-foreground border-transparent'
+                                    : 'bg-muted/30 text-muted-foreground border-transparent',
                               )}
                             >
                               {col.isPrimary && <Icons.key className="size-3.5" />}
@@ -545,9 +520,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
                       {/* Auto-Populate */}
                       <div className="pt-4 space-y-4">
-                        <Label className="lowercase block px-1">
-                          auto-populate variables
-                        </Label>
+                        <Label className="lowercase block px-1">auto-populate variables</Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {columns
                             .filter((col) => !col.isPrimary)
@@ -555,7 +528,9 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                               const autoPopObj: Record<string, string> = form.autoPopulateFields
                                 ? (() => {
                                     try {
-                                      return JSON.parse((form.autoPopulateFields as string) || '{}');
+                                      return JSON.parse(
+                                        (form.autoPopulateFields as string) || '{}',
+                                      );
                                     } catch {
                                       return {};
                                     }
@@ -646,9 +621,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                    <Label className="lowercase px-1">
-                      base access level
-                    </Label>
+                    <Label className="lowercase px-1">base access level</Label>
                     <Select
                       fullWidth
                       value={String(form.minRoleLevel ?? 0)}
@@ -680,24 +653,24 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                     </div>
                   </div>
 
-                    <div className="space-y-6">
-                      <MultiSelect
-                        label="required roles"
-                        options={availableRoles.map((r) => r.name)}
-                        value={form.roles || ''}
-                        onChange={(val) => setForm({ ...form, roles: val })}
-                        placeholder="select roles..."
-                      />
-                    </div>
-                    <div className="space-y-6">
-                      <MultiSelect
-                        label="required permissions"
-                        options={availablePermissions.map((p) => p.code)}
-                        value={form.permissions || ''}
-                        onChange={(val) => setForm({ ...form, permissions: val })}
-                        placeholder="select permissions..."
-                      />
-                    </div>
+                  <div className="space-y-6">
+                    <MultiSelect
+                      label="required roles"
+                      options={availableRoles.map((r) => r.name)}
+                      value={form.roles || ''}
+                      onChange={(val) => setForm({ ...form, roles: val })}
+                      placeholder="select roles..."
+                    />
+                  </div>
+                  <div className="space-y-6">
+                    <MultiSelect
+                      label="required permissions"
+                      options={availablePermissions.map((p) => p.code)}
+                      value={form.permissions || ''}
+                      onChange={(val) => setForm({ ...form, permissions: val })}
+                      placeholder="select permissions..."
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -721,14 +694,11 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                         <Card key={code}>
                           <CardContent>
                             <div className="flex items-center justify-between mb-4 mt-2">
-                              <Badge variant={info.isCustom ? "default" : "secondary"}>
+                              <Badge variant={info.isCustom ? 'default' : 'secondary'}>
                                 {code} {STATUS_ERROR_MAP[code].label.toLowerCase()}
                               </Badge>
                               {info.isCustom && (
-                                <Button
-                                  variant="ghost"
-                                  onClick={() => setErrorTemplate(code, '')}
-                                >
+                                <Button variant="ghost" onClick={() => setErrorTemplate(code, '')}>
                                   reset
                                 </Button>
                               )}
@@ -755,7 +725,8 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                     successful response mapper
                   </TextHeading>
                   <p className="text-base text-muted-foreground lowercase">
-                    {L.misc.responseTemplate || 'define the output structure for successful requests.'}
+                    {L.misc.responseTemplate ||
+                      'define the output structure for successful requests.'}
                   </p>
                   <textarea
                     id="responseDataEditor"
@@ -768,10 +739,10 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
 
                 {/* Lineage Helper Preview */}
                 <div className="pt-6 border-t border-border/10">
-                  <DataLineageHelper 
-                    targetId={targetId} 
-                    path={form.path || ''} 
-                    method={form.method || 'GET'} 
+                  <DataLineageHelper
+                    targetId={targetId}
+                    path={form.path || ''}
+                    method={form.method || 'GET'}
                   />
                 </div>
               </div>
@@ -787,13 +758,10 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                     launch in api tester
                   </TextHeading>
                   <p className="text-base text-muted-foreground lowercase mb-8">
-                    validate your endpoint logic in real-time. the platform will automatically inject
-                    necessary headers and parameters.
+                    validate your endpoint logic in real-time. the platform will automatically
+                    inject necessary headers and parameters.
                   </p>
-                  <Button
-                    onClick={() => onBack?.()}
-                    size="lg"
-                  >
+                  <Button onClick={() => onBack?.()} size="lg">
                     <Icons.zap className="size-5 mr-3" /> open interactive tester
                   </Button>
                 </div>
@@ -808,11 +776,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                         permanently delete this endpoint from the global lineage. this action cannot
                         be undone.
                       </p>
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={handleDelete}
-                      >
+                      <Button variant="destructive" className="w-full" onClick={handleDelete}>
                         <Icons.trash className="size-4 mr-3" /> destroy endpoint
                       </Button>
                     </div>

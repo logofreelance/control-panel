@@ -28,6 +28,7 @@ import {
 } from '@/components/ui';
 import { Icons } from '../config/icons';
 import { APP_USER_LABELS } from '../constants/ui-labels';
+import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
 import type { AppUser } from '../types/app-user.types';
 
@@ -48,14 +49,17 @@ const formatDate = (dateStr: string) => {
 };
 
 export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableProps) => {
+  const safeUsers = users || [];
 
-  if (!users.length) {
+  if (!safeUsers.length) {
     return (
       <div className="py-4 text-center border border-dashed border-border rounded-xl bg-muted p-4">
         <div className="size-16 rounded-xl bg-background mx-auto flex items-center justify-center mb-4">
           <Icons.users className="size-8 text-muted-foreground" />
         </div>
-        <TextHeading size="h3" className="mb-1 text-foreground">{L.empty.title}</TextHeading>
+        <TextHeading size="h3" className="mb-1 text-foreground">
+          {L.empty.title}
+        </TextHeading>
         <p className="text-base font-normal text-muted-foreground">{L.empty.subtitle}</p>
       </div>
     );
@@ -87,7 +91,7 @@ export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableP
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {safeUsers.map((user) => (
               <TableRow
                 key={user.id}
                 className="group border-border hover:bg-muted transition-all font-instrument"
@@ -99,7 +103,10 @@ export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableP
                   {user.email}
                 </TableCell>
                 <TableCell className="px-6 py-3.5 text-center">
-                  <Badge variant="secondary" className="h-7 px-3 rounded-full font-normal lowercase transition-colors">
+                  <Badge
+                    variant="secondary"
+                    className="h-7 px-3 rounded-full font-normal lowercase transition-colors"
+                  >
                     {user.roleDisplayName?.toLowerCase() || user.role?.toLowerCase() || 'user'}
                     {user.roleIsSuper && <Icons.crown className="size-4 ml-1.5" />}
                   </Badge>
@@ -112,9 +119,7 @@ export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableP
                     <div
                       className={cn(
                         'size-2 rounded-full',
-                        user.isActive
-                          ? 'bg-primary'
-                          : 'bg-destructive',
+                        user.isActive ? 'bg-primary' : 'bg-destructive',
                       )}
                     />
                   </div>
@@ -140,7 +145,7 @@ export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableP
 
       {/* Mobile Stacked View - Optimized No Scroll */}
       <div className="md:hidden space-y-4">
-        {users.map((user) => (
+        {safeUsers.map((user) => (
           <Card
             key={user.id}
             className="border border-border bg-card shadow-none rounded-2xl overflow-hidden"
@@ -167,8 +172,11 @@ export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableP
 
               <div className="flex items-center justify-between gap-2 border-t border-border pt-4 mt-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" className="h-7 px-3 rounded-full font-normal lowercase">
-                    {user.roleDisplayName?.toLowerCase().slice(0, 15) ||
+                  <Badge
+                    variant="secondary"
+                    className="h-7 px-3 rounded-full font-normal lowercase"
+                  >
+                    {(user.roleDisplayName?.toLowerCase() || '').slice(0, 15) ||
                       user.role?.toLowerCase() ||
                       'user'}
                     {user.roleIsSuper && <Icons.crown className="size-4 ml-1.5" />}
@@ -187,7 +195,7 @@ export const AppUserTable = ({ users, loading, onEdit, onDelete }: AppUserTableP
                   </div>
                 </div>
 
-                <span className="text-base font-normal text-muted-foreground lowercase shrink-0">
+                <span className="text-sm font-normal text-muted-foreground lowercase shrink-0">
                   {formatDate(user.createdAt)}
                 </span>
               </div>

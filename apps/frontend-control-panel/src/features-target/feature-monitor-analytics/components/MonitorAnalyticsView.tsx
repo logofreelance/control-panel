@@ -118,12 +118,12 @@ export const MonitorAnalyticsView = () => {
   ];
   return (
     <TargetLayout>
-      <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden pb-10 sm:pb-20">
-        <main className="relative z-10 w-full max-w-7xl mx-auto py-6 md:py-10 px-4 md:px-10 flex flex-col gap-10 md:gap-14">
+      <div className="relative w-full min-h-screen bg-background font-instrument overflow-x-hidden">
+        <main className="relative z-10 w-full flex flex-col gap-6 md:gap-8">
           {/* BOLD COLOR HEADER - CLEAN TYPO */}
           <header className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <TextHeading as="h1" size="h1">
+              <TextHeading as="h1" size="h3">
                 {L.title}
               </TextHeading>
               <span className="text-base text-muted-foreground font-normal lowercase">
@@ -163,7 +163,7 @@ export const MonitorAnalyticsView = () => {
                       {loading ? '...' : m.value}
                     </TextHeading>
                     <div className="flex items-center gap-2">
-                       <span className="text-base font-normal text-muted-foreground lowercase">
+                      <span className="text-base font-normal text-muted-foreground lowercase">
                         live data ({total.toLocaleString()})
                       </span>
                     </div>
@@ -177,11 +177,7 @@ export const MonitorAnalyticsView = () => {
           <div className="flex flex-col gap-6 px-1">
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-3 px-1">
-                <TextHeading
-                  as="h2"
-                  size="h3"
-                  className="lowercase text-foreground"
-                >
+                <TextHeading as="h2" size="h4" className="lowercase text-foreground">
                   request logs
                 </TextHeading>
                 <span className="text-base text-muted-foreground font-normal lowercase bg-muted py-0.5 px-2 rounded-lg border border-border">

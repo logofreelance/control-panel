@@ -2,15 +2,10 @@
 @import "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&display=swap";
 @source "../../../../packages/ui-kit/src";
 
-/* ULTIMATE GLOBAL SCROLLBAR HIDE */
+/* CUSTOM GLOBAL SCROLLBAR */
 * {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-*::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--foreground), transparent 95%) transparent;
 }
 
 @theme inline {
@@ -322,15 +317,20 @@ body {
 
 /* Custom Scrollbar Cleanup (Final) */
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: color-mix(in oklab, var(--foreground), transparent 95%);
   border-radius: 10px;
+  transition: background 0.3s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+  background: color-mix(in oklab, var(--foreground), transparent 70%);
+}
+::-webkit-scrollbar-button {
+  display: none;
 }

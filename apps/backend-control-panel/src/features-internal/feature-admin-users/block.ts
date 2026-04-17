@@ -2,16 +2,16 @@
  * feature-admin-users (HANYA MENGGUNAKAN INTERNAL DB)
  * Mengontrol CRUD staf/admin untuk Control Panel
  */
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import bcrypt from 'bcryptjs';
 import { buildInternalDatabaseConnection } from '../internal.db';
 import type { EnvironmentConfig } from '../../env';
 
 function respondError(c: HonoContext, message: string, status: number) {
-    return c.json({ success: false, error: { code: 'ERROR', message } }, status);
+    return c.json({ success: false, error: { code: 'ERROR', message } }, status as any);
 }
 
-type HonoContext = Hono<{ Variables: { user: any, session: any } }>;
+type HonoContext = Context<{ Variables: { user: any, session: any } }>;
 
 export function createFeatureAdminUsers(envConfig: EnvironmentConfig) {
     const router = new Hono<{ Variables: { user: any, session: any } }>();

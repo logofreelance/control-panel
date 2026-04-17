@@ -5,7 +5,7 @@
 export async function getAllPhysicalTables(db: any): Promise<string[]> {
     const res: any = await db.execute('SHOW TABLES');
     const rows = Array.isArray(res) ? res : (res.rows || []);
-    return rows.map((r: any) => Object.values(r)[0] as string).map(t => t.toLowerCase());
+    return rows.map((r: any) => Object.values(r)[0] as string).map((t: string) => t.toLowerCase());
 }
 
 export async function getManagedSchemas(db: any): Promise<any[]> {

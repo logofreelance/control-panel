@@ -33,7 +33,7 @@ const apiPrefix = '/api';
  * Ini mencegah error "INTERNAL DB URL MISSING" saat build-time/validation
  */
 async function buildAppInstance(env: EnvironmentConfig) {
-  const instance = new Hono<{ Variables: { targetDb: any; targetId: string } }>();
+  const instance = new Hono<{ Variables: { targetDb: any; targetId: string; user: any; session: any } }>();
 
   // Global error handler
   instance.onError((err, ctx) => {

@@ -12,9 +12,5 @@ export const CreateRelationPage = () => {
 
     if (!tableId) return null;
 
-    return (
-        <div className="max-w-5xl mx-auto py-8 px-4">
-            <CreateRelationForm DatabaseTableId={tableId} />
-        </div>
-    );
+    return <CreateRelationForm DatabaseTableId={tableId} />;
 };

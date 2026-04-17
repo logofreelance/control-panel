@@ -25,7 +25,7 @@ const BTN = MODULE_LABELS.monitorDatabase?.buttons || {};
 
 export const MonitorDatabaseView = () => {
   const { addToast } = useToast();
-  const { stats, loading, dropping, refresh, dropTable, cleanupOrphaned } = useMonitorDatabase();
+  const { stats, managedTableNames, loading, dropping, refresh, dropTable, cleanupOrphaned } = useMonitorDatabase();
 
   const [isCleaning, setIsCleaning] = useState(false);
 
@@ -81,7 +81,12 @@ export const MonitorDatabaseView = () => {
           <DatabaseStatsCard stats={stats} />
 
           {/* Tables List */}
-          <MonitorTablesList tables={stats.tables} dropping={dropping} onDelete={dropTable} />
+          <MonitorTablesList 
+            tables={stats.tables} 
+            managedTableNames={managedTableNames}
+            dropping={dropping} 
+            onDelete={dropTable} 
+          />
         </main>
       </div>
     </TargetLayout>

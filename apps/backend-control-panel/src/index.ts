@@ -23,7 +23,7 @@ import { createFeatureRbacRoles } from './features-target/feature-rbac-roles/blo
 import { createFeatureRbacPermissions } from './features-target/feature-rbac-permissions/block';
 import { createFeatureTargetAppUsers } from './features-target/feature-target-app-users/block';
 import { createFeatureMonitorAnalytics } from './features-target/feature-monitor-analytics/block';
-import { createFeatureMonitorDatabase } from './features-target/feature-monitor-database/block';
+import { createFeatureTargetMonitorDatabase } from './features-target/feature-monitor-database/router';
 import { setupIntegrationRouter } from './features-target/feature-integration/router';
 
 const apiPrefix = '/api';
@@ -129,7 +129,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
 
   // --- REGISTER ROUTES (SPECIFIC FEATURES FIRST) ---
   // Target System Features
-  instance.route(`${apiPrefix}/monitor-database`, createFeatureMonitorDatabase());
+  instance.route(`${apiPrefix}/monitor-database`, createFeatureTargetMonitorDatabase(env));
   instance.route(`${apiPrefix}/monitor-analytics`, createFeatureMonitorAnalytics());
   instance.route(`${apiPrefix}/database-schema`, createFeatureTargetDatabaseSchema(env));
   instance.route(`${apiPrefix}/route-builder`, setupDynamicRoutesRouter());

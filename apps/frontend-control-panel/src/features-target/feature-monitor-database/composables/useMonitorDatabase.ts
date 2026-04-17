@@ -30,6 +30,7 @@ export function useMonitorDatabase() {
             totalIndexSizeMb: '0'
         }
     });
+    const [managedTableNames, setManagedTableNames] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [dropping, setDropping] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -45,15 +46,31 @@ export function useMonitorDatabase() {
         setError(null);
 
         try {
-            const data = await apiClient.get<ApiResponse<MonitorDatabaseStats>>('/monitor-database/stats', {
+            // 1. Fetch live database stats (Primary)
+            const statsRes = await apiClient.get<ApiResponse<MonitorDatabaseStats>>('/monitor-database/stats', {
                 headers: { 'x-target-id': nodeId }
             });
 
-            if (data.status === 'success' && data.data) {
-                setStats(data.data);
+            if (statsRes.status === 'success' && statsRes.data) {
+                setStats(statsRes.data);
             } else {
-                setError(data.message || 'Failed to load database stats');
-                addToast(data.message || 'Failed to load database stats', 'error');
+                setError(statsRes.message || 'Failed to load database stats');
+                addToast(statsRes.message || 'Failed to load database stats', 'error');
+            }
+
+            // 2. Fetch managed schemas to identify managed tables (Secondary - Don't let it block primary)
+            try {
+                const schemasRes = await apiClient.get<ApiResponse<any[]>>('/database-schema', {
+                    headers: { 'x-target-id': nodeId }
+                });
+
+                if (schemasRes.status === 'success' && schemasRes.data) {
+                    const names = schemasRes.data.map((s: any) => s.tableName || s.table_name).filter(Boolean);
+                    setManagedTableNames(names);
+                }
+            } catch (schemaErr) {
+                console.warn('Failed to fetch managed schemas for monitoring categorization', schemaErr);
+                // We don't block the main UI if this fails
             }
         } catch (e: unknown) {
             const errMsg = e instanceof Error ? e.message : 'Connection failed';
@@ -128,6 +145,7 @@ export function useMonitorDatabase() {
 
     return {
         stats,
+        managedTableNames,
         loading,
         dropping,
         error,

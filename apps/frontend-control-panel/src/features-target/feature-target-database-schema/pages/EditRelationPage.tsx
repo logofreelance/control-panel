@@ -23,11 +23,7 @@ export const EditRelationPage = () => {
 
     if (!tableId || !relationName) return null;
 
-    return (
-        <div className="max-w-5xl mx-auto py-8 px-4">
-            <EditRelationForm DatabaseTableId={tableId} relationName={relationName} />
-        </div>
-    );
+    return <EditRelationForm DatabaseTableId={tableId} relationName={relationName} />;
 };
 
 export default EditRelationPage;

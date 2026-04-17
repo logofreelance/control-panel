@@ -374,7 +374,7 @@ function ExpandedResourcesPanel({
   const router = useRouter();
 
   return (
-    <div className="p-6 md:p-8 bg-muted/20 space-y-10 animate-in fade-in zoom-in-95 duration-200">
+    <div className="p-4 md:p-6 bg-muted/20 space-y-10 animate-in fade-in zoom-in-95 duration-200">
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <ActionShortcut
@@ -422,9 +422,7 @@ function ExpandedResourcesPanel({
       </div>
 
       {/* Relations Section - Keeping the builder */}
-      <div className="px-1 pt-2">
-        <RelationBuilder DatabaseTableId={sourceId} DatabaseTableName={sourceName} />
-      </div>
+      <RelationBuilder DatabaseTableId={sourceId} DatabaseTableName={sourceName} />
 
       {/* CMS Resources Section */}
       <div className="space-y-6">

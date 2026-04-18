@@ -7,8 +7,7 @@
  */
 import { buildInternalDatabaseConnection } from '../../../features-internal/internal.db';
 import { buildTargetDatabaseConnection } from '../../target.db';
-import { findTargetSystemById } from '../../../features-internal/feature-target-registry/target-registry.repository';
-import { buildAuthPanelLucia } from '../../../features-internal/feature-auth/auth.lucia';
+
 import type { EnvironmentConfig } from '../../../env';
 
 export function middleware(env: EnvironmentConfig) {
@@ -17,7 +16,37 @@ export function middleware(env: EnvironmentConfig) {
     try {
       if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL) throw new Error('INTERNAL DB URL MISSING');
       const internalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-      const lucia = buildAuthPanelLucia(internalDb);
+      
+      const { Lucia } = await import('lucia');
+      const authAdapter = {
+          async deleteSession(sessionId: string): Promise<void> { await internalDb.execute('DELETE FROM admin_sessions WHERE id = ?', [sessionId]); },
+          async deleteUserSessions(userId: string): Promise<void> { await internalDb.execute('DELETE FROM admin_sessions WHERE user_id = ?', [userId]); },
+          async getSessionAndUser(sessionId: string): Promise<[any, any]> {
+              const resSession: any = await internalDb.execute('SELECT * FROM admin_sessions WHERE id = ?', [sessionId]);
+              const sessionRows = Array.isArray(resSession) ? resSession : resSession.rows;
+              if (!sessionRows || sessionRows.length === 0) return [null, null];
+              const session = sessionRows[0];
+              const resUser: any = await internalDb.execute('SELECT id, username, role FROM admin_users WHERE id = ?', [session.user_id]);
+              const userRows = Array.isArray(resUser) ? resUser : resUser.rows;
+              if (!userRows || userRows.length === 0) return [null, null];
+              const user = userRows[0];
+              return [{ id: session.id, userId: session.user_id, expiresAt: new Date(session.expires_at) }, { id: user.id, username: user.username, role: user.role }];
+          },
+          async getTargetSessions(userId: string): Promise<any[]> { return []; },
+          async setSession(session: any): Promise<void> {
+              const expiresAt = session.expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+              await internalDb.execute('INSERT INTO admin_sessions (id, user_id, expires_at) VALUES (?, ?, ?)', [session.id, session.userId, expiresAt]);
+          },
+          async updateSessionExpiration(sessionId: string, expiresAt: Date): Promise<void> {
+              const expiresAtStr = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+              await internalDb.execute('UPDATE admin_sessions SET expires_at = ? WHERE id = ?', [expiresAtStr, sessionId]);
+          },
+          async deleteExpiredSessions(): Promise<void> {}
+      };
+      const lucia = new Lucia(authAdapter as any, {
+          sessionCookie: { attributes: { secure: env.NODE_ENV === 'production', sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax' } },
+          getUserAttributes: (attributes: any) => ({ username: attributes?.username ?? '', role: attributes?.role ?? '' })
+      });
 
       const sessionId = lucia.readSessionCookie(c.req.header('Cookie') ?? "")
                      ?? lucia.readBearerToken(c.req.header('Authorization') ?? "");
@@ -36,7 +65,9 @@ export function middleware(env: EnvironmentConfig) {
     if (targetId && !c.get('targetDb')) {
       try {
         const internalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-        const target = await findTargetSystemById(internalDb, targetId);
+        const res: any = await internalDb.execute('SELECT database_url FROM target_systems WHERE id = ? LIMIT 1', [targetId]);
+        const rows = Array.isArray(res) ? res : (res.rows || []);
+        const target = rows.length > 0 ? rows[0] : null;
 
         if (target) {
           const targetDb = buildTargetDatabaseConnection(target.database_url);

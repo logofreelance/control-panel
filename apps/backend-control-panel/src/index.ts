@@ -7,14 +7,11 @@ import { bodyLimit } from 'hono/body-limit';
 import { loadEnvironmentConfig, type EnvironmentConfig } from './env';
 import { buildInternalDatabaseConnection } from './features-internal/internal.db';
 import { buildTargetDatabaseConnection } from './features-target/target.db';
-import { findTargetSystemById } from './features-internal/feature-target-registry/target-registry.repository';
-import { buildAuthPanelLucia } from './features-internal/feature-auth/auth.lucia';
-
 // Fitur-fitur
-import { createFeaturePanelAuth } from './features-internal/feature-auth/auth.block';
-import { createFeatureAdminUsers } from './features-internal/feature-admin-users/block';
-import { createFeatureSettings } from './features-internal/feature-settings/settings.block';
-import { createFeatureTargetRegistry } from './features-internal/feature-target-registry/target-registry.block';
+import { createFeaturePanelAuth } from './features-internal/feature-auth/router';
+import { createFeatureAdminUsers } from './features-internal/feature-admin-users/router';
+import { createFeatureSettings } from './features-internal/feature-settings/router';
+import { createFeatureTargetRegistry } from './features-internal/feature-target-registry/router';
 import { setupDynamicRoutesRouter } from './features-target/feature-dynamic-routes/router';
 import { createFeatureTargetDatabaseSchema } from './features-target/feature-target-database-schema/router';
 import { setupClientApiKeysRouter } from './features-target/feature-client-api-keys/router';
@@ -54,43 +51,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
     }),
   );
 
-  // --- AUTH MIDDLEWARE (SESSION VALIDATION) ---
-  instance.use(`${apiPrefix}/*`, async (ctx, next) => {
-    // Skip session validation for public health check
-    if (ctx.req.path === '/health') return next();
-
-    try {
-      if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL) throw new Error('INTERNAL DB URL MISSING');
-      const db = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-      const isProd = env.NODE_ENV === 'production';
-      const lucia = buildAuthPanelLucia(db, isProd);
-
-      const sessionId = lucia.readSessionCookie(ctx.req.header('Cookie') ?? "") 
-                     ?? lucia.readBearerToken(ctx.req.header('Authorization') ?? "");
-                     
-      if (!sessionId) {
-        ctx.set('user', null);
-        ctx.set('session', null);
-        return next();
-      }
-
-      const { session, user } = await lucia.validateSession(sessionId);
-      if (session && session.fresh) {
-        ctx.header('Set-Cookie', lucia.createSessionCookie(session.id).serialize(), { append: true });
-      }
-      if (!session) {
-        ctx.header('Set-Cookie', lucia.createBlankSessionCookie().serialize(), { append: true });
-      }
-      
-      ctx.set('session', session);
-      ctx.set('user', user);
-    } catch (err) {
-      console.error('[AUTH-MIDDLEWARE-ERROR]', err);
-      ctx.set('session', null);
-      ctx.set('user', null);
-    }
-    await next();
-  });
+  // (AUTH MIDDLEWARE DIHAPUS DARI SINI: kini terisolasi di masing-masing Route Island)
 
   // --- SAAS TARGET MIDDLEWARE ---
   instance.use(`${apiPrefix}/*`, async (ctx, next) => {
@@ -113,7 +74,9 @@ async function buildAppInstance(env: EnvironmentConfig) {
       try {
         if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL) throw new Error('INTERNAL DB URL MISSING');
         const internalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-        const target = await findTargetSystemById(internalDb, targetId);
+        const res: any = await internalDb.execute('SELECT database_url FROM target_systems WHERE id = ? LIMIT 1', [targetId]);
+        const rows = Array.isArray(res) ? res : (res.rows || []);
+        const target = rows.length > 0 ? rows[0] : null;
         if (!target) return ctx.json({ status: 'error', message: 'Target system not found' }, 404);
 
         const targetDb = buildTargetDatabaseConnection(target.database_url);

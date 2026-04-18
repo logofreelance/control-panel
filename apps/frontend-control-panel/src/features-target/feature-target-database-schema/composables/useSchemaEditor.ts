@@ -11,7 +11,10 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
-import { useToast, useConfig } from '@/modules/_core';
+import { useToast } from '@/modules/_core';
+import { API } from '../api/endpoints';
+import { FEATURE_MESSAGES } from '../constants';
+import { TOAST_TYPE, API_STATUS } from '@/lib/config/defaults';
 import type { ColumnDefinition } from '../types';
 
 export interface UseSchemaEditorReturn {
@@ -25,8 +28,7 @@ export interface UseSchemaEditorReturn {
  * Uses Pure DI via useConfig() hook
  */
 export function useSchemaEditor(DatabaseTableId: string | number): UseSchemaEditorReturn {
-    // ✅ Pure DI: Get all dependencies from context
-    const { msg, api, API_STATUS, TOAST_TYPE } = useConfig();
+    // ❌ Removed useConfig() for local constants instead
     const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
     
@@ -42,38 +44,38 @@ export function useSchemaEditor(DatabaseTableId: string | number): UseSchemaEdit
     const addColumn = useCallback(async (column: ColumnDefinition): Promise<boolean> => {
         setLoading(true);
         try {
-            const response = await apiClient.post(api.databaseSchema.addColumn(DatabaseTableId), column, { headers });
+            const response = await apiClient.post(API.addColumn(DatabaseTableId), column, { headers });
             if (response.status === API_STATUS.SUCCESS) {
-                addToast(msg.databaseSchema.success.columnAdded, TOAST_TYPE.SUCCESS);
+                addToast('Column added successfully', TOAST_TYPE.SUCCESS);
                 return true;
             } else {
-                addToast((response as { message?: string }).message || msg.databaseSchema.error.schemaFailed, TOAST_TYPE.ERROR);
+                addToast((response as { message?: string }).message || 'Failed to update schema', TOAST_TYPE.ERROR);
             }
         } catch {
-            addToast(msg.databaseSchema.error.schemaFailed, TOAST_TYPE.ERROR);
+            addToast('Failed to update schema', TOAST_TYPE.ERROR);
         } finally {
             setLoading(false);
         }
         return false;
-    }, [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE, headers]);
+    }, [DatabaseTableId, addToast, headers]);
 
     const dropColumn = useCallback(async (columnName: string): Promise<boolean> => {
         setLoading(true);
         try {
-            const response = await apiClient.delete(api.databaseSchema.dropColumn(DatabaseTableId, columnName), { headers });
+            const response = await apiClient.delete(API.dropColumn(DatabaseTableId, columnName), { headers });
             if (response.status === API_STATUS.SUCCESS) {
-                addToast(msg.databaseSchema.success.columnDropped, TOAST_TYPE.SUCCESS);
+                addToast('Column dropped successfully', TOAST_TYPE.SUCCESS);
                 return true;
             } else {
-                addToast((response as { message?: string }).message || msg.databaseSchema.error.schemaFailed, TOAST_TYPE.ERROR);
+                addToast((response as { message?: string }).message || 'Failed to update schema', TOAST_TYPE.ERROR);
             }
         } catch {
-            addToast(msg.databaseSchema.error.schemaFailed, TOAST_TYPE.ERROR);
+            addToast('Failed to update schema', TOAST_TYPE.ERROR);
         } finally {
             setLoading(false);
         }
         return false;
-    }, [DatabaseTableId, addToast, api, msg, API_STATUS, TOAST_TYPE, headers]);
+    }, [DatabaseTableId, addToast, headers]);
 
     return {
         loading,

@@ -40,6 +40,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
 
     // Tab State
     const [activeTab, setActiveTab] = useState<'basic' | 'data' | 'mutation' | 'security' | 'response' | 'test'>('basic');
+    const [deleteConfirm, setDeleteConfirm] = useState(false);
 
     // Fetch Resources when DataSource changes
     const fetchResources = useCallback(async (dsId: string) => {
@@ -234,8 +235,10 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         }
     };
 
-    const handleDelete = async () => {
-        if (!endpointId || !confirm(L.messages.confirmDeleteEndpoint || 'Are you sure you want to delete this endpoint?')) return;
+    const handleDelete = () => setDeleteConfirm(true);
+
+    const executeDelete = async () => {
+        if (!endpointId) return;
 
         try {
             const res = await fetch(DYNAMIC_ROUTES_API.endpoints.delete(endpointId), { method: 'DELETE', headers: { 'x-target-id': targetId } });
@@ -245,6 +248,8 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
             }
         } catch {
             addToast(L.messages.deleteError || 'Failed to delete', 'error');
+        } finally {
+            setDeleteConfirm(false);
         }
     };
 
@@ -263,6 +268,8 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         errorTemplates,
         activeTab,
         setActiveTab,
+        deleteConfirm,
+        setDeleteConfirm,
 
         // Validation States
         pathError,
@@ -278,6 +285,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         handleDataSourceChange,
         handleSave,
         handleDelete,
+        executeDelete,
         router
     };
 }

@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { TABLES } from './constants';
 
 /**
@@ -93,10 +93,11 @@ export const ApiKeyService = {
         await ensureTableExists(db);
         const id = randomUUID();
         const rawKey = `pk_${randomUUID().replace(/-/g, '')}`;
+        const keyHash = createHash('sha256').update(rawKey).digest('hex');
         
         await queryHelper(db,
             `INSERT INTO \`${TABLES.API_KEYS}\` (\`id\`, \`name\`, \`key_hash\`, \`expires_at\`) VALUES (?, ?, ?, ?)`,
-            [id, name, rawKey, expiresAt || null]
+            [id, name, keyHash, expiresAt || null]
         );
         return { id, name, key: rawKey };
     },

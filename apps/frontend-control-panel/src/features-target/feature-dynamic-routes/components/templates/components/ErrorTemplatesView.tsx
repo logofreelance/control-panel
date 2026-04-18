@@ -189,8 +189,8 @@ export const ErrorTemplatesView = ({ targetId }: { targetId?: string }) => {
               <Label className="lowercase ml-1">code</Label>
               <Input
                 type="number"
-                placeholder="5xx"
-                value={editForm.statusCode > 500 ? editForm.statusCode : ''}
+                placeholder="e.g. 409, 422, 429"
+                value={editForm.statusCode > 0 ? editForm.statusCode : ''}
                 onChange={(e) =>
                   setEditForm({ ...editForm, statusCode: parseInt(e.target.value) || 0 })
                 }
@@ -201,7 +201,7 @@ export const ErrorTemplatesView = ({ targetId }: { targetId?: string }) => {
               <Label className="lowercase ml-1">template schema</Label>
               <Input
                 placeholder='{ "status": "error", "message": "error info" }'
-                value={editForm.statusCode > 500 ? editForm.template : ''}
+                value={editForm.statusCode > 0 ? editForm.template : ''}
                 onChange={(e) => setEditForm({ ...editForm, template: e.target.value })}
                 className="lowercase h-9"
               />
@@ -209,7 +209,7 @@ export const ErrorTemplatesView = ({ targetId }: { targetId?: string }) => {
             <div className="md:col-span-2">
               <Button
                 onClick={saveCustomCode}
-                disabled={!editForm.statusCode || editForm.statusCode <= 500}
+                disabled={!editForm.statusCode || [200, 201, 204, 400, 401, 403, 404, 500].includes(editForm.statusCode)}
                 className="w-full lowercase h-9"
               >
                 {L.buttons.add || 'inject'}

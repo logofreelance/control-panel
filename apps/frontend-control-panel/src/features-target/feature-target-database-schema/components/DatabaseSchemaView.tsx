@@ -14,10 +14,10 @@ import { TargetLayout } from '@/components/layout/TargetLayout';
 import { useDatabaseSchema, useSchemaActions, useResources, useSchemaStats } from '../composables';
 import { ConfirmDialog, PageLoadingSkeleton } from '@/modules/_core';
 import { RelationBuilder } from './RelationBuilder';
-import { FEATURE_LABELS, FEATURE_ICONS as Icons } from '../constants';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import type { DatabaseTable, Resource } from '../types';
 
-const L = FEATURE_LABELS;
+const L = MODULE_LABELS.databaseSchema;
 
 export function DatabaseSchemaView() {
   const router = useRouter();

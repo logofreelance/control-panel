@@ -54,14 +54,6 @@ export interface UseApiTesterReturn {
     getStatusLabel: (status: number) => string;
 }
 
-const METHOD_COLORS: Record<string, string> = {
-    GET: 'bg-blue-500',
-    POST: 'bg-green-500',
-    PUT: 'bg-amber-500',
-    DELETE: 'bg-red-500',
-    PATCH: 'bg-purple-500'
-};
-
 const STATUS_COLORS: Record<string, string> = {
     '2': 'bg-green-500',
     '3': 'bg-blue-500',
@@ -299,5 +291,4 @@ export const useApiTester = (targetId?: string): UseApiTesterReturn => {
 };
 
 // Export constants for use in component
-export { METHOD_COLORS };
 export const METHODS: readonly HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];

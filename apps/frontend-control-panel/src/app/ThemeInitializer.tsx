@@ -57,6 +57,32 @@ export function ThemeInitializer() {
         } catch (e) {
             console.error('[ThemeInitializer] Initialization runtime error:', e);
         }
+        // Global Scrolling State for Sleek Scrollbars
+        let scrollTimeout: NodeJS.Timeout;
+        const html = document.documentElement;
+        
+        const handleScroll = () => {
+            if (!html.classList.contains('is-scrolling')) {
+                html.classList.add('is-scrolling');
+            }
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                html.classList.remove('is-scrolling');
+            }, 1000); // Hide after 1s of inactivity
+        };
+
+        // Use capture phase to detect activity on any descendant element
+        window.addEventListener('scroll', handleScroll, true);
+        window.addEventListener('wheel', handleScroll, { passive: true });
+        window.addEventListener('touchmove', handleScroll, { passive: true });
+        window.addEventListener('mousemove', handleScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll, true);
+            window.removeEventListener('wheel', handleScroll);
+            window.removeEventListener('touchmove', handleScroll);
+            window.removeEventListener('mousemove', handleScroll);
+        };
     }, []);
 
 

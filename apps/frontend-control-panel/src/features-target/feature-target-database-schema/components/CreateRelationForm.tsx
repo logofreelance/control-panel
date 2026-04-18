@@ -5,7 +5,7 @@
  * Form for creating table relations with consistent design system and TargetLayout integration
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { 
     Button, 
@@ -45,27 +45,62 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
     const {
         targets,
         loading,
+        fetchColumns,
         addRelation
     } = useRelations(DatabaseTableId);
 
     const [submitting, setSubmitting] = useState(false);
+    const [sourceColumns, setSourceColumns] = useState<any[]>([]);
+    const [targetColumns, setTargetColumns] = useState<any[]>([]);
+    
     const [newRelation, setNewRelation] = useState<AddRelationPayload>({
         targetId: -1, // Use -1 as unselected
         type: 'belongs_to',
+        localKey: '',
+        foreignKey: '',
         alias: '',
     });
 
+    // Fetch source columns on mount
+    useEffect(() => {
+        const loadSourceColumns = async () => {
+            const cols = await fetchColumns(DatabaseTableId);
+            setSourceColumns(cols);
+        };
+        loadSourceColumns();
+    }, [DatabaseTableId, fetchColumns]);
+
+    // Fetch target columns when target changes
+    useEffect(() => {
+        if (newRelation.targetId !== -1) {
+            const loadTargetColumns = async () => {
+                const cols = await fetchColumns(newRelation.targetId);
+                setTargetColumns(cols);
+            };
+            loadTargetColumns();
+        } else {
+            setTargetColumns([]);
+        }
+    }, [newRelation.targetId, fetchColumns]);
+
     const handleSelectTarget = (id: string | number) => {
         setNewRelation(prev => {
-            if (id === 0 && ['has_one', 'has_many'].includes(prev.type)) {
-                return { ...prev, targetId: id, type: 'belongs_to' };
-            }
-            return { ...prev, targetId: id };
+            const isSystemTarget = id === 0;
+            const newType = (isSystemTarget && ['has_one', 'has_many'].includes(prev.type)) 
+                ? 'belongs_to' as const 
+                : prev.type;
+            
+            return { 
+                ...prev, 
+                targetId: id, 
+                type: newType,
+                foreignKey: 'id', // Default foreign key is usually id
+            };
         });
     };
 
     const handleSubmit = async () => {
-        if (newRelation.targetId === -1) return;
+        if (newRelation.targetId === -1 || !newRelation.localKey || !newRelation.foreignKey) return;
         setSubmitting(true);
         const success = await addRelation(newRelation);
         setSubmitting(false);
@@ -101,14 +136,14 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                     </div>
                 </header>
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6">
                     {/* Section: Target Selection */}
                     <Card>
                         <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-4 border-b border-border/50">
                             <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                                 <Icons.database className="size-5" />
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 <CardTitle className="text-xl md:text-2xl font-semibold lowercase leading-none mb-1">
                                     {L.messages.relations.targetTable}
                                 </CardTitle>
@@ -134,6 +169,7 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                                         return (
                                             <button
                                                 key={t.id}
+                                                type="button"
                                                 onClick={() => handleSelectTarget(t.id)}
                                                 className={cn(
                                                     "group relative p-4 rounded-2xl transition-all duration-300 border text-left",
@@ -170,14 +206,81 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                         </CardContent>
                     </Card>
 
+                    {/* Section: Keys Selection - ONLY SHOW IF TARGET SELECTED */}
+                    {newRelation.targetId !== -1 && (
+                        <Card>
+                            <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-4 border-b border-border/50">
+                                <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                    <Icons.key className="size-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardTitle className="text-xl md:text-2xl font-semibold lowercase leading-none mb-1">
+                                        Configuration
+                                    </CardTitle>
+                                    <CardDescription className="text-base text-muted-foreground font-normal lowercase">
+                                        define how these tables should be connected.
+                                    </CardDescription>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="pt-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                    <div className="space-y-3">
+                                        <label className="text-base font-semibold lowercase text-foreground block">
+                                            Local Column (Source)
+                                        </label>
+                                        <select
+                                            value={newRelation.localKey}
+                                            onChange={(e) => setNewRelation(prev => ({ ...prev, localKey: e.target.value }))}
+                                            className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all lowercase text-base font-normal appearance-none"
+                                        >
+                                            <option value="">select field...</option>
+                                            {sourceColumns.map(col => (
+                                                <option key={col.name} value={col.name}>{col.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <label className="text-base font-semibold lowercase text-foreground block">
+                                            Foreign Column (Target)
+                                        </label>
+                                        <select
+                                            value={newRelation.foreignKey}
+                                            onChange={(e) => setNewRelation(prev => ({ ...prev, foreignKey: e.target.value }))}
+                                            className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all lowercase text-base font-normal appearance-none"
+                                        >
+                                            <option value="">select field...</option>
+                                            {targetColumns.map(col => (
+                                                <option key={col.name} value={col.name}>{col.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-base font-semibold lowercase text-foreground block">
+                                        Relationship Display Alias
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newRelation.alias}
+                                        onChange={(e) => setNewRelation(prev => ({ ...prev, alias: e.target.value }))}
+                                        placeholder="optional: custom alias name (e.g. author_details)"
+                                        className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground lowercase text-base font-normal"
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Section: Relation Type */}
-                    <Card>
+                    <Card className={cn(newRelation.targetId === -1 && "opacity-50 pointer-events-none transition-opacity")}>
                         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-4">
                             <div className="flex items-center gap-4">
                                 <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                                     <Icons.settings className="size-5" />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <CardTitle className="text-xl md:text-2xl font-semibold lowercase leading-none mb-1">
                                         {L.messages.relations.relationType}
                                     </CardTitle>
@@ -185,15 +288,6 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                                         define the nature of the relationship.
                                     </CardDescription>
                                 </div>
-                            </div>
-                            <div className="max-w-md w-full">
-                                <input
-                                    type="text"
-                                    value={newRelation.alias}
-                                    onChange={(e) => setNewRelation(prev => ({ ...prev, alias: e.target.value }))}
-                                    placeholder="optional: custom alias name"
-                                    className="w-full h-10 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground lowercase text-base font-normal"
-                                />
                             </div>
                         </CardHeader>
                         <CardContent className="pt-4">
@@ -206,6 +300,7 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                                     return (
                                         <button
                                             key={type.value}
+                                            type="button"
                                             disabled={isDisabled}
                                             onClick={() => !isDisabled && setNewRelation(prev => ({ ...prev, type: type.value as any }))}
                                             className={cn(
@@ -251,7 +346,7 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/50">
+                <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/50 mt-4">
                     <Button
                         type="button"
                         variant="ghost"
@@ -262,7 +357,7 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                     <Button
                         onClick={handleSubmit}
                         isLoading={submitting}
-                        disabled={newRelation.targetId === -1}
+                        disabled={newRelation.targetId === -1 || !newRelation.localKey || !newRelation.foreignKey}
                     >
                         add relation
                     </Button>

@@ -4,8 +4,7 @@
 
 /* CUSTOM GLOBAL SCROLLBAR */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in oklab, var(--foreground), transparent 95%) transparent;
+  box-sizing: border-box;
 }
 
 @theme inline {
@@ -315,22 +314,34 @@ body {
   opacity: 0.05;
 }
 
-/* Custom Scrollbar Cleanup (Final) */
+/* Custom Scrollbar - Flat Luxury Minimalist */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px; /* w-3 scale */
+  height: 12px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in oklab, var(--foreground), transparent 95%);
-  border-radius: 10px;
-  transition: background 0.3s ease;
+  background: transparent;
+  border-radius: 9999px;
+  min-height: 80px; /* h-20 scale */
+  border: 3px solid transparent;
+  background-clip: content-box;
+  transition: background 0.2s ease;
 }
+
+/* Show scrollbar ONLY while scrolling or interacting (detected via JS) */
+.is-scrolling ::-webkit-scrollbar-thumb,
+.is-scrolling::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in oklab, var(--foreground), transparent 85%);
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklab, var(--foreground), transparent 70%);
+  background-color: color-mix(in oklab, var(--foreground), transparent 70%) !important;
 }
+
 ::-webkit-scrollbar-button {
   display: none;
 }

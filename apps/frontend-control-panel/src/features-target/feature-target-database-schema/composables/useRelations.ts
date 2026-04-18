@@ -39,6 +39,8 @@ export interface RelationTarget {
 export interface AddRelationPayload {
   targetId: string | number;
   type: Relation['type'];
+  localKey: string;
+  foreignKey: string;
   alias?: string;
 }
 
@@ -94,6 +96,22 @@ export function useRelations(DatabaseTableId: string | number) {
       console.error('Failed to fetch targets:', err);
     }
   }, [DatabaseTableId, headers]);
+
+  // Fetch columns for any table
+  const fetchColumns = useCallback(async (tableId: string | number) => {
+    try {
+      const response = await apiClient.get<any[]>(
+        API.columns(tableId),
+        { headers }
+      );
+      if (response.status === API_STATUS.SUCCESS && response.data) {
+        return response.data;
+      }
+    } catch (err) {
+      console.error('Failed to fetch columns:', err);
+    }
+    return [];
+  }, [headers]);
 
   // Initial load
   useEffect(() => {
@@ -215,6 +233,7 @@ export function useRelations(DatabaseTableId: string | number) {
     // Actions
     fetchRelations,
     fetchTargets,
+    fetchColumns,
     addRelation,
     deleteRelation,
     updateRelation,

@@ -17,7 +17,6 @@ import { useConfig } from '@/modules/_core';
 import type { DatabaseTable, Resource } from '../types';
 
 const L = MODULE_LABELS.databaseSchema;
-
 interface ResourceFormProps {
     DatabaseTable: DatabaseTable;
     resource?: Resource;

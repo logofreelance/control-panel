@@ -10,5 +10,5 @@ export default function EditRelationPage() {
 
     if (isNaN(id) || !rid) return null;
 
-    return <EditRelationForm DatabaseTableId={id} relationName={rid} />;
+    return <EditRelationForm DatabaseTableId={id} relationId={rid} />;
 }

@@ -102,7 +102,7 @@ export function useSchemaActions() {
         setLoading(true);
         try {
             // ✅ Use Internal API
-            const response = await apiClient.delete(API.archive?.(id) || `${API.list}/${id}/archive`, { headers: getHeaders() });
+            const response = await apiClient.delete(API.delete(id), { headers: getHeaders() });
             if (response.status === 'success') {
                 addToast(FEATURE_MESSAGES.success.sourceArchived, TOAST_TYPE.SUCCESS);
                 return true;

@@ -10,15 +10,17 @@ import {
   Label,
   Checkbox
 } from '@/components/ui';
+import { useEffect } from 'react';
 import { TextHeading } from '@/components/ui/text-heading';
 import { Icons } from '../../../config/icons';
 import { DYNAMIC_ROUTES_LABELS } from '../../../constants/ui-labels';
 import { cn } from '@/lib/utils';
+import { env } from '@/lib/env';
 import { useApiTester, METHODS } from '../composables';
 
 const L = DYNAMIC_ROUTES_LABELS.apiTester;
 
-export const ApiTesterView = ({ targetId }: { targetId?: string }) => {
+export const ApiTesterView = ({ targetId, preFill }: { targetId?: string; preFill?: { method: string; path: string } }) => {
   const {
     method,
     setMethod,
@@ -51,6 +53,13 @@ export const ApiTesterView = ({ targetId }: { targetId?: string }) => {
     getStatusColor,
     getStatusLabel,
   } = useApiTester(targetId);
+
+  useEffect(() => {
+    if (preFill) {
+      setMethod(preFill.method);
+      setUrl(`${env.API_URL}${preFill.path.startsWith('/') ? '' : '/'}${preFill.path}`);
+    }
+  }, [preFill, setMethod, setUrl]);
 
   return (
     <div className="space-y-4">
@@ -138,11 +147,16 @@ export const ApiTesterView = ({ targetId }: { targetId?: string }) => {
 
             {/* URL Input */}
             <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1">
+              <div className="flex-1 flex gap-2">
+                {!targetId && (
+                  <Badge variant="destructive" className="flex items-center shrink-0 lowercase whitespace-nowrap">
+                    no target
+                  </Badge>
+                )}
                 <Input
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendRequest()}
+                  onKeyDown={(e) => e.key === 'Enter' && sendRequest()}
                   placeholder="enter endpoint url..."
                   className="lowercase"
                 />

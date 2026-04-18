@@ -59,7 +59,7 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
         } finally {
             setLoading(false);
         }
-    }, [endpointId, api.databaseSchema, addToast, router]);
+    }, [endpointId, targetId, api.databaseSchema, addToast]);
 
     useEffect(() => {
         if (endpointId) {

@@ -27,10 +27,9 @@ import {
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/modules/_core';
-import { MODULE_LABELS } from '@/lib/config/client';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { useRelations } from '../composables';
 import { RELATION_TYPES } from '../registry';
-import { FEATURE_ICONS as Icons } from '../constants';
 
 const L = MODULE_LABELS.databaseSchema;
 
@@ -60,7 +59,7 @@ export const RelationBuilder = ({
   // Handle delete relation
   const handleDeleteRelation = async () => {
     if (!deleteTarget) return;
-    const relationId = deleteTarget.localKey || deleteTarget.alias || deleteTarget.target?.name;
+    const relationId = deleteTarget.id;
     if (!relationId) return;
 
     const success = await deleteRelation(relationId);
@@ -138,13 +137,10 @@ export const RelationBuilder = ({
                       size="icon"
                       className="size-9"
                       onClick={() => {
-                        if (rel.localKey) {
-                          const key = rel.localKey;
-                          const path = nodeId
-                            ? `/target/${nodeId}/database-schema/${DatabaseTableId}/relations/${key}/edit`
-                            : `/database-schema/${DatabaseTableId}/relations/${key}/edit`;
-                          router.push(path);
-                        }
+                        const path = nodeId
+                          ? `/target/${nodeId}/database-schema/${DatabaseTableId}/relations/${rel.id}/edit`
+                          : `/database-schema/${DatabaseTableId}/relations/${rel.id}/edit`;
+                        router.push(path);
                       }}
                     >
                       <Icons.edit className="size-4 text-muted-foreground" />

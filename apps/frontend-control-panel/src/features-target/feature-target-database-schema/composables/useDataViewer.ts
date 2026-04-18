@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/frontend-api';
 import { usePagination, useSorting, useSelection } from '@/lib/frontend-table';
@@ -44,6 +44,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [columns, setColumns] = useState<any[]>([]); // New physical columns state
   const [loading, setLoading] = useState(false);
+  const fetchRef = useRef(false);
   const [total, setTotal] = useState(0);
 
   // Pagination from @repo/frontend-table
@@ -66,8 +67,9 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
 
   // Fetch data
   const fetchData = useCallback(async () => {
-    if (loading) return; // Prevent concurrent requests
+    if (fetchRef.current) return; // Prevent concurrent requests
     
+    fetchRef.current = true;
     setLoading(true);
     try {
       const searchParams = new URLSearchParams({
@@ -99,6 +101,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
       console.error("Data fetch failed", e);
       addToast(FEATURE_MESSAGES.error.dataLoadFailed, TOAST_TYPE.ERROR);
     } finally {
+      fetchRef.current = false;
       setLoading(false);
     }
   }, [
@@ -110,8 +113,6 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
     getHeaders,
     addToast,
     columns.length,
-    API_STATUS,
-    TOAST_TYPE,
   ]);
 
   // Insert row
@@ -156,7 +157,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
 
   // Delete row
   const deleteRow = useCallback(
-    async (rowId: number): Promise<boolean> => {
+    async (rowId: number, skipFetch?: boolean): Promise<boolean> => {
       try {
         const response = await apiClient.delete(
           API.deleteRow(DatabaseTableId, rowId),
@@ -164,7 +165,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
         );
         if (response.status === API_STATUS.SUCCESS) {
           addToast(FEATURE_MESSAGES.success.rowDeleted, TOAST_TYPE.SUCCESS);
-          await fetchData();
+          if (!skipFetch) await fetchData();
           return true;
         }
       } catch {
@@ -180,18 +181,47 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
     const ids = selection.selectedIds;
     if (ids.length === 0) return false;
 
+    // Use Promise.allSettled with chunking to avoid overwhelming the server
+    const batchSize = 10;
+    const allIds = [...ids];
     let success = 0;
-    for (const id of ids) {
-      const deleted = await deleteRow(Number(id));
-      if (deleted) success++;
+
+    for (let i = 0; i < allIds.length; i += batchSize) {
+      const batch = allIds.slice(i, i + batchSize);
+      const results = await Promise.allSettled(
+        batch.map((id) => deleteRow(Number(id), true))
+      );
+      success += results.filter((r) => r.status === 'fulfilled' && r.value).length;
     }
 
     if (success > 0) {
       selection.deselectAll();
       addToast(FEATURE_MESSAGES.success.rowsDeleted(success), TOAST_TYPE.SUCCESS);
+      await fetchData();
     }
     return success === ids.length;
-  }, [selection, deleteRow, addToast]);
+  }, [selection, deleteRow, addToast, fetchData]);
+
+  // Export data
+  const exportData = useCallback(async () => {
+    try {
+      const response = await fetch(`${API.list}/${DatabaseTableId}/export?format=csv`, {
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `export-${DatabaseTableId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      addToast('Failed to export data', TOAST_TYPE.ERROR);
+    }
+  }, [DatabaseTableId, getHeaders, addToast]);
 
   return {
     // Data
@@ -211,6 +241,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
 
     // Actions
     fetchData,
+    exportData,
     insertRow,
     updateRow,
     deleteRow,

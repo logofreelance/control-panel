@@ -20,10 +20,10 @@ const L = MODULE_LABELS.databaseSchema;
 
 interface EditRelationFormProps {
     DatabaseTableId: string | number;
-    relationName: string; // This is the localKey / column name
+    relationId: string | number;
 }
 
-export const EditRelationForm = ({ DatabaseTableId, relationName }: EditRelationFormProps) => {
+export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFormProps) => {
     const router = useRouter();
     const params = useParams();
     const nodeId = params.id as string;
@@ -43,7 +43,8 @@ export const EditRelationForm = ({ DatabaseTableId, relationName }: EditRelation
 
     useEffect(() => {
         if (!loading && relations.length > 0) {
-            const found = relations.find(r => r.localKey === relationName);
+            const ridStr = String(relationId);
+            const found = relations.find(r => String(r.id) === ridStr || r.localKey === ridStr);
             if (found) {
                 setRelation(found);
                 setForm({
@@ -52,11 +53,11 @@ export const EditRelationForm = ({ DatabaseTableId, relationName }: EditRelation
                 });
             }
         }
-    }, [relations, loading, relationName]);
+    }, [relations, loading, relationId]);
 
     const handleSubmit = async () => {
         setSubmitting(true);
-        const success = await updateRelation(relationName, form);
+        const success = await updateRelation(relationId, form);
         if (success) {
             router.back();
             router.refresh();
@@ -74,7 +75,7 @@ export const EditRelationForm = ({ DatabaseTableId, relationName }: EditRelation
                     </div>
                     <div className="space-y-3">
                          <TextHeading size="h4" className="lowercase text-foreground/80">{C.messages.notFound || "relation not found"}</TextHeading>
-                         <p className="text-sm text-muted-foreground lowercase opacity-60">could not find relation for column: <code className="font-mono bg-muted px-1 rounded">{relationName}</code></p>
+                         <p className="text-sm text-muted-foreground lowercase opacity-60">could not find relation for column: <code className="font-mono bg-muted px-1 rounded">{relationId}</code></p>
                     </div>
                     <Button
                         variant="outline"

@@ -9,10 +9,13 @@ import { useEndpointEditor } from '../composables';
 import { MultiSelect } from './MultiSelect';
 import { DataLineageHelper } from './DataLineageHelper';
 
+import { ConfirmDialog } from '@/modules/_core';
+
 interface EndpointEditorProps {
   targetId: string;
   endpointId?: string;
   onBack?: () => void;
+  onTest?: (method: string, path: string) => void;
 }
 
 const METHOD_STYLES: Record<string, string> = {
@@ -23,7 +26,7 @@ const METHOD_STYLES: Record<string, string> = {
   PATCH: 'bg-primary/10 text-primary',
 };
 
-export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorProps) => {
+export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: EndpointEditorProps) => {
   const L = DYNAMIC_ROUTES_LABELS.routeBuilder;
 
   const {
@@ -48,6 +51,9 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
     handleDataSourceChange,
     handleSave,
     handleDelete,
+    executeDelete,
+    deleteConfirm,
+    setDeleteConfirm,
   } = useEndpointEditor(targetId, endpointId, onBack);
 
   const getValidationRule = (colName: string): string => {
@@ -457,7 +463,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                     <div className="space-y-6">
                       {/* Column Chips */}
                       <div className="flex flex-wrap gap-2">
-                        {columns.map((col) => {
+                        {(() => {
                           const writableList: string[] = form.writableFields
                             ? JSON.parse((form.writableFields as string) || '[]')
                             : [];
@@ -468,9 +474,10 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                             ? JSON.parse((form.autoPopulateFields as string) || '{}')
                             : {};
 
-                          const isWritable = writableList.includes(col.name);
-                          const isProtected = protectedList.includes(col.name);
-                          const isAutoPopulate = col.name in autoPopObj;
+                          return columns.map((col) => {
+                            const isWritable = writableList.includes(col.name);
+                            const isProtected = protectedList.includes(col.name);
+                            const isAutoPopulate = col.name in autoPopObj;
 
                           const toggleColumn = () => {
                             if (!isWritable && !isProtected) {
@@ -515,28 +522,29 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                               <span className="opacity-50 text-base">({col.type})</span>
                             </button>
                           );
-                        })}
+                        });
+                        })()}
                       </div>
 
                       {/* Auto-Populate */}
                       <div className="pt-4 space-y-4">
                         <Label className="lowercase block px-1">auto-populate variables</Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {columns
-                            .filter((col) => !col.isPrimary)
-                            .map((col) => {
-                              const autoPopObj: Record<string, string> = form.autoPopulateFields
-                                ? (() => {
-                                    try {
-                                      return JSON.parse(
-                                        (form.autoPopulateFields as string) || '{}',
-                                      );
-                                    } catch {
-                                      return {};
-                                    }
-                                  })()
-                                : {};
-                              const currentValue = autoPopObj[col.name] || '';
+                          {(() => {
+                            const autoPopObj: Record<string, string> = form.autoPopulateFields
+                              ? (() => {
+                                  try {
+                                    return JSON.parse((form.autoPopulateFields as string) || '{}');
+                                  } catch {
+                                    return {};
+                                  }
+                                })()
+                              : {};
+
+                            return columns
+                              .filter((col) => !col.isPrimary)
+                              .map((col) => {
+                                const currentValue = autoPopObj[col.name] || '';
 
                               const handleAutoPopChange = (value: string) => {
                                 const newObj = { ...autoPopObj };
@@ -570,7 +578,8 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                                   />
                                 </div>
                               );
-                            })}
+                            });
+                          })()}
                         </div>
                       </div>
 
@@ -764,7 +773,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
                     validate your endpoint logic in real-time. the platform will automatically
                     inject necessary headers and parameters.
                   </p>
-                  <Button onClick={() => onBack?.()} size="lg">
+                  <Button onClick={() => onTest?.(form.method || 'GET', form.path || '/')} size="lg">
                     <Icons.zap className="size-5 mr-3" /> open interactive tester
                   </Button>
                 </div>
@@ -790,6 +799,17 @@ export const EndpointEditor = ({ targetId, endpointId, onBack }: EndpointEditorP
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm}
+        onClose={() => setDeleteConfirm(false)}
+        onConfirm={executeDelete}
+        title="Delete Endpoint"
+        message="Are you sure you want to permanently delete this endpoint from the global lineage?"
+        confirmText="Destroy Endpoint"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 };

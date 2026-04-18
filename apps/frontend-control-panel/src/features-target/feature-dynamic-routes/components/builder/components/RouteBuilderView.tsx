@@ -12,7 +12,8 @@ import {
   PopoverContent, 
   PopoverTrigger,
   Modal,
-  TextHeading
+  TextHeading,
+  Switch
 } from '@/components/ui';
 import { Icons } from '../../../config/icons';
 import { DYNAMIC_ROUTES_LABELS } from '../../../constants/ui-labels';
@@ -50,6 +51,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
     deleteConfirm,
     setDeleteConfirm,
     filteredEndpoints,
+    handleToggleEndpoint,
   } = useRouteBuilder(targetId);
 
   const L = DYNAMIC_ROUTES_LABELS.routeBuilder;
@@ -427,7 +429,13 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+                          <Switch
+                            checked={endpoint.isActive}
+                            onCheckedChange={() => handleToggleEndpoint(endpoint.id)}
+                          />
+                        </div>
                         <Button
                           variant="ghost"
                           onClick={(e) => {

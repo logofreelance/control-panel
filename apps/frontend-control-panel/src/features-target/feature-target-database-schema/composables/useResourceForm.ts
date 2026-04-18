@@ -13,7 +13,7 @@ import { useForm, useAutoSlug } from '@/lib/frontend-form-utils';
 import { useListBuilder } from '@/lib/frontend-list-builder';
 import { FEATURE_MESSAGES } from '../constants';
 import { DEFAULTS } from '@/lib/config/defaults';
-import type { Resource } from '../types';
+import type { Resource, JoinConfig } from '../types';
 
 export interface ResourceFormValues {
     name: string;
@@ -40,12 +40,7 @@ export interface FilterConfig {
     isRequired: boolean;
 }
 
-export interface JoinConfig {
-    table: string;
-    alias: string;
-    type: 'LEFT' | 'INNER' | 'RIGHT';
-    on: [string, string];
-}
+
 
 /**
  * Hook for managing resource form state

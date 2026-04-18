@@ -14,7 +14,7 @@ export interface ColumnDefinition {
     target?: string;
 }
 
-export interface databaseSchemachema {
+export interface SchemaDefinition {
     columns: ColumnDefinition[];
     timestamps?: boolean;
     softDelete?: boolean;
@@ -25,7 +25,7 @@ export interface DatabaseTable {
     name: string;
     tableName: string;
     description?: string;
-    schema?: databaseSchemachema;
+    schema?: SchemaDefinition;
     schemaJson?: string;
     prefix?: string;
     isSystem?: boolean;

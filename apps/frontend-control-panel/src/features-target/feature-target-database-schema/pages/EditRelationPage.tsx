@@ -19,11 +19,11 @@ export const EditRelationPage = () => {
     const rawTableId = Array.isArray(params.tableId) ? params.tableId[0] : params.tableId;
     const rawNodeId = Array.isArray(params.id) ? params.id[0] : params.id;
     const tableId = rawTableId || rawNodeId;
-    const relationName = params.localKey as string;
+    const relationId = params.localKey as string;
 
-    if (!tableId || !relationName) return null;
+    if (!tableId || !relationId) return null;
 
-    return <EditRelationForm DatabaseTableId={tableId} relationName={relationName} />;
+    return <EditRelationForm DatabaseTableId={tableId} relationId={relationId} />;
 };
 
 export default EditRelationPage;

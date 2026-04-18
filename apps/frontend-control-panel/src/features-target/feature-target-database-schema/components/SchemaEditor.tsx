@@ -31,8 +31,6 @@ import { ColumnBuilder } from './ColumnBuilder';
 import { useDatabaseSchema, useSchemaEditor } from '../composables';
 import type { ColumnDefinition, DatabaseTable } from '../types';
 
-const L = MODULE_LABELS.databaseSchema;
-
 interface SchemaEditorProps {
   DatabaseTableId: string | number;
 }
@@ -154,7 +152,7 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
 
     if (!hasError) {
       setOriginalColumns(JSON.parse(JSON.stringify(columns)));
-      addToast(L.messages.success.schemaUpdated, 'success');
+      addToast('schema updated successfully', 'success');
     }
     setSaving(false);
   };

@@ -18,6 +18,7 @@ interface TargetRoutesLayoutProps {
 export function TargetRoutesLayout({ targetId }: TargetRoutesLayoutProps) {
   const [activeTab, setActiveTab] = useState('builder');
   const [subView, setSubView] = useState<{ view: string; id?: string } | null>(null);
+  const [testerPreFill, setTesterPreFill] = useState<{ method: string; path: string } | null>(null);
 
   const tabs = [
     { id: 'builder', label: 'route builder', icon: Icons.plus },
@@ -35,6 +36,12 @@ export function TargetRoutesLayout({ targetId }: TargetRoutesLayoutProps) {
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
+    setSubView(null);
+  };
+
+  const handleTestEndpoint = (method: string, path: string) => {
+    setTesterPreFill({ method, path });
+    setActiveTab('tester');
     setSubView(null);
   };
 

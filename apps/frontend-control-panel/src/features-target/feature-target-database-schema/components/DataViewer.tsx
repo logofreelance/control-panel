@@ -20,8 +20,9 @@ import { PageTitle } from '@/components/ui/page-title';
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/modules/_core';
 import { useDataViewer } from '../composables';
-import { FEATURE_LABELS as L, FEATURE_ICONS as Icons } from '../constants';
+import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { API } from '../api/endpoints';
+const L = MODULE_LABELS.databaseSchema;
 import type { DatabaseTable } from '../types';
 import { ImportDataModal } from './ImportDataModal';
 
@@ -49,6 +50,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
     fetchData,
     deleteRow,
     deleteSelected,
+    exportData,
   } = useDataViewer(DatabaseTable?.id);
 
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -101,15 +103,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
     setDeleteId(null);
   };
 
-  const getExportUrl = () => {
-    try {
-      const baseUrl = API.list;
-      if (!baseUrl) return '';
-      return `${baseUrl}/${DatabaseTable?.id}/export?format=csv`;
-    } catch {
-      return '';
-    }
-  };
+  // Export logic moved to useDataViewer
 
   if (!DatabaseTable) return null;
 
@@ -151,10 +145,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => {
-                const url = getExportUrl();
-                if (url) window.open(url, '_blank');
-              }}
+              onClick={exportData}
             >
               <Icons.download className="mr-2" /> {C?.actions?.export || 'export'}
             </Button>

@@ -36,7 +36,10 @@ export function ImportDataModal({
 
     if (!isOpen) return null;
 
+    const [parseError, setParseError] = useState<string | null>(null);
+
     const handleImport = async () => {
+        setParseError(null);
         try {
             const parsedData = JSON.parse(inputData);
             const success = await importData(parsedData);
@@ -45,8 +48,8 @@ export function ImportDataModal({
                 onClose();
                 setInputData('');
             }
-        } catch {
-            // Error handling in composable
+        } catch (e: any) {
+            setParseError(`JSON format error: ${e.message || 'invalid json'}`);
         }
     };
 
@@ -91,10 +94,10 @@ export function ImportDataModal({
                             </div>
                         </div>
                         
-                        {error && (
+                        {(error || parseError) && (
                             <div className="p-4 rounded-2xl bg-rose-500/5 ring-1 ring-rose-500/10 flex items-start gap-4 animate-in slide-in-from-top-2">
                                 <Icons.warning className="size-4 text-rose-500 mt-0.5" />
-                                <p className="text-sm font-normal text-rose-600/80 lowercase">{error}</p>
+                                <p className="text-sm font-normal text-rose-600/80 lowercase">{error || parseError}</p>
                             </div>
                         )}
                     </div>

@@ -137,7 +137,7 @@ export function useResourceSubmit(DatabaseTableId: string | number) {
           const sources = response.data;
 
           // Add System Users Mock (if not present)
-          if (!sources.some((s) => s.id === 0)) {
+          if (false && !sources.some((s) => s.id === 0)) {
             sources.push({
               id: 0,
               name: 'System Users',

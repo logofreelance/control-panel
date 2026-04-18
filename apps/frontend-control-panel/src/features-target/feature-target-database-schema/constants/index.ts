@@ -5,7 +5,7 @@
  * Decoupled from global config to ensure feature isolation.
  */
 
-import { Icons } from '@/lib/config/client';
+import { Icons } from '../config/icons';
 
 export const FEATURE_LABELS = {
     title: 'database schema',

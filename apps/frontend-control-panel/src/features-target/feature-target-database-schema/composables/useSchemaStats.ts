@@ -40,8 +40,7 @@ export function useSchemaStats() {
         setLoading(true);
         try {
             const headers = targetId ? { 'x-target-id': targetId } : undefined;
-            // ✅ Use Internal API or fallback to standard path
-            const statsUrl = (API as any).stats || `${API.list}/stats`;
+            const statsUrl = API.stats;
             const response = await apiClient.get<SchemaStats>(statsUrl, { headers });
             
             if (response?.status === 'success' && response?.data) {

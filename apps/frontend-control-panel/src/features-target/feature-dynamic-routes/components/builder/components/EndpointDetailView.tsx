@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { Card, CardContent, Button, Badge } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
-import { Icons, MODULE_LABELS } from '@/lib/config/client';
+import { Icons } from '../../../config/icons';
+import { DYNAMIC_ROUTES_LABELS } from '../../../constants/ui-labels';
 import { useEndpointDetail } from '../composables/useEndpointDetail';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +23,7 @@ export const EndpointDetailView = ({
   onNavigate,
   onBack,
 }: EndpointDetailViewProps) => {
-  const L = MODULE_LABELS.routeBuilder;
+  const L = DYNAMIC_ROUTES_LABELS.routeBuilder;
   const { loading, endpoint, dataSource, resource, getFullUrl, getCodeExamples } =
     useEndpointDetail(targetId, endpointId);
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useConfig } from '@/modules/_core';
+import { useConfig, useToast } from '@/modules/_core';
 
 interface Column {
     name: string;
@@ -8,6 +8,7 @@ interface Column {
 
 export const useDataSourceColumns = (targetId: string, dataSourceId?: string) => {
     const { api } = useConfig();
+    const { addToast } = useToast();
     const [columns, setColumns] = useState<Column[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -20,9 +21,11 @@ export const useDataSourceColumns = (targetId: string, dataSourceId?: string) =>
                 setColumns(data.data);
             } else {
                 setColumns([]);
+                addToast(data.message || 'Failed to load columns', 'error');
             }
         } catch {
             setColumns([]);
+            addToast('Failed to load columns', 'error');
         } finally {
             setLoading(false);
         }

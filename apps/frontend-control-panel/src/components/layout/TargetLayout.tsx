@@ -99,7 +99,7 @@ export function TargetLayout({ children }: TargetLayoutProps) {
   );
 
   return (
-    <div className="relative flex flex-col w-full bg-background font-instrument">
+    <div className="relative flex flex-col min-h-screen w-full bg-background font-instrument">
       {/* GLOBAL HEADER */}
       <header className="z-50 w-full px-2 md:px-4 pt-2 md:pt-4 pointer-events-none transition-all shrink-0 fixed top-0 left-0 right-0">
         <div className="mx-auto w-full max-w-7xl bg-card border-2 border-border h-16 rounded-2xl flex items-center justify-between px-3 md:px-8 pointer-events-auto shadow-none">
@@ -152,12 +152,16 @@ export function TargetLayout({ children }: TargetLayoutProps) {
       {/* MAIN CONTAINER (SIDEBAR + CONTENT) */}
       <div className="flex flex-1 w-full max-w-7xl mx-auto px-3 md:px-4 pt-24 pb-4">
         {/* SIDEBAR - DESKTOP ONLY */}
-        <aside className="hidden lg:flex flex-col w-72 shrink-0 pr-6 sticky top-24 h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
-          <NavContent />
+        <aside className="hidden lg:block w-72 shrink-0 pr-6 relative">
+          <div className="fixed top-24 w-64 h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
+            <NavContent />
+          </div>
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 bg-background relative lg:mx-0 mx-2">{children}</main>
+        <main className="flex-1 bg-background relative lg:mx-0 mx-2">
+          {children}
+        </main>
       </div>
     </div>
   );

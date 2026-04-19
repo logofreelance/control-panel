@@ -345,3 +345,10 @@ body {
 ::-webkit-scrollbar-button {
   display: none;
 }
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

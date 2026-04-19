@@ -206,73 +206,6 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                         </CardContent>
                     </Card>
 
-                    {/* Section: Keys Selection - ONLY SHOW IF TARGET SELECTED */}
-                    {newRelation.targetId !== -1 && (
-                        <Card>
-                            <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-4 border-b border-border/50">
-                                <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                                    <Icons.key className="size-5" />
-                                </div>
-                                <div className="flex-1">
-                                    <CardTitle className="text-xl md:text-2xl font-semibold lowercase leading-none mb-1">
-                                        Configuration
-                                    </CardTitle>
-                                    <CardDescription className="text-base text-muted-foreground font-normal lowercase">
-                                        define how these tables should be connected.
-                                    </CardDescription>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="pt-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                                    <div className="space-y-3">
-                                        <label className="text-base font-semibold lowercase text-foreground block">
-                                            Local Column (Source)
-                                        </label>
-                                        <select
-                                            value={newRelation.localKey}
-                                            onChange={(e) => setNewRelation(prev => ({ ...prev, localKey: e.target.value }))}
-                                            className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all lowercase text-base font-normal appearance-none"
-                                        >
-                                            <option value="">select field...</option>
-                                            {sourceColumns.map(col => (
-                                                <option key={col.name} value={col.name}>{col.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <label className="text-base font-semibold lowercase text-foreground block">
-                                            Foreign Column (Target)
-                                        </label>
-                                        <select
-                                            value={newRelation.foreignKey}
-                                            onChange={(e) => setNewRelation(prev => ({ ...prev, foreignKey: e.target.value }))}
-                                            className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all lowercase text-base font-normal appearance-none"
-                                        >
-                                            <option value="">select field...</option>
-                                            {targetColumns.map(col => (
-                                                <option key={col.name} value={col.name}>{col.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-base font-semibold lowercase text-foreground block">
-                                        Relationship Display Alias
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newRelation.alias}
-                                        onChange={(e) => setNewRelation(prev => ({ ...prev, alias: e.target.value }))}
-                                        placeholder="optional: custom alias name (e.g. author_details)"
-                                        className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground lowercase text-base font-normal"
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
                     {/* Section: Relation Type */}
                     <Card className={cn(newRelation.targetId === -1 && "opacity-50 pointer-events-none transition-opacity")}>
                         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-4">
@@ -343,6 +276,95 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Section: Keys Selection - ONLY SHOW IF TARGET SELECTED */}
+                    {newRelation.targetId !== -1 && (
+                        <Card>
+                            <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-4 border-b border-border/50">
+                                <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                    <Icons.key className="size-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardTitle className="text-xl md:text-2xl font-semibold lowercase leading-none mb-1">
+                                        Configuration
+                                    </CardTitle>
+                                    <CardDescription className="text-base text-muted-foreground font-normal lowercase">
+                                        define how these tables should be connected based on "{newRelation.type.replace('_', ' ')}"
+                                    </CardDescription>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="pt-6">
+                                {/* Dynamic Helper Guide */}
+                                <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-4">
+                                    <Icons.info className="size-5 text-primary shrink-0 mt-0.5" />
+                                    <div className="text-sm font-normal text-primary/80 lowercase leading-relaxed">
+                                        {newRelation.type === 'belongs_to' ? (
+                                            <>
+                                                <strong className="font-semibold block mb-1">guide for 'belongs to' (child points to parent):</strong>
+                                                choose <span className="font-mono text-xs bg-primary/10 px-1 py-0.5 rounded text-primary">..._id</span> for the <strong>local column</strong> (because this table stores the key). <br/>
+                                                choose <span className="font-mono text-xs bg-primary/10 px-1 py-0.5 rounded text-primary">id</span> for the <strong>foreign column</strong> (this is the parent's actual key).
+                                            </>
+                                        ) : (
+                                            <>
+                                                <strong className="font-semibold block mb-1">guide for '{newRelation.type.replace('_', ' ')}' (parent points to child):</strong>
+                                                choose <span className="font-mono text-xs bg-primary/10 px-1 py-0.5 rounded text-primary">id</span> for the <strong>local column</strong> (because this is your actual key). <br/>
+                                                choose <span className="font-mono text-xs bg-primary/10 px-1 py-0.5 rounded text-primary">..._id</span> for the <strong>foreign column</strong> (because the target table is storing your key).
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                    <div className="space-y-3">
+                                        <label className="text-base font-semibold lowercase text-foreground block">
+                                            Local Column (Source)
+                                        </label>
+                                        <select
+                                            value={newRelation.localKey}
+                                            onChange={(e) => setNewRelation(prev => ({ ...prev, localKey: e.target.value }))}
+                                            className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all lowercase text-base font-normal appearance-none"
+                                        >
+                                            <option value="">select field...</option>
+                                            {sourceColumns.map(col => (
+                                                <option key={col.name} value={col.name}>{col.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <label className="text-base font-semibold lowercase text-foreground block">
+                                            Foreign Column (Target)
+                                        </label>
+                                        <select
+                                            value={newRelation.foreignKey}
+                                            onChange={(e) => setNewRelation(prev => ({ ...prev, foreignKey: e.target.value }))}
+                                            className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all lowercase text-base font-normal appearance-none"
+                                        >
+                                            <option value="">select field...</option>
+                                            {targetColumns.map(col => (
+                                                <option key={col.name} value={col.name}>{col.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-base font-semibold lowercase text-foreground block">
+                                        Relationship Display Alias
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newRelation.alias}
+                                        onChange={(e) => setNewRelation(prev => ({ ...prev, alias: e.target.value }))}
+                                        placeholder="optional: custom alias name (e.g. author_details)"
+                                        className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground lowercase text-base font-normal"
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+
                 </div>
 
                 {/* Form Actions */}

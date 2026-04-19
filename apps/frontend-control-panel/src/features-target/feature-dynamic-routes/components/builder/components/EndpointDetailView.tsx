@@ -24,8 +24,11 @@ export const EndpointDetailView = ({
   onBack,
 }: EndpointDetailViewProps) => {
   const L = DYNAMIC_ROUTES_LABELS.routeBuilder;
-  const { loading, endpoint, dataSource, resource, getFullUrl, getCodeExamples } =
-    useEndpointDetail(targetId, endpointId);
+  const { 
+    endpoint, dataSource, resource, 
+    targetApiUrls = [], selectedBaseUrlIndex = 0, setSelectedBaseUrlIndex,
+    getFullUrl, getCodeExamples 
+  } = useEndpointDetail(targetId, endpointId);
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [activeCodeTab, setActiveCodeTab] = useState<'curl' | 'javascript' | 'python'>('curl');
@@ -52,13 +55,6 @@ export const EndpointDetailView = ({
 
   const fullUrl = getFullUrl();
   const codeExamples = getCodeExamples();
-  const methodStyles: Record<string, string> = {
-    GET: 'bg-primary/10 text-primary',
-    POST: 'bg-primary/10 text-primary',
-    PUT: 'bg-primary/10 text-primary',
-    PATCH: 'bg-primary/10 text-primary',
-    DELETE: 'bg-destructive/10 text-destructive',
-  };
 
   const getRoleLevelLabel = (level: number) => {
     if (level === 0) return L.options?.public || 'public';
@@ -136,9 +132,25 @@ export const EndpointDetailView = ({
         <CardContent>
           <div className="flex flex-row items-center justify-between gap-4 py-2">
             <div className="flex-1 min-w-0">
-              <p className="text-base font-normal text-muted-foreground mb-1 lowercase">
-                {L.detail?.fullUrl || 'access url'}
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-1">
+                <p className="text-base font-normal text-muted-foreground lowercase">
+                  {L.detail?.fullUrl || 'access url'}
+                </p>
+                {targetApiUrls.length > 0 && (
+                  <select
+                    value={String(selectedBaseUrlIndex)}
+                    onChange={(e) => setSelectedBaseUrlIndex?.(Number(e.target.value))}
+                    disabled={targetApiUrls.length === 1}
+                    className="h-7 text-[13px] text-muted-foreground w-auto bg-transparent border border-border/50 rounded-lg px-2 py-0 outline-none cursor-pointer hover:border-border transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {targetApiUrls.map((url: string, i: number) => (
+                      <option key={i} value={i} className="text-foreground bg-background">
+                        {url}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
               <div className="text-base text-foreground break-all">{fullUrl}</div>
             </div>
             <Button
@@ -160,16 +172,16 @@ export const EndpointDetailView = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left Column */}
         <div className="space-y-4">
-          {/* Request Info */}
+          {/* Integration Status */}
           <Card>
             <CardContent>
               <div className="flex flex-row items-center gap-3 mb-6">
-                <Icons.send className="size-5 text-primary" />
+                <Icons.database className="size-5 text-primary" />
                 <TextHeading as="h3" size="h4" className="lowercase">
-                  {L.detail?.requestInfo || 'request info'}
+                  {L.detail?.integration || 'integration'}
                 </TextHeading>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex flex-row justify-between items-center gap-2">
                   <p className="text-base text-muted-foreground lowercase">
                     {L.detail?.method || 'method'}
@@ -208,11 +220,15 @@ export const EndpointDetailView = ({
                 )}
                 {(writableFields.length > 0 || protectedFields.length > 0 || Object.keys(autoPopulateFields).length > 0) && (
                   <div className="space-y-4 border-t border-border pt-4">
-                    <TextHeading as="h4" size="h5" className="lowercase">Mutation Rules</TextHeading>
+                    <TextHeading as="h4" size="h5" className="lowercase">
+                      {L.detail?.mutationRules || 'mutation rules'}
+                    </TextHeading>
                     
                     {writableFields.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm font-normal text-muted-foreground lowercase">writable fields (allowed from body)</p>
+                        <p className="text-sm font-normal text-muted-foreground lowercase">
+                          {L.detail?.writableFields || 'writable fields (allowed from body)'}
+                        </p>
                         <div className="flex flex-wrap gap-1.5">
                           {writableFields.map((field) => (
                             <Badge key={field} variant="default" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-2 min-h-5 py-0.5 lowercase font-mono text-xs">
@@ -225,7 +241,9 @@ export const EndpointDetailView = ({
 
                     {protectedFields.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm font-normal text-muted-foreground lowercase">protected fields (ignored from body)</p>
+                        <p className="text-sm font-normal text-muted-foreground lowercase">
+                          {L.detail?.protectedFields || 'protected fields (ignored from body)'}
+                        </p>
                         <div className="flex flex-wrap gap-1.5">
                           {protectedFields.map((field) => (
                             <Badge key={field} variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20 px-2 py-0.5 min-h-5 lowercase font-mono text-xs">
@@ -238,12 +256,14 @@ export const EndpointDetailView = ({
 
                     {Object.keys(autoPopulateFields).length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm font-normal text-muted-foreground lowercase">auto-populated fields</p>
+                        <p className="text-sm font-normal text-muted-foreground lowercase">
+                          {L.detail?.autoPopulateFields || 'auto-populated fields'}
+                        </p>
                         <div className="flex flex-col gap-1.5 w-full">
                           {Object.entries(autoPopulateFields).map(([field, value]) => (
                             <div key={field} className="flex flex-row items-center justify-between text-xs font-mono bg-muted/40 rounded-md px-2 py-1.5">
                               <span className="text-primary">{field}</span>
-                              <span className="text-muted-foreground">→</span>
+                              <span className="text-muted-foreground">{L.misc?.arrow || '→'}</span>
                               <span className="text-foreground">{String(value)}</span>
                             </div>
                           ))}
@@ -383,8 +403,6 @@ export const EndpointDetailView = ({
                             const parsed = JSON.parse(endpoint.responseData);
                             return JSON.stringify(parsed, null, 2);
                         } catch {
-                            // If it's a template string (like {"status": "success", "data": {{DATA}}}) 
-                            // it might fail JSON.parse. In that case we just return it but we can format it lightly manually.
                             const val = endpoint.responseData;
                             if(val.startsWith('{') && val.endsWith('}')) {
                                 return val.replace(/","/g, '",\n  "').replace(/^{"/, '{\n  "').replace(/}$/, '\n}');

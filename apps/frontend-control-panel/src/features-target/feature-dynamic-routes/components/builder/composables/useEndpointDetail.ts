@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useConfig } from '@/modules/_core';
 import { useToast } from '@/modules/_core';
@@ -23,6 +23,8 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
     const [endpoint, setEndpoint] = useState<ApiEndpoint | null>(null);
     const [dataSource, setDataSource] = useState<{ name: string; tableName: string } | null>(null);
     const [resource, setResource] = useState<{ name: string } | null>(null);
+    
+    const [selectedBaseUrlIndex, setSelectedBaseUrlIndex] = useState(0);
 
     // Fetch endpoint data
     const fetchEndpoint = useCallback(async () => {
@@ -77,19 +79,25 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
       return url;
     }, []);
 
-    // Generate full URL pointing to target Backend System API
-    const getFullUrl = useCallback(() => {
-        if (!endpoint) return '';
-        
+    // Get all available Target API URLs
+    const targetApiUrls = useMemo(() => {
         const currentTarget = targets.find((t) => t.id === targetId);
         const rawTargetApiUrl = currentTarget?.apiEndpoint || getTargetApiUrlFallback();
         
-        // Ensure ends with /api
-        const trimmed = rawTargetApiUrl.split(',')[0].trim();
-        const baseApiUrl = trimmed.endsWith('/api') ? trimmed : `${trimmed.replace(/\/$/, '')}/api`;
+        return rawTargetApiUrl.split(',').map(url => {
+            const trimmed = url.trim();
+            // Ensure ends with /api
+            return trimmed.endsWith('/api') ? trimmed : `${trimmed.replace(/\/$/, '')}/api`;
+        }).filter(Boolean);
+    }, [targets, targetId, getTargetApiUrlFallback]);
+
+    // Generate full URL pointing to target Backend System API
+    const getFullUrl = useCallback(() => {
+        if (!endpoint || !targetApiUrls || targetApiUrls.length === 0) return '';
         
+        const baseApiUrl = targetApiUrls[selectedBaseUrlIndex] || targetApiUrls[0];
         return `${baseApiUrl}/v1${endpoint.path}`;
-    }, [endpoint, targetId, targets, getTargetApiUrlFallback]);
+    }, [endpoint, targetApiUrls, selectedBaseUrlIndex]);
 
     // Generate code examples
     const getCodeExamples = useCallback(() => {
@@ -174,6 +182,9 @@ print(response.json())`;
         endpoint,
         dataSource,
         resource,
+        targetApiUrls,
+        selectedBaseUrlIndex,
+        setSelectedBaseUrlIndex,
         getFullUrl,
         getCodeExamples,
         router

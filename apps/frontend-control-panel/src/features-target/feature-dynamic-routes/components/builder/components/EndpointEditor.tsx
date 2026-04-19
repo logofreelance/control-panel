@@ -439,11 +439,11 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
 
                 <div className="pt-2">
                   <TextHeading as="h3" size="h4" className="lowercase mb-1">
-                    {L.mutation?.columnSelector || 'field configuration'}
+                    {L.mutation?.columnSelector || 'column configuration'}
                   </TextHeading>
-                  <p className="text-base text-muted-foreground lowercase mb-6">
+                  <p className="text-base text-muted-foreground lowercase mb-4">
                     {L.mutation?.columnSelectorHint ||
-                      'select which database fields are writable, protected, or auto-populated.'}
+                      'click columns to toggle their write permission'}
                   </p>
 
                   {!form.dataSourceId ? (
@@ -461,6 +461,24 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                     </div>
                   ) : (
                     <div className="space-y-6">
+                      {/* Legend */}
+                      <div className="flex flex-wrap items-center gap-4 p-3 rounded-xl bg-muted/20 border border-border/5">
+                        <span className="text-base text-muted-foreground lowercase mr-1">legend:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="size-2.5 rounded-full bg-muted-foreground/30" />
+                          <span className="text-base text-muted-foreground lowercase">ignored</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="size-2.5 rounded-full bg-primary" />
+                          <span className="text-base text-primary lowercase">writable</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="size-2.5 rounded-full bg-destructive" />
+                          <span className="text-base text-destructive lowercase">protected</span>
+                        </div>
+                        <span className="text-base text-muted-foreground/50 lowercase ml-auto hidden sm:inline">click to cycle →</span>
+                      </div>
+
                       {/* Column Chips */}
                       <div className="flex flex-wrap gap-2">
                         {(() => {
@@ -503,23 +521,31 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                             }
                           };
 
+                          const stateLabel = isProtected ? 'protected' : isWritable ? 'writable' : isAutoPopulate ? 'auto' : '';
+                          const StateIcon = isProtected ? Icons.shield : isWritable ? Icons.edit : isAutoPopulate ? Icons.sparkles : null;
+
                           return (
                             <button
                               key={col.name}
                               type="button"
                               onClick={toggleColumn}
                               className={cn(
-                                'px-4 py-2 rounded-xl text-base transition-all flex items-center gap-2 border',
+                                'px-4 py-2.5 rounded-xl text-base transition-all flex items-center gap-2 border group relative',
                                 isProtected
-                                  ? 'bg-destructive/5 text-destructive border-destructive/10'
+                                  ? 'bg-destructive/5 text-destructive border-destructive/10 hover:bg-destructive/10'
                                   : isAutoPopulate || isWritable
-                                    ? 'bg-primary/5 text-primary border-primary/10'
-                                    : 'bg-muted/30 text-muted-foreground border-transparent',
+                                    ? 'bg-primary/5 text-primary border-primary/10 hover:bg-primary/10'
+                                    : 'bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50',
                               )}
                             >
-                              {col.isPrimary && <Icons.key className="size-3.5" />}
+                              {col.isPrimary ? <Icons.key className="size-3.5" /> : StateIcon ? <StateIcon className="size-3.5" /> : null}
                               {col.name}
-                              <span className="opacity-50 text-base">({col.type})</span>
+                              <span className="opacity-40 text-base">({col.type})</span>
+                              {stateLabel && (
+                                <Badge variant={isProtected ? 'destructive' : 'default'} className="text-[11px] px-1.5 py-0 h-5 lowercase">
+                                  {stateLabel}
+                                </Badge>
+                              )}
                             </button>
                           );
                         });

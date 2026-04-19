@@ -175,9 +175,6 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                     onCheckedChange={() => selection?.toggleAll(rows || [])}
                   />
                 </TableHead>
-                <TableHead className="w-24 text-sm font-normal lowercase text-muted-foreground/60">
-                  {C?.table?.id || 'id'}
-                </TableHead>
                 {displayColumns?.map((col: any) => (
                   <TableHead
                     key={col.name}
@@ -238,9 +235,6 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                           checked={isSelected}
                           onCheckedChange={() => selection?.toggle?.((row as any).id)}
                         />
-                      </TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground font-normal">
-                        {String(row.id || '-').slice(0, 8)}
                       </TableCell>
                       {displayColumns?.map((col: any) => (
                         <TableCell

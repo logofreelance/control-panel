@@ -91,10 +91,20 @@ export function middleware(env: EnvironmentConfig) {
   };
 }
 
+// Helper: TiDB serverless driver returns [rows, fields] tuple from db.execute()
+// This normalizes the result to always return the rows array.
+function extractRows(result: any): any[] {
+  if (Array.isArray(result) && result.length > 0 && Array.isArray(result[0])) {
+    return result[0]; // [rows, fields] tuple → rows
+  }
+  if (Array.isArray(result)) return result;
+  return result?.rows || [];
+}
+
 async function ensureMetadataTables(db: any) {
   // --- database_tables ---
   const exists: any = await db.execute("SHOW TABLES LIKE 'database_tables'");
-  const existsRows = Array.isArray(exists) ? exists : exists.rows || [];
+  const existsRows = extractRows(exists);
   if (existsRows.length === 0) {
     await db.execute(`
       CREATE TABLE database_tables (
@@ -120,7 +130,7 @@ async function ensureMetadataTables(db: any) {
 
   // --- database_relations ---
   const relationsExist: any = await db.execute("SHOW TABLES LIKE 'database_relations'");
-  const relationsExistRows = Array.isArray(relationsExist) ? relationsExist : relationsExist.rows || [];
+  const relationsExistRows = extractRows(relationsExist);
   if (relationsExistRows.length === 0) {
     await db.execute(`
       CREATE TABLE database_relations (
@@ -142,16 +152,19 @@ async function ensureMetadataTables(db: any) {
 
   // --- database_resources ---
   const resourcesExist: any = await db.execute("SHOW TABLES LIKE 'database_resources'");
-  const resourcesExistRows = Array.isArray(resourcesExist) ? resourcesExist : resourcesExist.rows || [];
+  const resourcesExistRows = extractRows(resourcesExist);
   if (resourcesExistRows.length > 0) {
     // Check for old column name and migrate if needed
     try {
       const columns: any = await db.execute("DESCRIBE database_resources");
-      const columnRows = Array.isArray(columns) ? columns : columns.rows || [];
+      const columnRows = extractRows(columns);
       const hasOldId = columnRows.some((c: any) => c.Field === 'DatabaseTableId');
-      if (hasOldId) {
+      const hasNewId = columnRows.some((c: any) => c.Field === 'database_table_id');
+      console.log('[MIGRATION CHECK] hasOldId:', hasOldId, 'hasNewId:', hasNewId, 'columnCount:', columnRows.length);
+      if (hasOldId && !hasNewId) {
         console.log('[MIGRATION] Renaming DatabaseTableId to database_table_id in database_resources');
         await db.execute("ALTER TABLE database_resources CHANGE DatabaseTableId database_table_id VARCHAR(36)");
+        console.log('[MIGRATION] Successfully renamed column.');
       }
     } catch (e) {
       console.error('[MIGRATION ERROR] Failed to check/migrate database_resources columns:', e);

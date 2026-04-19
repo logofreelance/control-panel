@@ -206,6 +206,52 @@ export const EndpointDetailView = ({
                     </p>
                   </div>
                 )}
+                {(writableFields.length > 0 || protectedFields.length > 0 || Object.keys(autoPopulateFields).length > 0) && (
+                  <div className="space-y-4 border-t border-border pt-4">
+                    <TextHeading as="h4" size="h5" className="lowercase">Mutation Rules</TextHeading>
+                    
+                    {writableFields.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-normal text-muted-foreground lowercase">writable fields (allowed from body)</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {writableFields.map((field) => (
+                            <Badge key={field} variant="default" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-2 min-h-5 py-0.5 lowercase font-mono text-xs">
+                              {field}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {protectedFields.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-normal text-muted-foreground lowercase">protected fields (ignored from body)</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {protectedFields.map((field) => (
+                            <Badge key={field} variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20 px-2 py-0.5 min-h-5 lowercase font-mono text-xs">
+                              {field}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {Object.keys(autoPopulateFields).length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-normal text-muted-foreground lowercase">auto-populated fields</p>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          {Object.entries(autoPopulateFields).map(([field, value]) => (
+                            <div key={field} className="flex flex-row items-center justify-between text-xs font-mono bg-muted/40 rounded-md px-2 py-1.5">
+                              <span className="text-primary">{field}</span>
+                              <span className="text-muted-foreground">→</span>
+                              <span className="text-foreground">{String(value)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -300,7 +346,7 @@ export const EndpointDetailView = ({
               {/* Code Block */}
               <div className="relative group">
                 <div className="bg-muted p-4 rounded-xl overflow-hidden border border-border">
-                  <div className="text-base text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
+                  <div className="text-sm font-mono text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
                     {codeExamples[activeCodeTab]}
                   </div>
                 </div>
@@ -331,8 +377,21 @@ export const EndpointDetailView = ({
                   </TextHeading>
                 </div>
                 <div className="bg-muted p-4 rounded-xl relative group border border-border">
-                  <div className="text-base text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
-                    {endpoint.responseData}
+                  <div className="text-sm font-mono text-foreground overflow-x-auto scrollbar-none leading-relaxed whitespace-pre">
+                    {(() => {
+                        try {
+                            const parsed = JSON.parse(endpoint.responseData);
+                            return JSON.stringify(parsed, null, 2);
+                        } catch {
+                            // If it's a template string (like {"status": "success", "data": {{DATA}}}) 
+                            // it might fail JSON.parse. In that case we just return it but we can format it lightly manually.
+                            const val = endpoint.responseData;
+                            if(val.startsWith('{') && val.endsWith('}')) {
+                                return val.replace(/","/g, '",\n  "').replace(/^{"/, '{\n  "').replace(/}$/, '\n}');
+                            }
+                            return val;
+                        }
+                    })()}
                   </div>
                   <Button
                     variant="outline"
@@ -355,3 +414,4 @@ export const EndpointDetailView = ({
     </div>
   );
 };
+

@@ -7,6 +7,7 @@ import { useToast } from '@/modules/_core';
 import { ApiEndpoint } from '@/features-target/feature-dynamic-routes';
 import { DYNAMIC_ROUTES_API } from '../../../api';
 import { env } from '@/lib/env';
+import { useTargetRegistry } from '@/features-internal/feature-target-registry/hooks/useTargetRegistry';
 
 /**
  * useEndpointDetail composable
@@ -16,6 +17,7 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
     const { api } = useConfig();
     const { addToast } = useToast();
     const router = useRouter();
+    const { targets } = useTargetRegistry();
 
     const [loading, setLoading] = useState(true);
     const [endpoint, setEndpoint] = useState<ApiEndpoint | null>(null);
@@ -67,11 +69,27 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
         }
     }, [endpointId, fetchEndpoint]);
 
-    // Generate full URL using centralized env
+    // Helper to determine the Engine's URL based on Control Panel's URL
+    const getTargetApiUrlFallback = useCallback(() => {
+      let url = env.API_URL || 'http://localhost:3001/api';
+      url = url.replace(':3001', ':3002');
+      url = url.replace('backend-control-panel', 'backend-system');
+      return url;
+    }, []);
+
+    // Generate full URL pointing to target Backend System API
     const getFullUrl = useCallback(() => {
         if (!endpoint) return '';
-        return `${env.API_URL}${endpoint.path}`;
-    }, [endpoint]);
+        
+        const currentTarget = targets.find((t) => t.id === targetId);
+        const rawTargetApiUrl = currentTarget?.apiEndpoint || getTargetApiUrlFallback();
+        
+        // Ensure ends with /api
+        const trimmed = rawTargetApiUrl.split(',')[0].trim();
+        const baseApiUrl = trimmed.endsWith('/api') ? trimmed : `${trimmed.replace(/\/$/, '')}/api`;
+        
+        return `${baseApiUrl}/v1${endpoint.path}`;
+    }, [endpoint, targetId, targets, getTargetApiUrlFallback]);
 
     // Generate code examples
     const getCodeExamples = useCallback(() => {
@@ -96,9 +114,11 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
         const curl = needsBody
             ? `curl -X ${method} "${url}" \\
   -H "Content-Type: application/json" \\
+  -H "x-api-key: YOUR_API_KEY" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -d '${bodyExample}'`
             : `curl -X ${method} "${url}" \\
+  -H "x-api-key: YOUR_API_KEY" \\
   -H "Authorization: Bearer YOUR_TOKEN"`;
 
         const javascript = needsBody
@@ -106,6 +126,7 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
   method: "${method}",
   headers: {
     "Content-Type": "application/json",
+    "x-api-key": "YOUR_API_KEY",
     "Authorization": "Bearer YOUR_TOKEN"
   },
   body: JSON.stringify(${bodyExample})
@@ -114,6 +135,7 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
   .then(data => console.log(data));`
             : `fetch("${url}", {
   headers: {
+    "x-api-key": "YOUR_API_KEY",
     "Authorization": "Bearer YOUR_TOKEN"
   }
 })
@@ -127,6 +149,7 @@ response = requests.${method.toLowerCase()}(
     "${url}",
     headers={
         "Content-Type": "application/json",
+        "x-api-key": "YOUR_API_KEY",
         "Authorization": "Bearer YOUR_TOKEN"
     },
     json=${bodyExample.replace(/"/g, "'")}
@@ -137,6 +160,7 @@ print(response.json())`
 response = requests.${method.toLowerCase()}(
     "${url}",
     headers={
+        "x-api-key": "YOUR_API_KEY",
         "Authorization": "Bearer YOUR_TOKEN"
     }
 )

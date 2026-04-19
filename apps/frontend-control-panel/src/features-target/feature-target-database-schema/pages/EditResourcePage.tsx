@@ -12,10 +12,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Badge } from '@/components/ui';
-import { TextHeading } from '@/components/ui/text-heading';
+import { Button, Badge, PageTitle } from '@/components/ui';
 import { useConfig } from '@/modules/_core';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/frontend-api';
+import { TargetLayout } from '@/components/layout/TargetLayout';
 import { ResourceForm } from '../components/ResourceForm';
 import type { DatabaseTable, Resource } from '../types';
 
@@ -30,6 +30,7 @@ export function EditResourcePage() {
     // State
     const [DatabaseTable, setDatabaseTable] = useState<DatabaseTable | null>(null);
     const [resource, setResource] = useState<Resource | null>(null);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     // Resolve IDs from URL params
@@ -45,6 +46,7 @@ export function EditResourcePage() {
         if (!tableId || !resourceId) return;
 
         const fetchDetails = async () => {
+            setLoading(true);
             try {
                 const headers: Record<string, string> = nodeId ? { 'x-target-id': nodeId } : {};
 
@@ -69,43 +71,75 @@ export function EditResourcePage() {
             } catch (e) {
                 console.error(e);
                 setError(L.messages.error.network);
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchDetails();
     }, [tableId, resourceId, nodeId, api, API_STATUS, L]);
 
+    // Loading state
+    if (loading) {
+        return (
+            <TargetLayout>
+                <div className="w-full flex items-center justify-center min-h-[60vh]">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+                        <span className="text-base text-muted-foreground font-medium lowercase">
+                            loading resource...
+                        </span>
+                    </div>
+                </div>
+            </TargetLayout>
+        );
+    }
+
     // Error state
     if (error || !DatabaseTable || !resource) {
         return (
-            <div className="p-12 text-center text-red-500">
-                <Icons.warning className="w-8 h-8 mx-auto mb-2" />
-                {error || L.messages.error.resourceNotFound}
-            </div>
+            <TargetLayout>
+                <div className="flex flex-col items-center justify-center p-12 text-center text-red-500 animate-page-enter">
+                    <Icons.warning className="size-10 mb-4" />
+                    <PageTitle title="error occurred" subtitle={error || L.messages.error.resourceNotFound} />
+                    <Button variant="ghost" className="mt-8" onClick={() => router.back()}>
+                        {L.labels.backToDataSources}
+                    </Button>
+                </div>
+            </TargetLayout>
         );
     }
 
     return (
-        <div className="max-w-4xl mx-auto py-8">
-            <div className="mb-8">
-                <Button
-                    variant="ghost"
-                    onClick={() => router.back()}
-                    className="mb-4 pl-0 hover:bg-transparent hover:text-foreground group"
-                >
-                    <Icons.arrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                    {L.labels.backToDataSources}
-                </Button>
-                <div className="flex flex-row items-center gap-3">
-                    <TextHeading size="h2" as="h2">{L.titles.editResource}</TextHeading>
-                    <Badge variant="default">
-                        {resource.name}
-                    </Badge>
-                </div>
-            </div>
+        <TargetLayout>
+            <div className="flex flex-col gap-6 md:gap-10 animate-page-enter">
+                <header className="flex flex-col gap-6 px-1">
+                    <div>
+                        <Button
+                            variant="ghost"
+                            onClick={() => router.back()}
+                            className="-ml-1"
+                        >
+                            <Icons.arrowLeft className="size-4 mr-2" />
+                            {L.labels.backToDataSources}
+                        </Button>
+                    </div>
 
-            <ResourceForm DatabaseTable={DatabaseTable} resource={resource} />
-        </div>
+                    <PageTitle 
+                        title={L.titles.editResource} 
+                        subtitle={
+                            <div className="flex items-center gap-2">
+                                {L.labels.editing} <span className="text-primary">{resource.name}</span>
+                            </div>
+                        }
+                    />
+                </header>
+
+                <main className="px-1">
+                    <ResourceForm DatabaseTable={DatabaseTable} resource={resource} />
+                </main>
+            </div>
+        </TargetLayout>
     );
 }
 

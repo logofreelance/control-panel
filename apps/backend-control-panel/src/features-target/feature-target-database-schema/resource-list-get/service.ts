@@ -41,8 +41,8 @@ export function filterEndpointsByTableId(allEndpoints: any[], tableId: string) {
       // Never show the root '/' endpoint
       if (dbEndpoint === '/' || dbEndpoint === '') return false;
 
-      // Match by data_source_id
-      const sourceId = e.data_source_id || e.dataSourceId || e.DatabaseTableId;
+      // Match by database_table_id
+      const sourceId = e.database_table_id || e.DatabaseTableId;
       return sourceId && String(sourceId) === String(tableId);
     });
 }

@@ -2,7 +2,7 @@
  * target.db.ts
  * 
  * Modul ini HANYA UNTUK KONEKSI KE DATABASE TARGET BACKEND SYSTEM.
- * Tabel yang disentuh: route_dynamic, data_sources, data_source_resources.
+ * Tabel yang disentuh: route_dynamic, database_tables, database_resources.
  * DILARANG digunakan untuk query data admin_users atau session internal control panel!
  */
 

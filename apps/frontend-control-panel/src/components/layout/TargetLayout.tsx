@@ -66,7 +66,7 @@ export function TargetLayout({ children }: TargetLayoutProps) {
   ];
 
   const NavContent = () => (
-    <div className="flex flex-col gap-8 pb-12 pt-6">
+    <div className="flex flex-col gap-8 pb-12">
       {navigation.map((group) => (
         <div key={group.group} className="flex flex-col gap-2">
           <p className="text-base text-muted-foreground font-normal px-4 mb-2 lowercase">
@@ -99,9 +99,9 @@ export function TargetLayout({ children }: TargetLayoutProps) {
   );
 
   return (
-    <div className="relative flex flex-col h-screen w-full overflow-hidden bg-background font-instrument">
+    <div className="relative flex flex-col w-full bg-background font-instrument">
       {/* GLOBAL HEADER */}
-      <header className="z-50 w-full px-2 md:px-4 pt-2 md:pt-4 pointer-events-none transition-all shrink-0">
+      <header className="z-50 w-full px-2 md:px-4 pt-2 md:pt-4 pointer-events-none transition-all shrink-0 fixed top-0 left-0 right-0">
         <div className="mx-auto w-full max-w-7xl bg-card border-2 border-border h-16 rounded-2xl flex items-center justify-between px-3 md:px-8 pointer-events-auto shadow-none">
           <div className="flex items-center gap-2 md:gap-4">
             {/* MOBILE MENU TRIGGER */}
@@ -150,16 +150,14 @@ export function TargetLayout({ children }: TargetLayoutProps) {
       </header>
 
       {/* MAIN CONTAINER (SIDEBAR + CONTENT) */}
-      <div className="flex flex-1 overflow-hidden w-full max-w-7xl mx-auto px-3 md:px-4 pt-4 pb-4">
+      <div className="flex flex-1 w-full max-w-7xl mx-auto px-3 md:px-4 pt-24 pb-4">
         {/* SIDEBAR - DESKTOP ONLY */}
-        <aside className="hidden lg:flex flex-col w-72 shrink-0 pr-6 overflow-y-auto scrollbar-hide">
+        <aside className="hidden lg:flex flex-col w-72 shrink-0 pr-6 sticky top-24 h-[calc(100vh-120px)] overflow-y-auto no-scrollbar">
           <NavContent />
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 bg-background overflow-y-auto relative lg:mx-0 mx-2 scrollbar-hide">
-          {children}
-        </main>
+        <main className="flex-1 bg-background relative lg:mx-0 mx-2">{children}</main>
       </div>
     </div>
   );

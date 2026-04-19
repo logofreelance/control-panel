@@ -5,7 +5,7 @@
  * Integrated with TargetLayout and consistent Design System
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Badge, Card, CardContent } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
@@ -15,6 +15,7 @@ import { useDatabaseSchema, useSchemaActions, useResources, useSchemaStats } fro
 import { ConfirmDialog, PageLoadingSkeleton } from '@/modules/_core';
 import { RelationBuilder } from './RelationBuilder';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
+import { DYNAMIC_ROUTES_API } from '@/features-target/feature-dynamic-routes/api';
 import type { DatabaseTable, Resource } from '../types';
 
 const L = MODULE_LABELS.databaseSchema;
@@ -425,64 +426,69 @@ function ExpandedResourcesPanel({
       <RelationBuilder DatabaseTableId={sourceId} DatabaseTableName={sourceName} />
 
       {/* CMS Resources Section */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-3">
-            <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Icons.api className="w-4 h-4" />
+      <div className="space-y-6 flex flex-col gap-8">
+        <div>
+          <div className="flex items-center justify-between px-1 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <Icons.database className="w-4 h-4" />
+              </div>
+              <TextHeading size="h6" className="lowercase">
+                resource logic
+              </TextHeading>
+              {loadingResources && (
+                <Icons.loading className="w-3.5 h-3.5 animate-spin text-muted-foreground/40" />
+              )}
             </div>
-            <TextHeading size="h6" className="lowercase">
-              API Endpoints
-            </TextHeading>
-            {loadingResources && (
-              <Icons.loading className="w-3.5 h-3.5 animate-spin text-muted-foreground/40" />
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                router.push(
+                  nodeId
+                    ? `/target/${nodeId}/database-schema/${sourceId}/resources/create`
+                    : `/database-schema/${sourceId}/resources/create`,
+                )
+              }
+              title={L.buttons.createResource}
+            >
+              <Icons.plus className="w-4 h-4" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() =>
-              router.push(
-                nodeId
-                  ? `/target/${nodeId}/database-schema/${sourceId}/resources/create`
-                  : `/database-schema/${sourceId}/resources/create`,
-              )
-            }
-            title={L.buttons.createResource}
-          >
-            <Icons.plus className="w-4 h-4" />
-          </Button>
+
+          {loadingResources && resources.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <div className="size-8 border-[3px] border-primary/20 border-t-primary animate-spin rounded-full" />
+              <span className="text-sm text-muted-foreground lowercase">fetching resources...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {resources.length === 0 ? (
+                <div className="col-span-full border border-dashed border-border/20 rounded-2xl py-12 flex flex-col items-center justify-center text-center bg-background/20">
+                  <p className="text-sm text-muted-foreground lowercase mb-1">
+                    no resource logic configured
+                  </p>
+                  <span className="text-[10px] text-muted-foreground/50 lowercase">
+                    create a resource logic to define filters and rules
+                  </span>
+                </div>
+              ) : (
+                resources.map((r: any) => (
+                  <ResourceCard
+                    key={r.id}
+                    resource={r}
+                    sourceId={sourceId}
+                    onDelete={() => onDeleteResource(r.id, r.name)}
+                    nodeId={nodeId}
+                  />
+                ))
+              )}
+            </div>
+          )}
         </div>
 
-        {loadingResources && resources.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-4">
-            <div className="size-8 border-[3px] border-primary/20 border-t-primary animate-spin rounded-full" />
-            <span className="text-sm text-muted-foreground lowercase">fetching resources...</span>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {resources.length === 0 ? (
-              <div className="col-span-full border border-dashed border-border/20 rounded-2xl py-12 flex flex-col items-center justify-center text-center bg-background/20">
-                <p className="text-sm text-muted-foreground lowercase mb-1">
-                  {L.labels.noEndpointsConfigured.toLowerCase()}
-                </p>
-                <span className="text-[10px] text-muted-foreground/50 lowercase">
-                  {L.labels.createResourceToExpose.toLowerCase()}
-                </span>
-              </div>
-            ) : (
-              resources.map((r: any) => (
-                <ResourceCard
-                  key={r.id}
-                  resource={r}
-                  sourceId={sourceId}
-                  onDelete={() => onDeleteResource(r.id, r.name)}
-                  nodeId={nodeId}
-                />
-              ))
-            )}
-          </div>
-        )}
+        {/* Dynamic Routes Section */}
+        <EndpointListSection sourceId={sourceId} nodeId={nodeId} />
       </div>
     </div>
   );
@@ -636,6 +642,181 @@ function ResourceCard({ resource: r, sourceId, onDelete, nodeId }: any) {
             )}
           >
             {r.isActive || r.is_active ? L.labels.active : L.labels.draft}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ----------------------------------------------------------------------
+// NEW: Endpoint List Section for displaying Dynamic Routes referencing this Database
+// ----------------------------------------------------------------------
+
+function EndpointListSection({ sourceId, nodeId }: { sourceId: string | number; nodeId: string }) {
+  const router = useRouter();
+  const [endpoints, setEndpoints] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const fetchEndpoints = async () => {
+      try {
+        setLoading(true);
+        const targetId = Array.isArray(nodeId) ? nodeId[0] : (nodeId || '');
+        const res = await fetch(DYNAMIC_ROUTES_API.endpoints.list, {
+          headers: { 'x-target-id': targetId },
+        });
+        const data = await res.json();
+        
+        if (data.status === 'success' && Array.isArray(data.data) && active) {
+          // Filter to those that reference this sourceId
+          const filtered = data.data.filter(
+            (ep: any) => String(ep.dataSourceId) === String(sourceId)
+          );
+          setEndpoints(filtered);
+        }
+      } catch (err) {
+        console.error('Failed to fetch endpoints', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    
+    if (sourceId) {
+      fetchEndpoints();
+    }
+    
+    return () => { active = false; };
+  }, [sourceId, nodeId]);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between px-1 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <Icons.api className="w-4 h-4" />
+          </div>
+          <TextHeading size="h6" className="lowercase">
+            api endpoints
+          </TextHeading>
+          {loading && (
+            <Icons.loading className="w-3.5 h-3.5 animate-spin text-muted-foreground/40" />
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() =>
+            router.push(
+              nodeId
+                ? `/target/${nodeId}/routes`
+                : `/routes`,
+            )
+          }
+          title="go to endpoints builder"
+        >
+          <Icons.external className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {loading && endpoints.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <div className="size-8 border-[3px] border-primary/20 border-t-primary animate-spin rounded-full" />
+          <span className="text-sm text-muted-foreground lowercase">fetching endpoints...</span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {endpoints.length === 0 ? (
+            <div className="col-span-full border border-dashed border-border/20 rounded-2xl py-12 flex flex-col items-center justify-center text-center bg-background/20 mt-2">
+              <p className="text-sm text-muted-foreground lowercase mb-1">
+                no api endpoints configured.
+              </p>
+              <span className="text-[10px] text-muted-foreground/50 lowercase">
+                create an endpoint in route builder to expose this schema
+              </span>
+            </div>
+          ) : (
+            endpoints.map((ep: any) => (
+              <EndpointSimpleCard
+                key={ep.id}
+                endpoint={ep}
+                nodeId={nodeId}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EndpointSimpleCard({ endpoint: ep, nodeId }: { endpoint: any; nodeId: string }) {
+  const router = useRouter();
+
+  const handleEdit = () => {
+    router.push(
+      nodeId
+        ? `/target/${nodeId}/routes`
+        : `/routes`
+    );
+  };
+
+  const getMethodColor = (m: string) => {
+    if (!m) return 'text-muted-foreground bg-muted/50';
+    switch (String(m).toUpperCase()) {
+        case 'GET': return 'text-emerald-600 bg-emerald-500/10';
+        case 'POST': return 'text-indigo-600 bg-indigo-500/10';
+        case 'PUT':
+        case 'PATCH': return 'text-amber-600 bg-amber-500/10';
+        case 'DELETE': return 'text-rose-600 bg-rose-500/10';
+        default: return 'text-muted-foreground bg-muted/50';
+    }
+  };
+
+  return (
+    <Card size="sm" onClick={handleEdit} className="opacity-90 hover:opacity-100">
+      <CardContent>
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className={cn(
+                'border-none font-semibold uppercase',
+                getMethodColor(ep.method)
+              )}
+            >
+              {ep.method || 'UNKNOWN'}
+            </Badge>
+          </div>
+
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon-xs" onClick={handleEdit}>
+              <Icons.external className="w-3 h-3 text-muted-foreground" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-4 space-y-1">
+          <TextHeading size="h6" className="lowercase truncate">
+            {ep.path || ep.endpoint}
+          </TextHeading>
+          <p className="text-xs text-muted-foreground line-clamp-1 lowercase font-normal">
+            {ep.description || 'no description'}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-border/5">
+          <Badge
+            variant="outline"
+            className={cn(
+              'text-[9px] px-1.5 py-0 h-4 border-none uppercase font-semibold',
+              ep.isActive 
+                ? 'bg-indigo-500/10 text-indigo-600'
+                : 'bg-muted/50 text-muted-foreground/60',
+            )}
+          >
+            {ep.isActive ? 'active' : 'inactive'}
           </Badge>
         </div>
       </CardContent>

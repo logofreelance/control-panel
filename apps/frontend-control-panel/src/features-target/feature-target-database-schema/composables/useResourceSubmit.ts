@@ -8,7 +8,7 @@ import { TOAST_TYPE, API_STATUS } from '@/lib/config/defaults';
 import type { Resource, DatabaseTable } from '../types';
 
 export interface ResourcePayload {
-  data_source_id: string | number;
+  database_table_id: string | number;
   name: string;
   slug: string;
   description?: string;
@@ -25,10 +25,6 @@ export interface ResourcePayload {
   relations_json?: string;
 }
 
-/**
- * Hook for submitting resource create/update
- * Uses Pure DI via useConfig() hook
- */
 /**
  * Hook for submitting resource create/update
  * Modularized: Uses internal API and local constants
@@ -135,27 +131,6 @@ export function useResourceSubmit(DatabaseTableId: string | number) {
         const response = await apiClient.get<DatabaseTable[]>(API.list, { headers });
         if (response.status === API_STATUS.SUCCESS && response.data) {
           const sources = response.data;
-
-          // Add System Users Mock (if not present)
-          if (false && !sources.some((s) => s.id === 0)) {
-            sources.push({
-              id: 0,
-              name: 'System Users',
-              tableName: 'users',
-              isSystem: true,
-              schema_json: JSON.stringify({
-                columns: [
-                  { name: 'id', type: 'integer' },
-                  { name: 'email', type: 'string' },
-                  { name: 'username', type: 'string' },
-                  { name: 'role', type: 'string' },
-                  { name: 'created_at', type: 'timestamp' },
-                  { name: 'updated_at', type: 'timestamp' },
-                ],
-              }),
-            } as any);
-          }
-
           return excludeId ? sources.filter((ds) => ds.id !== excludeId) : sources;
         }
       } catch (err) {

@@ -64,12 +64,12 @@ export const IntegrationService = {
     // 4. Gather error templates
     const errorTemplates = await queryHelper(db, "SELECT * FROM " + TARGET_TABLES.ERROR_TEMPLATES + "");
     
-    // 5. Gather data sources
-    const dataSources = await queryHelper(db, "SELECT * FROM " + TARGET_TABLES.DATA_SOURCES + "");
+    // 5. Gather database tables
+    const databaseTables = await queryHelper(db, "SELECT * FROM " + TARGET_TABLES.DATABASE_TABLES + "");
     
     // 6. Introspect Table Schemas
     const schemas: any = {};
-    for (const ds of dataSources) {
+    for (const ds of databaseTables) {
        try {
            const cols = await queryHelper(db, "DESCRIBE `" + ds.table_name + "`");
            schemas[ds.id] = cols;
@@ -140,7 +140,7 @@ export const IntegrationService = {
         },
         categories,
         errorTemplates,
-        dataSources,
+        dataSources: databaseTables,
         schemas
     };
   }

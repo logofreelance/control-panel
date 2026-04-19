@@ -56,11 +56,12 @@ export async function insertSchemaRecord(db: any, data: {
   name: string;
   table_name: string;
   description: string;
+  schema_json: string;
   connection_config: string;
 }) {
   await db.execute(
     `INSERT INTO database_tables (id, name, table_name, display_name, description, schema_json, connection_config)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [data.id, data.name, data.table_name, data.name, data.description, '{}', data.connection_config]
+    [data.id, data.name, data.table_name, data.name, data.description, data.schema_json, data.connection_config]
   );
 }

@@ -139,4 +139,49 @@ async function ensureMetadataTables(db: any) {
       )
     `);
   }
+
+  // --- database_resources ---
+  const resourcesExist: any = await db.execute("SHOW TABLES LIKE 'database_resources'");
+  const resourcesExistRows = Array.isArray(resourcesExist) ? resourcesExist : resourcesExist.rows || [];
+  if (resourcesExistRows.length > 0) {
+    // Check for old column name and migrate if needed
+    try {
+      const columns: any = await db.execute("DESCRIBE database_resources");
+      const columnRows = Array.isArray(columns) ? columns : columns.rows || [];
+      const hasOldId = columnRows.some((c: any) => c.Field === 'DatabaseTableId');
+      if (hasOldId) {
+        console.log('[MIGRATION] Renaming DatabaseTableId to database_table_id in database_resources');
+        await db.execute("ALTER TABLE database_resources CHANGE DatabaseTableId database_table_id VARCHAR(36)");
+      }
+    } catch (e) {
+      console.error('[MIGRATION ERROR] Failed to check/migrate database_resources columns:', e);
+    }
+  }
+
+  if (resourcesExistRows.length === 0) {
+    await db.execute(`
+      CREATE TABLE database_resources (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          database_table_id VARCHAR(36) NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          slug VARCHAR(255) NOT NULL,
+          description TEXT,
+          fields_json TEXT,
+          filters_json TEXT,
+          relations_json TEXT,
+          order_by VARCHAR(255) DEFAULT 'id',
+          order_direction VARCHAR(10) DEFAULT 'DESC',
+          default_limit INT DEFAULT 10,
+          max_limit INT DEFAULT 100,
+          is_public TINYINT DEFAULT 0,
+          is_active TINYINT DEFAULT 1,
+          aggregates_json TEXT,
+          computed_json TEXT,
+          joins_json TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_table_id (database_table_id)
+      )
+    `);
+  }
 }

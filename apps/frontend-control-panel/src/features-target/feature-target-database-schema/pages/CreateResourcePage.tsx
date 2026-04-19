@@ -12,10 +12,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Badge } from '@/components/ui';
-import { TextHeading } from '@/components/ui/text-heading';
+import { Button, Badge, PageTitle } from '@/components/ui';
 import { useConfig } from '@/modules/_core';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/frontend-api';
+import { TargetLayout } from '@/components/layout/TargetLayout';
 import { ResourceForm } from '../components/ResourceForm';
 import type { DatabaseTable } from '../types';
 
@@ -29,6 +29,7 @@ export function CreateResourcePage() {
 
     // State
     const [DatabaseTable, setDatabaseTable] = useState<DatabaseTable | null>(null);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     // Resolve IDs from URL params
@@ -38,61 +39,135 @@ export function CreateResourcePage() {
     const nodeId = isTargetRoute ? rawNodeId : undefined;
     const tableId = rawTableId || rawNodeId;
 
+    useEffect(() => {
+        console.log('[CreateResourcePage] URL Params:', params);
+        console.log('[CreateResourcePage] Resolved IDs:', { tableId, nodeId });
+    }, [params, tableId, nodeId]);
+
     // Fetch data source details
     useEffect(() => {
         if (!tableId) return;
 
         const fetchSource = async () => {
+            setLoading(true);
             try {
                 const data = await apiClient.get<any>(api.databaseSchema.detail(tableId), {
                     headers: nodeId ? { 'x-target-id': nodeId } : {}
                 });
 
                 if (data.status === API_STATUS.SUCCESS) {
-                    setDatabaseTable(data.data);
+                    console.log('[CreateResourcePage] Raw API Response:', data);
+                    
+                    let tableData = data.data?.data || data.data?.result || data.data;
+                    console.log('[CreateResourcePage] Resolved Table Data:', tableData);
+                    
+                    // Check if columns are already available (enriched by backend detail handler)
+                    const existingColumns = tableData.columns || tableData.schema?.columns;
+                    const hasColumns = Array.isArray(existingColumns) && existingColumns.length > 0;
+                    
+                    if (!hasColumns) {
+                        console.log('[CreateResourcePage] Columns missing from detail, fetching via DESCRIBE...');
+                        const colsData = await apiClient.get<any>(api.databaseSchema.columns(tableId), {
+                            headers: nodeId ? { 'x-target-id': nodeId } : {}
+                        });
+                        console.log('[CreateResourcePage] Columns Response:', colsData);
+                        if (colsData.status === API_STATUS.SUCCESS) {
+                            let resolvedCols = colsData.data?.data || colsData.data?.result || colsData.data;
+                            
+                            // Fallback: try by tableName
+                            if ((!resolvedCols || resolvedCols.length === 0) && tableData.tableName) {
+                                const nameColsData = await apiClient.get<any>(api.databaseSchema.columns(tableData.tableName), {
+                                    headers: nodeId ? { 'x-target-id': nodeId } : {}
+                                });
+                                if (nameColsData.status === API_STATUS.SUCCESS) {
+                                    resolvedCols = nameColsData.data?.data || nameColsData.data?.result || nameColsData.data;
+                                }
+                            }
+
+                            console.log('[CreateResourcePage] Resolved Columns:', resolvedCols);
+                            tableData = { ...tableData, columns: Array.isArray(resolvedCols) ? resolvedCols : [] };
+                        }
+                    }
+                    
+                    setDatabaseTable(tableData);
                 } else {
                     setError(data.message || L.messages.error.loadFailed);
                 }
             } catch (e) {
                 console.error(e);
                 setError(L.messages.error.network);
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchSource();
     }, [tableId, nodeId, api, API_STATUS, L]);
 
+    // Loading state
+    if (loading) {
+        return (
+            <TargetLayout>
+                <div className="w-full flex items-center justify-center min-h-[60vh]">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="size-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+                        <span className="text-base text-muted-foreground font-medium lowercase">
+                            loading schema...
+                        </span>
+                    </div>
+                </div>
+            </TargetLayout>
+        );
+    }
+
     // Error state
     if (error || !DatabaseTable) {
         return (
-            <div className="p-12 text-center text-red-500">
-                <Icons.warning className="w-8 h-8 mx-auto mb-2" />
-                {error || L.messages.error.sourceNotFound}
-            </div>
+            <TargetLayout>
+                <div className="flex flex-col items-center justify-center p-12 text-center text-red-500 animate-page-enter">
+                    <Icons.warning className="size-10 mb-4" />
+                    <PageTitle title="error occurred" subtitle={error || L.messages.error.sourceNotFound} />
+                    <Button variant="ghost" className="mt-8" onClick={() => router.back()}>
+                        {L.labels.backToDataSources}
+                    </Button>
+                </div>
+            </TargetLayout>
         );
     }
 
     return (
-        <div className="max-w-4xl mx-auto py-8">
-            <div className="mb-8">
-                <Button
-                    variant="ghost"
-                    onClick={() => router.back()}
-                    className="mb-4 pl-0 hover:bg-transparent hover:text-foreground group"
-                >
-                    <Icons.arrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                    {L.labels.backToDataSources}
-                </Button>
-                <div className="flex flex-row items-center gap-3">
-                    <TextHeading size="h2" as="h2">{L.titles.createResource}</TextHeading>
-                    <Badge variant="default">
-                        {L.labels.forSource} {DatabaseTable.name}
-                    </Badge>
-                </div>
-            </div>
+        <TargetLayout>
+            <div className="flex flex-col gap-6 md:gap-10 animate-page-enter">
+                <header className="flex flex-col gap-6">
+                    <div>
+                        <Button
+                            variant="ghost"
+                            onClick={() => router.back()}
+                            className="-ml-1"
+                        >
+                            <Icons.arrowLeft className="size-4 mr-2" />
+                            {L.labels.backToDataSources}
+                        </Button>
+                    </div>
 
-            <ResourceForm DatabaseTable={DatabaseTable} />
-        </div>
+                    <PageTitle 
+                        title={L.titles.createResource} 
+                        subtitle={
+                            <span className="flex items-center gap-2">
+                                {L.labels.forSource}{' '}
+                                <Badge variant="secondary" className="font-normal lowercase">
+                                    {DatabaseTable.name}
+                                </Badge>
+                            </span>
+                        }
+                    />
+                </header>
+
+                <main>
+                    <ResourceForm DatabaseTable={DatabaseTable} />
+                </main>
+            </div>
+        </TargetLayout>
     );
 }
 

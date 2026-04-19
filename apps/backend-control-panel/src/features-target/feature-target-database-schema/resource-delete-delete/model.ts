@@ -1,9 +1,9 @@
 /**
  * resource-delete-delete/model.ts
  *
- * SQL: DELETE from route_dynamic by rid
+ * SQL: DELETE from database_resources by rid
  */
 
-export async function deleteEndpoint(db: any, rid: string) {
-  await db.execute('DELETE FROM route_dynamic WHERE id = ?', [rid]);
+export async function deleteEndpoint(db: any, rid: string | number) {
+  await db.execute('DELETE FROM database_resources WHERE id = ?', [rid]);
 }

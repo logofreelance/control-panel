@@ -92,7 +92,7 @@ export const CreateRelationForm = ({ DatabaseTableId }: CreateRelationFormProps)
             
             return { 
                 ...prev, 
-                targetId: id, 
+                targetId: id !== undefined && id !== null ? id : 'MISSING_ID', 
                 type: newType,
                 foreignKey: 'id', // Default foreign key is usually id
             };

@@ -155,6 +155,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
     { id: 'basic', label: 'basic info', Icon: Icons.globe },
     { id: 'data', label: 'data binding', Icon: Icons.database },
     { id: 'mutation', label: 'mutation settings', Icon: Icons.edit },
+    { id: 'query', label: 'query settings', Icon: Icons.settings },
     { id: 'security', label: 'security', Icon: Icons.lock },
     { id: 'response', label: 'response', Icon: Icons.upload },
     { id: 'test', label: 'quick test', Icon: Icons.flask },
@@ -222,6 +223,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
         {TABS.map((tab) => {
           const TabIcon = tab.Icon;
           if (tab.id === 'mutation' && !isWriteOp) return null;
+          if (tab.id === 'query' && isWriteOp) return null;
           const isActive = activeTab === tab.id;
 
           return (
@@ -641,6 +643,187 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                           </div>
                         );
                       })()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'query' && !isWriteOp && (
+              <div className="space-y-8 animate-page-enter">
+                <div className="p-4 rounded-xl bg-muted/30 border border-border/5">
+                  <TextHeading as="h3" size="h4" className="lowercase mb-1">{L.querySettings.title}</TextHeading>
+                  <p className="text-base text-muted-foreground lowercase">{L.querySettings.subtitle}</p>
+                </div>
+
+                {/* Pagination */}
+                <div className="space-y-4">
+                  <div className="flex flex-row items-center justify-between gap-4 p-4 rounded-xl bg-muted/10 border border-border/5">
+                    <div className="space-y-1">
+                      <Label className="text-base lowercase">{L.querySettings.pagination.title}</Label>
+                      <p className="text-sm text-muted-foreground lowercase">{L.querySettings.pagination.enableHint}</p>
+                    </div>
+                    <Switch
+                      checked={form.allowDynamicPagination ?? true}
+                      onCheckedChange={(checked) => setForm({ ...form, allowDynamicPagination: checked })}
+                    />
+                  </div>
+                  
+                  {form.allowDynamicPagination && (
+                    <div className="max-w-xs pl-4 border-l-2 border-primary/20">
+                      <Label className="lowercase mb-2 block px-1">{L.querySettings.pagination.defaultLimit}</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={form.defaultLimit || 20}
+                        onChange={(e) => setForm({ ...form, defaultLimit: parseInt(e.target.value) || 20 })}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Filtering */}
+                <div className="space-y-6">
+                  <div className="flex flex-row items-center justify-between gap-4 p-4 rounded-xl bg-muted/10 border border-border/5">
+                    <div className="space-y-1">
+                      <Label className="text-base lowercase">{L.querySettings.filtering.title}</Label>
+                      <p className="text-sm text-muted-foreground lowercase">{L.querySettings.filtering.enableHint}</p>
+                    </div>
+                    <Switch
+                      checked={form.allowDynamicFilters || false}
+                      onCheckedChange={(checked) => setForm({ ...form, allowDynamicFilters: checked })}
+                    />
+                  </div>
+
+                  {form.allowDynamicFilters && (
+                    <div className="pl-4 border-l-2 border-primary/20 space-y-4">
+                      <Label className="lowercase mb-2 block px-1">{L.querySettings.filtering.filterableFields}</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                           const filterableList: string[] = form.filterableFields
+                             ? JSON.parse((form.filterableFields as string) || '[]')
+                             : [];
+                           
+                           return columns.map(col => {
+                             const isFilterable = filterableList.includes(col.name);
+                             const toggleFilter = () => {
+                               const newList = isFilterable 
+                                 ? filterableList.filter(n => n !== col.name)
+                                 : [...filterableList, col.name];
+                               setForm({ ...form, filterableFields: JSON.stringify(newList) });
+                             };
+
+                             return (
+                               <button
+                                 key={col.name}
+                                 type="button"
+                                 onClick={toggleFilter}
+                                 className={cn(
+                                   'px-3 py-1.5 rounded-lg text-[13px] transition-all flex items-center gap-1.5 border',
+                                   isFilterable 
+                                     ? 'bg-primary/5 text-primary border-primary/20' 
+                                     : 'bg-muted/20 text-muted-foreground border-transparent'
+                                 )}
+                               >
+                                 {isFilterable && <Icons.check className="size-3" />}
+                                 {col.name}
+                               </button>
+                             );
+                           });
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sorting */}
+                <div className="space-y-6">
+                  <div className="flex flex-row items-center justify-between gap-4 p-4 rounded-xl bg-muted/10 border border-border/5">
+                    <div className="space-y-1">
+                      <Label className="text-base lowercase">{L.querySettings.sorting.title}</Label>
+                      <p className="text-sm text-muted-foreground lowercase">{L.querySettings.sorting.enableHint}</p>
+                    </div>
+                    <Switch
+                      checked={form.allowDynamicSort || false}
+                      onCheckedChange={(checked) => setForm({ ...form, allowDynamicSort: checked })}
+                    />
+                  </div>
+
+                  {form.allowDynamicSort && (
+                    <div className="pl-4 border-l-2 border-primary/20 space-y-4">
+                      <Label className="lowercase mb-2 block px-1">{L.querySettings.sorting.sortableFields}</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                           const sortableList: string[] = form.sortableFields
+                             ? JSON.parse((form.sortableFields as string) || '[]')
+                             : [];
+                           
+                           return columns.map(col => {
+                             const isSortable = sortableList.includes(col.name);
+                             const toggleSort = () => {
+                               const newList = isSortable 
+                                 ? sortableList.filter(n => n !== col.name)
+                                 : [...sortableList, col.name];
+                               setForm({ ...form, sortableFields: JSON.stringify(newList) });
+                             };
+
+                             return (
+                               <button
+                                 key={col.name}
+                                 type="button"
+                                 onClick={toggleSort}
+                                 className={cn(
+                                   'px-3 py-1.5 rounded-lg text-[13px] transition-all flex items-center gap-1.5 border',
+                                   isSortable 
+                                     ? 'bg-primary/5 text-primary border-primary/20' 
+                                     : 'bg-muted/20 text-muted-foreground border-transparent'
+                                 )}
+                               >
+                                 {isSortable && <Icons.check className="size-3" />}
+                                 {col.name}
+                               </button>
+                             );
+                           });
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Detail View Resolution */}
+                <div className="space-y-6">
+                  <div className="flex flex-row items-center justify-between gap-4 p-4 rounded-xl bg-muted/10 border border-border/5">
+                    <div className="space-y-1">
+                      <Label className="text-base lowercase">{L.querySettings.detailView.title}</Label>
+                      <p className="text-sm text-muted-foreground lowercase">{L.querySettings.detailView.enableHint}</p>
+                    </div>
+                    <Switch
+                      checked={form.allowDetailView ?? true}
+                      onCheckedChange={(checked) => setForm({ ...form, allowDetailView: checked })}
+                    />
+                  </div>
+
+                  {form.allowDetailView && (
+                    <div className="pl-4 border-l-2 border-primary/20 space-y-4">
+                      <div className="max-w-md">
+                        <Label className="lowercase mb-2 block px-1">{L.querySettings.detailView.lookupColumn}</Label>
+                        <Select
+                          value={form.lookupColumn || 'id'}
+                          onChange={(e) => setForm({ ...form, lookupColumn: e.target.value })}
+                          fullWidth
+                          options={[
+                            { label: 'id (uuid)', value: 'id' },
+                            ...columns.map(col => ({
+                              label: col.name.toLowerCase(),
+                              value: col.name
+                            })).filter(o => o.value !== 'id')
+                          ]}
+                        />
+                        <p className="text-[13px] text-muted-foreground mt-2 lowercase px-1">
+                           {L.querySettings.detailView.lookupColumnHint}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>

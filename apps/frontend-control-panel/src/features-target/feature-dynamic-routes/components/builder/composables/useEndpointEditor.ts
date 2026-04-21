@@ -30,7 +30,13 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         method: 'GET',
         isActive: true,
         minRoleLevel: 0, // Default: public access
-        responseData: '{"status": "success", "data": {{DATA}}, "count": {{COUNT}}}'
+        responseData: '{"status": "success", "data": {{DATA}}, "count": {{COUNT}}}',
+        allowDynamicPagination: true,
+        allowDynamicFilters: false,
+        allowDynamicSort: false,
+        allowDetailView: true,
+        lookupColumn: 'id',
+        defaultLimit: 20,
     });
 
     // Validation States
@@ -39,7 +45,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
     // Removed allEndpoints state as we now check server-side
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'basic' | 'data' | 'mutation' | 'security' | 'response' | 'test'>('basic');
+    const [activeTab, setActiveTab] = useState<'basic' | 'data' | 'mutation' | 'query' | 'security' | 'response' | 'test'>('basic');
     const [deleteConfirm, setDeleteConfirm] = useState(false);
 
     // Fetch Resources when DataSource changes

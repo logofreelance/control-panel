@@ -462,9 +462,9 @@ function ExpandedResourcesPanel({
               <span className="text-sm text-muted-foreground lowercase">fetching resources...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-3">
               {resources.length === 0 ? (
-                <div className="col-span-full border border-dashed border-border/20 rounded-2xl py-12 flex flex-col items-center justify-center text-center bg-background/20">
+                <div className="border border-dashed border-border/20 rounded-2xl py-12 flex flex-col items-center justify-center text-center bg-background/20">
                   <p className="text-sm text-muted-foreground lowercase mb-1">
                     no resource logic configured
                   </p>
@@ -564,85 +564,97 @@ function ResourceCard({ resource: r, sourceId, onDelete, nodeId }: any) {
   };
 
   return (
-    <Card size="sm" onClick={handleEdit}>
-      <CardContent>
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-2">
+    <Card size="sm" className="group">
+      <CardContent className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-3">
+        {/* Info & Status */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="flex flex-col items-center gap-1 shrink-0">
             <Badge
               variant="outline"
-              className="text-emerald-600 bg-emerald-500/10 border-none font-semibold uppercase"
+              className="text-[10px] px-1.5 py-0 h-4 border-none font-bold text-emerald-600 bg-emerald-500/10 min-w-10 flex justify-center"
             >
               GET
             </Badge>
             {hasJoins && (
-              <div
-                className="size-5 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center"
-                title={L.labels.hasJoins}
-              >
-                <Icons.link className="w-3 h-3" />
+                <div
+                    className="size-5 rounded-md bg-amber-500/10 text-amber-600 flex items-center justify-center"
+                    title={L.labels.hasJoins}
+                >
+                    <Icons.link className="w-3 h-3" />
+                </div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3">
+              <TextHeading size="h6" className="lowercase truncate">
+                {r.name}
+              </TextHeading>
+              <div className="font-mono text-[10px] text-muted-foreground/40 lowercase">
+                /{r.slug}
               </div>
-            )}
-          </div>
+            </div>
+            
+            <div className="flex items-center gap-2 mt-1">
+               <Badge
+                variant="outline"
+                className={cn(
+                  'text-[9px] px-1.5 py-0 h-4 border-none uppercase font-semibold',
+                  r.isPublic || r.is_public
+                    ? 'bg-amber-500/10 text-amber-600'
+                    : 'bg-emerald-500/10 text-emerald-600',
+                )}
+              >
+                {r.isPublic || r.is_public ? L.labels.public : L.labels.protected}
+              </Badge>
 
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon-xs" onClick={handleEdit}>
-              <Icons.edit className="w-3 h-3 text-muted-foreground" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <Icons.trash className="w-3 h-3 text-muted-foreground hover:text-rose-500 transition-colors" />
-            </Button>
+              {hasFilters && (
+                <Badge
+                  variant="outline"
+                  className="text-[9px] px-1.5 py-0 h-4 bg-primary/5 text-primary border-none uppercase font-semibold"
+                >
+                  {L.labels.filters}
+                </Badge>
+              )}
+
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-[9px] px-1.5 py-0 h-4 border-none uppercase font-semibold',
+                  r.isActive || r.is_active
+                    ? 'bg-indigo-500/10 text-indigo-600'
+                    : 'bg-muted/50 text-muted-foreground/60',
+                )}
+              >
+                {r.isActive || r.is_active ? L.labels.active : L.labels.draft}
+              </Badge>
+            </div>
           </div>
         </div>
 
-        <div className="mb-4 space-y-1">
-          <TextHeading size="h6" className="lowercase">
-            {r.name}
-          </TextHeading>
-          <div className="font-mono text-[9px] text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded w-fit uppercase">
-            /{r.slug}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-border/5">
-          <Badge
-            variant="outline"
-            className={cn(
-              'text-[9px] px-1.5 py-0 h-4 border-none uppercase font-semibold',
-              r.isPublic || r.is_public
-                ? 'bg-amber-500/10 text-amber-600'
-                : 'bg-emerald-500/10 text-emerald-600',
-            )}
+        {/* Actions */}
+        <div className="flex items-center gap-2 shrink-0 border-l border-border/5 pl-4 ml-auto">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 text-xs font-medium lowercase"
+            onClick={handleEdit}
           >
-            {r.isPublic || r.is_public ? L.labels.public : L.labels.protected}
-          </Badge>
-
-          {hasFilters && (
-            <Badge
-              variant="outline"
-              className="text-[9px] px-1.5 py-0 h-4 bg-primary/5 text-primary border-none uppercase font-semibold"
-            >
-              {L.labels.filters}
-            </Badge>
-          )}
-
-          <Badge
-            variant="outline"
-            className={cn(
-              'text-[9px] px-1.5 py-0 h-4 border-none uppercase font-semibold',
-              r.isActive || r.is_active
-                ? 'bg-indigo-500/10 text-indigo-600'
-                : 'bg-muted/50 text-muted-foreground/60',
-            )}
+            <Icons.edit className="w-3 h-3 mr-2" />
+            edit logic
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            className="size-8 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/5"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
           >
-            {r.isActive || r.is_active ? L.labels.active : L.labels.draft}
-          </Badge>
+            <Icons.trash className="w-3.5 h-3.5" />
+          </Button>
         </div>
       </CardContent>
     </Card>

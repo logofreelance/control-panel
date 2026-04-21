@@ -95,7 +95,7 @@ export const RelationBuilder = ({
         </div>
       </div>
 
-      {/* Relations Grid */}
+      {/* Relations List (Refactored from Grid to List) */}
       {relations.length === 0 ? (
         <Empty className="py-16 border-border bg-card">
           <EmptyHeader>
@@ -111,93 +111,84 @@ export const RelationBuilder = ({
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-3">
           {relations.map((rel) => {
             return (
               <Card
                 key={rel.id}
-                className="group relative flex flex-col p-5 border-border shadow-none"
+                className="group relative flex flex-col md:flex-row md:items-center justify-between p-3 border-border shadow-none gap-4"
               >
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="size-12 rounded-xl bg-muted flex items-center justify-center text-2xl">
+                {/* 1. Type Icon & Label */}
+                <div className="flex items-center gap-4 min-w-[200px]">
+                  <div className="size-10 rounded-xl bg-primary/5 flex items-center justify-center text-xl text-primary shrink-0 border border-primary/10">
                     {getTypeIcon(rel.type)}
                   </div>
-                  <div className="flex-1">
-                    <TextHeading size="h5" className="font-semibold lowercase leading-none mb-1.5">
+                  <div>
+                    <TextHeading size="h6" className="font-semibold lowercase leading-none mb-1">
                       {getTypeLabel(rel.type)}
                     </TextHeading>
-                    <p className="text-base text-muted-foreground font-normal lowercase">
+                    <p className="text-[10px] text-muted-foreground font-normal lowercase opacity-60">
                       relationship type
                     </p>
                   </div>
+                </div>
 
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-9"
-                      onClick={() => {
-                        const path = nodeId
-                          ? `/target/${nodeId}/database-schema/${DatabaseTableId}/relations/${rel.id}/edit`
-                          : `/database-schema/${DatabaseTableId}/relations/${rel.id}/edit`;
-                        router.push(path);
-                      }}
-                    >
-                      <Icons.edit className="size-4 text-muted-foreground" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-9 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteTarget(rel);
-                      }}
-                    >
-                      <Icons.trash className="size-4" />
-                    </Button>
+                {/* 2. Mapping Visualization (Compact) */}
+                <div className="flex-1 flex items-center justify-center gap-4 px-4 border-x border-border/5">
+                  <div className="text-right">
+                    <span className="block text-[10px] text-muted-foreground font-normal lowercase opacity-60">source</span>
+                    <span className="block text-sm font-medium lowercase truncate max-w-[120px]">{DatabaseTableName}</span>
+                  </div>
+                  <div className="size-7 rounded-full bg-muted/40 flex items-center justify-center">
+                    <Icons.arrowRight className="size-3.5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <span className="block text-[10px] text-muted-foreground font-normal lowercase opacity-60">target</span>
+                    <span className="block text-sm font-medium lowercase truncate max-w-[120px]">{rel.target?.name || 'unknown'}</span>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 p-4 rounded-xl bg-muted/30 border border-border mb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="block text-sm text-muted-foreground font-normal lowercase mb-0.5">
-                        source
-                      </span>
-                      <span className="block text-base md:text-lg font-normal lowercase">
-                        {DatabaseTableName}
-                      </span>
-                    </div>
-                    <Icons.arrowRight className="size-5 text-muted-foreground" />
-                    <div className="text-right">
-                      <span className="block text-sm text-muted-foreground font-normal lowercase mb-0.5">
-                        target
-                      </span>
-                      <span className="block text-base md:text-lg font-normal lowercase">
-                        {rel.target?.name || 'unknown'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    className="text-sm px-2.5 py-0.5 font-normal lowercase border-border flex gap-2 items-center"
-                  >
-                    <Icons.key className="size-3.5 text-muted-foreground" />
-                    <span>{rel.localKey}</span>
+                {/* 3. Keys & Aliases */}
+                <div className="flex flex-wrap items-center gap-2 min-w-[180px]">
+                  <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 font-normal lowercase border-border/40 bg-muted/20 text-muted-foreground flex gap-1.5 items-center">
+                    <Icons.key className="size-2.5" />
+                    {rel.localKey}
                   </Badge>
                   {rel.alias && (
-                    <Badge
-                      variant="secondary"
-                      className="text-sm px-2.5 py-0.5 font-normal lowercase"
-                    >
-                      <Icons.code className="size-3.5 mr-2" />
-                      <span>{rel.alias}</span>
+                    <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 font-medium lowercase border-indigo-500/10 bg-indigo-500/5 text-indigo-600 flex gap-1.5 items-center">
+                      <Icons.code className="size-2.5" />
+                      {rel.alias}
                     </Badge>
                   )}
+                </div>
+
+                {/* 4. Persistent Actions */}
+                <div className="flex items-center gap-1 shrink-0 border-l border-border/5 pl-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs font-medium lowercase px-3"
+                    onClick={() => {
+                        const path = nodeId
+                        ? `/target/${nodeId}/database-schema/${DatabaseTableId}/relations/${rel.id}/edit`
+                        : `/database-schema/${DatabaseTableId}/relations/${rel.id}/edit`;
+                        router.push(path);
+                    }}
+                  >
+                    <Icons.edit className="size-3 mr-2" />
+                    edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="size-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget(rel);
+                    }}
+                  >
+                    <Icons.trash className="size-3.5" />
+                  </Button>
                 </div>
               </Card>
             );

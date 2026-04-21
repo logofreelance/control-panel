@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { useResourceSubmit, useRelations } from '../composables';
+import { RecursiveRelationPicker } from './RecursiveRelationPicker';
 import { useConfig } from '@/modules/_core';
 import type { DatabaseTable, Resource } from '../types';
 
@@ -63,7 +64,7 @@ interface FormState {
     logic?: 'AND' | 'OR';
   }[];
   joins?: { table: string; alias: string; type: 'LEFT' | 'INNER'; on: [string, string] }[];
-  relations?: { name: string; fields: string[] }[];
+  relations?: any; // Tree structure: { [alias]: { targetId, fields, relations } }
 }
 
 export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => {
@@ -114,7 +115,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
       return Array.isArray(f) ? (f as FormState['filters']) : [];
     })(),
     joins: safeParseJSON(resource?.joinsJson, []),
-    relations: safeParseJSON(resource?.relationsJson, []),
+    relations: safeParseJSON(resource?.relationsJson, null),
   });
 
   const columns = (() => {
@@ -330,127 +331,53 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                     {L.labels.relatedData}
                   </TextHeading>
                   <p className="text-base font-normal text-muted-foreground lowercase">
-                    {L.labels.relatedDataHint.toLowerCase()}
+                    {(L.labels.relatedDataHint || "include data from related tables (eager loading).").toLowerCase()}
                   </p>
                 </div>
               </div>
 
-              {loadingRelations ? (
-                <div className="flex items-center justify-center py-12 gap-3 text-muted-foreground">
-                  <Icons.loading className="size-5 animate-spin" />
-                  <span className="text-base font-normal text-muted-foreground lowercase">loading relations...</span>
-                </div>
-              ) : relations.length === 0 ? (
-                <div className="text-center py-12 px-4 bg-muted/20 rounded-3xl border border-dashed border-border/40 text-muted-foreground space-y-2">
+              {form.relations === null ? (
+                <div className="text-center py-12 px-4 bg-muted/20 rounded-3xl border border-dashed border-border/40 text-muted-foreground space-y-4">
                   <p className="text-base font-normal text-muted-foreground lowercase">
-                    {L.labels.noRelationsDefined}
+                    {L.labels.relatedDataHint || "include data from related tables (eager loading)."}
                   </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        relations: {} // Initialize as object to show the picker
+                      })
+                    }
+                  >
+                    Enable
+                  </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {relations.map((rel) => {
-                    const selectedRel = form.relations?.find((r) => r.name === rel.alias);
-                    return (
-                      <Card key={rel.id}>
-                        <CardContent>
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-4">
-                              <TextHeading size="h6">
-                                {rel.alias}
-                              </TextHeading>
-                            </div>
-
-                            <Button
-                              type="button"
-                              variant={selectedRel ? 'default' : 'outline'}
-                              onClick={() => {
-                                if (selectedRel) {
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    relations: (prev.relations || []).filter(
-                                      (r) => r.name !== rel.alias,
-                                    ),
-                                  }));
-                                } else {
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    relations: [
-                                      ...(prev.relations || []),
-                                      { name: rel.alias, fields: [] },
-                                    ],
-                                  }));
-                                }
-                              }}
-                            >
-                              {selectedRel ? 'Enabled' : 'Enable'}
-                            </Button>
-                          </div>
-
-                          {selectedRel && (
-                            <div className="space-y-4 pt-4 border-t border-violet-500/10">
-                              <TextHeading size="h6">
-                                include columns
-                              </TextHeading>
-                              <div className="flex flex-wrap gap-2">
-                                {(() => {
-                                  const targetSource = availableSources.find(
-                                    (s) => s.id === rel.targetId,
-                                  );
-                                  if (!targetSource) return null;
-
-                                  const src = targetSource as any;
-                                  // Priority: direct columns array > schema.columns > schemaJson
-                                  const targetColumns = (
-                                    (Array.isArray(src.columns) && src.columns.length > 0 ? src.columns : null) ||
-                                    (src.schema?.columns?.length > 0 ? src.schema.columns : null) ||
-                                    safeParseJSON<{ columns: any[] }>(src.schemaJson || src.schema_json, { columns: [] }).columns ||
-                                    []
-                                  ).map((col: any) => ({
-                                    name: col.name || col.Field || col.column_name || col.COLUMN_NAME,
-                                    type: col.type || col.Type || 'string',
-                                  }));
-
-                                  return targetColumns.map((col) => {
-                                    const isColSelected = selectedRel.fields.includes(col.name);
-                                    return (
-                                      <Button
-                                        key={col.name}
-                                        type="button"
-                                        variant={isColSelected ? 'default' : 'secondary'}
-                                        size="sm"
-                                        onClick={() => {
-                                          const newRelations = [...(form.relations || [])];
-                                          const relIndex = newRelations.findIndex(
-                                            (r) => r.name === rel.alias,
-                                          );
-                                          if (relIndex > -1) {
-                                            const existingFields = newRelations[relIndex].fields;
-                                            newRelations[relIndex].fields = isColSelected
-                                              ? existingFields.filter((f) => f !== col.name)
-                                              : [...existingFields, col.name];
-                                            setForm((prev) => ({
-                                              ...prev,
-                                              relations: newRelations,
-                                            }));
-                                          }
-                                        }}
-                                      >
-                                        {col.name}
-                                      </Button>
-                                    );
-                                  });
-                                })()}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                <div className="space-y-6">
+                  <RecursiveRelationPicker 
+                    sourceId={DatabaseTable.id}
+                    value={form.relations || {}}
+                    onChange={(val) => setForm({ ...form, relations: val })}
+                  />
+                  
+                  <div className="flex justify-center pt-4 border-t border-border/5">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-rose-500 lowercase"
+                      onClick={() => setForm({ ...form, relations: null })}
+                    >
+                      disable all relations
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
+
 
           {/* Section: Computed Fields */}
           <Card>

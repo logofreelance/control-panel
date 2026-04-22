@@ -132,7 +132,11 @@ export const EndpointDetailView = ({
        if (resource) {
          try {
            const fields = JSON.parse(resource.fields_json || resource.fieldsJson || '[]');
-           if (fields.length > 0) fieldPieces.push(`BASE FIELDS: [${fields.join(', ')}]`);
+           if (fields.length > 0) {
+             fieldPieces.push(`BASE FIELDS: [${fields.join(', ')}]`);
+           } else if (columns.length > 0) {
+             fieldPieces.push(`BASE FIELDS (ALL): [${columns.map(c => c.name || c.Field || c.column_name).join(', ')}]`);
+           }
            
            const computed = JSON.parse(resource.computed_json || resource.computedJson || '[]');
            if (computed.length > 0) fieldPieces.push(`COMPUTED FIELDS: [${computed.map((c: any) => c.name).join(', ')}]`);
@@ -141,8 +145,23 @@ export const EndpointDetailView = ({
            if (aggregates.length > 0) fieldPieces.push(`AGGREGATES: [${aggregates.map((a: any) => a.alias || a.function).join(', ')}]`);
            
            const relations = JSON.parse(resource.relations_json || resource.relationsJson || '{}');
-           const relKeys = Object.keys(relations);
-           if (relKeys.length > 0) fieldPieces.push(`EAGER RELATIONS: [${relKeys.join(', ')}]`);
+           const seen = new Set();
+           const relPieces = Object.entries(relations)
+             .map(([key, config]: [string, any]) => {
+                // EXTREME CLEANING: Skip if key is numeric OR config is missing targetId/name
+                if (!isNaN(Number(key))) return null;
+                if (!config || (!config.targetId && !config.table)) return null;
+
+                const alias = key; 
+                if (seen.has(alias)) return null;
+                seen.add(alias);
+
+                const subFields = Array.isArray(config.fields) ? `(${config.fields.join(', ')})` : '(all)';
+                return `${alias} ${subFields}`;
+             })
+             .filter(Boolean);
+             
+           if (relPieces.length > 0) fieldPieces.push(`EAGER RELATIONS: [${relPieces.join(', ')}]`);
          } catch { fieldPieces.push(`DATA: ALL RESOURCE FIELDS`); }
        } else if (columns.length > 0) {
          fieldPieces.push(`DATA: [${columns.map(c => c.name || c.Field || c.column_name).join(', ')}]`);
@@ -619,8 +638,13 @@ export const EndpointDetailView = ({
                                 // 1. Base Fields
                                 try {
                                   const fields = JSON.parse(res.fields_json || res.fieldsJson || '[]');
-                                  if (Array.isArray(fields)) {
+                                  if (Array.isArray(fields) && fields.length > 0) {
                                     fields.forEach(f => { obj[f] = 'value'; });
+                                  } else if (columns.length > 0) {
+                                    // Fallback to all columns if fields_json is empty (SELECT *)
+                                    columns.forEach((col: any) => {
+                                      obj[col.name || col.Field || col.column_name] = `value (${col.type || col.Type || 'any'})`;
+                                    });
                                   }
                                 } catch {}
 
@@ -647,7 +671,18 @@ export const EndpointDetailView = ({
                                 try {
                                   const relations = JSON.parse(res.relations_json || res.relationsJson || '{}');
                                   if (relations && typeof relations === 'object') {
-                                    Object.entries(relations).forEach(([alias, config]: [string, any]) => {
+                                    const seenAliases = new Set<string>();
+                                    Object.entries(relations).forEach(([key, config]: [string, any]) => {
+                                      // EXTREME CLEANING: Skip if key is numeric OR config is missing targetId/table
+                                      if (!isNaN(Number(key))) return;
+                                      if (!config || (!config.targetId && !config.table)) return;
+
+                                      const alias = key;
+                                      
+                                      // Skip if we already processed this relation
+                                      if (seenAliases.has(alias)) return;
+                                      seenAliases.add(alias);
+                                      
                                       const relObj: any = {};
                                       if (Array.isArray(config.fields)) {
                                         config.fields.forEach((f: string) => { relObj[f] = 'value'; });
@@ -699,7 +734,9 @@ export const EndpointDetailView = ({
                     {/* Error Responses Section */}
                     {Object.keys(errorTemplates).length > 0 && (
                        <div className="pt-4 border-t border-border/5 space-y-4">
-                          <TextHeading as="h4" size="h5" className="lowercase mb-2">error definitions</TextHeading>
+                          <div className="flex items-center justify-between mb-2">
+                             <TextHeading as="h4" size="h5" className="lowercase">error definitions</TextHeading>
+                          </div>
                           <div className="grid grid-cols-1 gap-2">
                              {Object.entries(errorTemplates).map(([code, tpl]) => (
                                <div key={code} className="p-3 rounded-xl bg-muted/10 border border-border/5 hover:bg-muted/20 transition-colors">
@@ -723,4 +760,3 @@ export const EndpointDetailView = ({
     </div>
   );
 };
-

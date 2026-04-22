@@ -115,7 +115,18 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
       return Array.isArray(f) ? (f as FormState['filters']) : [];
     })(),
     joins: safeParseJSON(resource?.joinsJson, []),
-    relations: safeParseJSON(resource?.relationsJson, null),
+    relations: (() => {
+      const raw = safeParseJSON(resource?.relationsJson, null);
+      if (!raw || typeof raw !== 'object') return raw;
+      const cleaned: any = {};
+      Object.entries(raw).forEach(([key, val]: [string, any]) => {
+        if (!isNaN(Number(key))) return;
+        if (val && typeof val === 'object' && (val.targetId || val.table)) {
+          cleaned[key] = val;
+        }
+      });
+      return cleaned;
+    })(),
   });
 
   const columns = (() => {
@@ -192,6 +203,21 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // SANITIZER: Aggressively remove numeric keys (legacy garbage) and malformed entries
+    const cleanRelations = (rels: any) => {
+      if (!rels || typeof rels !== 'object') return rels;
+      const cleaned: any = {};
+      Object.entries(rels).forEach(([key, val]: [string, any]) => {
+        // Remove numeric keys (the "0" issue)
+        if (!isNaN(Number(key))) return;
+        // Ensure entry is a valid relation object
+        if (val && typeof val === 'object' && (val.targetId || val.table)) {
+          cleaned[key] = val;
+        }
+      });
+      return cleaned;
+    };
+
     const payload = {
       database_table_id: DatabaseTable.id,
       name: form.name,
@@ -209,7 +235,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
         filters: form.filters,
       }),
       joins_json: JSON.stringify(form.joins),
-      relations_json: JSON.stringify(form.relations),
+      relations_json: JSON.stringify(cleanRelations(form.relations)),
     };
 
     const result = resource ? await update(resource.id, payload) : await create(payload);

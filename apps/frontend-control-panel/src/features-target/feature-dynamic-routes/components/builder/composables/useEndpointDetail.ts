@@ -65,7 +65,8 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
                     const resRes = await fetch(api.databaseSchema.resources(found.dataSourceId), { headers: { 'x-target-id': targetId } });
                     const resData = await resRes.json();
                     if (resData.status === 'success') {
-                        const r = resData.data.find((r: { id: number }) => r.id === found.resourceId);
+                        // USE LOOSE EQUALITY OR STRING CONVERSION TO PREVENT UUID/NUMBER MISMATCH
+                        const r = resData.data.find((r: { id: any }) => String(r.id) === String(found.resourceId));
                         if (r) setResource(r);
                     }
                 }

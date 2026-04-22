@@ -10,7 +10,7 @@ export async function updateEndpoint(db: any, rid: string | number, body: any) {
   const description = body.description || '';
   const fieldsJson = body.fields_json || '[]';
   const filtersJson = body.filters_json || '[]';
-  const relationsJson = body.relations_json || '[]';
+  const relationsJson = body.relations_json || '{}';
   const orderBy = body.order_by || 'id';
   const orderDirection = body.order_direction || 'DESC';
   const defaultLimit = body.default_limit || 10;

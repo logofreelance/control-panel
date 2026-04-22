@@ -38,6 +38,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
     dataSources,
     resources,
     columns,
+    relations,
     availableRoles,
     availablePermissions,
     activeTab,
@@ -552,6 +553,52 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                           );
                         });
                         })()}
+                      </div>
+
+                      {/* --- PAYLOAD DISCOVERY SECTION --- */}
+                      <div className="pt-8 border-t border-border/10 mt-8 space-y-4">
+                          <TextHeading as="h3" size="h4" className="lowercase flex items-center gap-2">
+                              <Icons.zap className="size-5 text-primary" />
+                              expected payload structure
+                          </TextHeading>
+                          <p className="text-base text-muted-foreground lowercase mb-4">
+                              use this json structure to interact with this endpoint. it includes your writable fields and child relations for nested writes.
+                          </p>
+                          
+                          <div className="relative group">
+                              <pre className="p-6 rounded-2xl bg-muted/30 border border-border/5 text-sm font-mono overflow-x-auto text-foreground leading-relaxed">
+{JSON.stringify((() => {
+    const example: Record<string, any> = {};
+    
+    // Core fields
+    const writableList: string[] = form.writableFields
+        ? JSON.parse((form.writableFields as string) || '[]')
+        : [];
+
+    writableList.forEach(field => {
+        example[field] = "value";
+    });
+
+    // Virtual Relations (Nested Writes)
+    if (relations && relations.length > 0) {
+        relations.forEach(rel => {
+            const alias = rel.alias || rel.target?.tableName;
+            if (alias && (rel.type === 'has_many' || rel.type === 'has_one')) {
+                example[alias] = rel.type === 'has_many' ? [{ /* child data */ }] : { /* child data */ };
+            }
+        });
+    }
+    
+    return example;
+})(), null, 2)}
+                              </pre>
+                              <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center gap-3">
+                                  <Icons.info className="size-5 text-primary shrink-0" />
+                                  <p className="text-base text-muted-foreground lowercase">
+                                      tip: you can also send child data using relation aliases (e.g. <b>"styles": [ ... ]</b>) to perform nested creates.
+                                  </p>
+                              </div>
+                          </div>
                       </div>
 
                       {/* Auto-Populate */}

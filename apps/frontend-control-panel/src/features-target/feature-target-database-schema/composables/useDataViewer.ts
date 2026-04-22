@@ -82,7 +82,10 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
       const response = await apiClient.get<{
         data: Record<string, unknown>[];
         total: number;
-      }>(`${API.data(DatabaseTableId)}?${searchParams}`, { headers: getHeaders() });
+      }>(`${API.data(DatabaseTableId)}?${searchParams}`, { 
+        headers: getHeaders(),
+        transformResponse: false 
+      } as any);
 
       if (response.status === API_STATUS.SUCCESS && response.data) {
         setRows(response.data.data || []);
@@ -91,7 +94,10 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
         
         // Fetch columns if not available
         if (columns.length === 0) {
-            const colRes = await apiClient.get<any[]>(API.columns(DatabaseTableId), { headers: getHeaders() });
+            const colRes = await apiClient.get<any[]>(API.columns(DatabaseTableId), { 
+              headers: getHeaders(),
+              transformResponse: false
+            } as any);
             if (colRes.status === API_STATUS.SUCCESS && colRes.data) {
                 setColumns(colRes.data);
             }

@@ -24,6 +24,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
     const [availableRoles, setAvailableRoles] = useState<{ name: string; level: number; isSuper: boolean }[]>([]);
     const [availablePermissions, setAvailablePermissions] = useState<string[]>([]);
     const [errorTemplates, setErrorTemplates] = useState<{ status_code: number; template: string }[]>([]);
+    const [relations, setRelations] = useState<any[]>([]);
 
     // Form
     const [form, setForm] = useState<Partial<ApiEndpoint>>({
@@ -76,7 +77,6 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
     // Columns state for Mutation configuration
     const [columns, setColumns] = useState<ColumnInfo[]>([]);
 
-    // Fetch Columns when DataSource changes
     const fetchColumns = useCallback(async (dsId: string) => {
         try {
             const res = await fetch(api.databaseSchema.columns(dsId), { headers: { 'x-target-id': targetId } });
@@ -89,7 +89,22 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         } catch {
             setColumns([]);
         }
-    }, [api.databaseSchema]);
+    }, [api.databaseSchema, targetId]);
+
+    // Fetch Relations when DataSource changes
+    const fetchRelations = useCallback(async (dsId: string) => {
+        try {
+            const res = await fetch(`${env.API_URL}/target/database-schema/${dsId}/relations`, { headers: { 'x-target-id': targetId } });
+            const data = await res.json();
+            if (data.status === 'success') {
+                setRelations(data.data);
+            } else {
+                setRelations([]);
+            }
+        } catch {
+            setRelations([]);
+        }
+    }, [targetId]);
 
     // Initial Load
     useEffect(() => {
@@ -139,6 +154,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
                             if (found.dataSourceId) {
                                 fetchResources(found.dataSourceId);
                                 fetchColumns(found.dataSourceId);
+                                fetchRelations(found.dataSourceId);
                             }
                         }
                     }
@@ -159,9 +175,11 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         if (dsId) {
             fetchResources(dsId);
             fetchColumns(dsId); // Fetch columns for Mutation tab
+            fetchRelations(dsId);
         } else {
             setResources([]);
             setColumns([]);
+            setRelations([]);
         }
     };
 
@@ -269,6 +287,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         dataSources,
         resources,
         columns, // For Mutation tab column selector
+        relations,
         availableRoles,
         availablePermissions,
         errorTemplates,

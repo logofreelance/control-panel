@@ -236,23 +236,43 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                           onCheckedChange={() => selection?.toggle?.((row as any).id)}
                         />
                       </TableCell>
-                      {displayColumns?.map((col: any) => (
-                        <TableCell
-                          key={`${row.id || i}-${col.name}`}
-                          className="max-w-[200px] truncate text-sm font-normal text-foreground lowercase py-5"
-                        >
-                          {typeof row[col.name] === 'object' ? (
-                            <Badge
-                              variant="outline"
-                              className="text-xs font-mono lowercase opacity-50 px-2 py-0.5"
-                            >
-                              json
-                            </Badge>
-                          ) : (
-                            String(row[col.name] ?? '-')
-                          )}
-                        </TableCell>
-                      ))}
+                      {displayColumns?.map((col: any) => {
+                        // ✅ CASE-INSENSITIVE FALLBACK: Try exact, then camelCase, then snake_case
+                        const colName = col.name;
+                        let val = row[colName];
+                        
+                        if (val === undefined) {
+                           // Fallback to searching keys (e.g. if DB has created_at but row has createdAt)
+                           const rowKeys = Object.keys(row);
+                           const matchingKey = rowKeys.find(k => k.toLowerCase() === colName.toLowerCase());
+                           if (matchingKey) val = row[matchingKey];
+                        }
+
+                        return (
+                          <TableCell
+                            key={`${row.id || i}-${colName}`}
+                            className="max-w-[200px] truncate text-sm font-normal text-foreground lowercase py-5"
+                          >
+                            {val === null || val === undefined ? (
+                               <span className="opacity-20">-</span>
+                            ) : val instanceof Date ? (
+                               val.toLocaleString()
+                            ) : typeof val === 'object' ? (
+                              <Badge
+                                variant="outline"
+                                className="text-xs font-mono lowercase opacity-50 px-2 py-0.5"
+                              >
+                                json
+                              </Badge>
+                            ) : (
+                              // Detect if string looks like a date and format it
+                              typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{3}Z$/.test(val) 
+                                ? new Date(val).toLocaleString()
+                                : String(val)
+                            )}
+                          </TableCell>
+                        );
+                      })}
                       <TableCell className="text-right pr-6">
                         <Button
                           size="icon"

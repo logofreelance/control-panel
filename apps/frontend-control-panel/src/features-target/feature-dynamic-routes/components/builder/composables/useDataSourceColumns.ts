@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useConfig, useToast } from '@/modules/_core';
+import { env } from '@/lib/env';
 
 interface Column {
     name: string;
@@ -10,35 +11,49 @@ export const useDataSourceColumns = (targetId: string, dataSourceId?: string) =>
     const { api } = useConfig();
     const { addToast } = useToast();
     const [columns, setColumns] = useState<Column[]>([]);
+    const [relations, setRelations] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const fetchColumns = useCallback(async (dsId: string) => {
+    const fetchSchema = useCallback(async (dsId: string) => {
         setLoading(true);
         try {
-            const res = await fetch(api.databaseSchema.columns(dsId), { headers: { 'x-target-id': targetId } });
-            const data = await res.json();
-            if (data.status === 'success') {
-                setColumns(data.data);
+            // Fetch Columns
+            const colRes = await fetch(api.databaseSchema.columns(dsId), { headers: { 'x-target-id': targetId } });
+            const colData = await colRes.json();
+            
+            // Fetch Relations
+            const relRes = await fetch(`${env.API_URL}/target/database-schema/${dsId}/relations`, { headers: { 'x-target-id': targetId } });
+            const relData = await relRes.json();
+
+            if (colData.status === 'success') {
+                setColumns(colData.data);
             } else {
                 setColumns([]);
-                addToast(data.message || 'Failed to load columns', 'error');
+            }
+
+            if (relData.status === 'success') {
+                setRelations(relData.data);
+            } else {
+                setRelations([]);
             }
         } catch {
             setColumns([]);
-            addToast('Failed to load columns', 'error');
+            setRelations([]);
+            addToast('Failed to load schema information', 'error');
         } finally {
             setLoading(false);
         }
-    }, [api.databaseSchema, targetId]);
+    }, [api.databaseSchema, targetId, addToast]);
 
     useEffect(() => {
         if (!dataSourceId) {
             setColumns([]);
+            setRelations([]);
             return;
         }
 
-        fetchColumns(dataSourceId);
-    }, [dataSourceId, fetchColumns]);
+        fetchSchema(dataSourceId);
+    }, [dataSourceId, fetchSchema]);
 
-    return { columns, loading };
+    return { columns, relations, loading };
 };

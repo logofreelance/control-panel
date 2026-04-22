@@ -36,10 +36,16 @@ export function DataPage() {
   // State
   const [source, setSource] = useState<DatabaseTable | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch data source details
   const fetchSource = async () => {
-    if (!tableId) return;
+    if (!tableId) {
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
     try {
       const headers: Record<string, string> = {};
       if (nodeId) headers['x-target-id'] = nodeId;
@@ -48,12 +54,15 @@ export function DataPage() {
 
       if (res.status === API_STATUS.SUCCESS && res.data) {
         setSource(res.data);
+        setError(null);
       } else {
         setError((res as { message?: string }).message || 'failed to load data source');
       }
     } catch (e) {
       console.error(e);
       setError('network error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,6 +70,15 @@ export function DataPage() {
     fetchSource();
   }, [tableId, nodeId]);
 
+  if (loading) {
+    return (
+      <TargetLayout>
+        <div className="flex flex-col items-center justify-center py-64 animate-pulse">
+          <Icons.loading className="size-12 animate-spin text-primary opacity-20" />
+        </div>
+      </TargetLayout>
+    );
+  }
 
   if (error || !source) {
     return (

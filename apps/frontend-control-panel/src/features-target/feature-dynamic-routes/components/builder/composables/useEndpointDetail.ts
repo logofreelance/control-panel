@@ -21,13 +21,16 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
 
     const [loading, setLoading] = useState(true);
     const [endpoint, setEndpoint] = useState<ApiEndpoint | null>(null);
-    const [dataSource, setDataSource] = useState<{ name: string; tableName: string } | null>(null);
-    const [resource, setResource] = useState<{ name: string } | null>(null);
+    const [dataSource, setDataSource] = useState<{ name: string; tableName: string; id: number } | null>(null);
+    const [columns, setColumns] = useState<any[]>([]);
+    const [resource, setResource] = useState<any | null>(null);
     
     const [selectedBaseUrlIndex, setSelectedBaseUrlIndex] = useState(0);
 
     // Fetch endpoint data
     const fetchEndpoint = useCallback(async () => {
+        if (!endpointId) return;
+        
         try {
             setLoading(true);
             const res = await fetch(DYNAMIC_ROUTES_API.endpoints.detail(endpointId), { headers: { 'x-target-id': targetId } });
@@ -37,12 +40,23 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
                 const found = data.data;
                 setEndpoint(found);
 
-                // Fetch DataSource details if linked
+                // Fetch DataSource details and its Columns
                 if (found.dataSourceId) {
                     const dsRes = await fetch(api.databaseSchema.detail(found.dataSourceId), { headers: { 'x-target-id': targetId } });
                     const dsData = await dsRes.json();
                     if (dsData.status === 'success') {
-                        setDataSource({ name: dsData.data.name, tableName: dsData.data.tableName });
+                        setDataSource({ 
+                          name: dsData.data.name, 
+                          tableName: dsData.data.tableName,
+                          id: dsData.data.id
+                        });
+                    }
+
+                    // Fetch actual columns from the table
+                    const colRes = await fetch(api.databaseSchema.columns(found.dataSourceId), { headers: { 'x-target-id': targetId } });
+                    const colData = await colRes.json();
+                    if (colData.status === 'success') {
+                        setColumns(colData.data || []);
                     }
                 }
 
@@ -52,7 +66,7 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
                     const resData = await resRes.json();
                     if (resData.status === 'success') {
                         const r = resData.data.find((r: { id: number }) => r.id === found.resourceId);
-                        if (r) setResource({ name: r.name });
+                        if (r) setResource(r);
                     }
                 }
             } else {
@@ -181,6 +195,7 @@ print(response.json())`;
         loading,
         endpoint,
         dataSource,
+        columns,
         resource,
         targetApiUrls,
         selectedBaseUrlIndex,

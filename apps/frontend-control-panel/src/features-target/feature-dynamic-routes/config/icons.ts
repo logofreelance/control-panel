@@ -5,6 +5,7 @@ import {
     Key, Link2, AlertTriangle, Upload, Shield, ChevronRight, Info,
     ChevronDown, Lightbulb, Users, Play, Clock, Sparkles, Download,
     Database, ChevronLeft, Terminal, Activity, Cloud, Settings,
+    List, Filter, FileCode,
 } from 'lucide-react';
 
 export const Icons = {
@@ -57,4 +58,7 @@ export const Icons = {
     back: ArrowLeft,
     delete: Trash2,
     loading: Clock,
+    list: List,
+    filter: Filter,
+    fileCode: FileCode,
 } as const;

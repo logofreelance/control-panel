@@ -1,4 +1,4 @@
-// apps/backend-control-panel/src/index.ts
+// Apps/backend-control-panel/src/index.ts
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
@@ -25,10 +25,10 @@ import { setupIntegrationRouter } from './features-target/feature-integration/ro
 
 const apiPrefix = '/api';
 
-/**
- * FACTORY JALUR DEPLOY: Membangun seluruh app hanya saat dibutuhkan (Lazy)
- * Ini mencegah error "INTERNAL DB URL MISSING" saat build-time/validation
- */
+// CONTEXT CACHE: Mencegah Socket Exhaustion (EACCES) pada Windows
+let cachedInternalDb: any = null;
+const cachedTargetDbs = new Map<string, any>();
+
 async function buildAppInstance(env: EnvironmentConfig) {
   const instance = new Hono<{ Variables: { targetDb: any; targetId: string; user: any; session: any } }>();
 
@@ -73,15 +73,28 @@ async function buildAppInstance(env: EnvironmentConfig) {
     if (isTargetFeature && targetId) {
       try {
         if (!env.DATABASE_URL_INTERNAL_CONTROL_PANEL) throw new Error('INTERNAL DB URL MISSING');
-        const internalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-        const res: any = await internalDb.execute('SELECT database_url FROM target_systems WHERE id = ? LIMIT 1', [targetId]);
-        const rows = Array.isArray(res) ? res : (res.rows || []);
-        const target = rows.length > 0 ? rows[0] : null;
-        if (!target) return ctx.json({ status: 'error', message: 'Target system not found' }, 404);
+        
+        // 1. REUSE INTERNAL DB CONNECTION
+        if (!cachedInternalDb) {
+           cachedInternalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
+        }
+        const internalDb = cachedInternalDb;
+        
+        // 2. REUSE TARGET DB CONNECTION IF CACHED
+        if (cachedTargetDbs.has(targetId)) {
+          ctx.set('targetDb', cachedTargetDbs.get(targetId));
+          ctx.set('targetId', targetId);
+        } else {
+          const res: any = await internalDb.execute('SELECT database_url FROM target_systems WHERE id = ? LIMIT 1', [targetId]);
+          const rows = Array.isArray(res) ? res : (res.rows || []);
+          const target = rows.length > 0 ? rows[0] : null;
+          if (!target) return ctx.json({ status: 'error', message: 'Target system not found' }, 404);
 
-        const targetDb = buildTargetDatabaseConnection(target.database_url);
-        ctx.set('targetDb', targetDb);
-        ctx.set('targetId', targetId);
+          const targetDb = buildTargetDatabaseConnection(target.database_url);
+          cachedTargetDbs.set(targetId, targetDb);
+          ctx.set('targetDb', targetDb);
+          ctx.set('targetId', targetId);
+        }
       } catch (err: any) {
         console.error('[TARGET-MIDDLEWARE-ERROR]', err);
         return ctx.json({ status: 'error', message: 'Failed to connect to target database' }, 500);
@@ -108,33 +121,36 @@ async function buildAppInstance(env: EnvironmentConfig) {
   instance.route(`${apiPrefix}/settings`, createFeatureSettings(env));
   instance.route(`${apiPrefix}/target-systems`, createFeatureTargetRegistry(env));
 
-  // System Status
-  instance.get(`${apiPrefix}/system-status`, async (ctx) => {
-    const hasDbUrl = !!env.DATABASE_URL_INTERNAL_CONTROL_PANEL;
-    let isDbConnected = false;
-    let isAdminCreated = false;
+    // System Status
+    instance.get(`${apiPrefix}/system-status`, async (ctx) => {
+      const hasDbUrl = !!env.DATABASE_URL_INTERNAL_CONTROL_PANEL;
+      let isDbConnected = false;
+      let isAdminCreated = false;
 
-    if (hasDbUrl) {
-      try {
-        const db = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-        await db.execute('SELECT 1'); // Test connection
-        isDbConnected = true;
+      if (hasDbUrl) {
+        try {
+          if (!cachedInternalDb) {
+            cachedInternalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
+          }
+          const db = cachedInternalDb;
+          await db.execute('SELECT 1'); // Test connection
+          isDbConnected = true;
 
-        const res: any = await db.execute('SELECT id FROM admin_users LIMIT 1');
-        const rows = Array.isArray(res) ? res : res.rows || [];
-        isAdminCreated = rows.length > 0;
-      } catch (err) {
-        console.error('[SYSTEM-STATUS] DB Check Failed:', err);
+          const res: any = await db.execute('SELECT id FROM admin_users LIMIT 1');
+          const rows = Array.isArray(res) ? res : res.rows || [];
+          isAdminCreated = rows.length > 0;
+        } catch (err) {
+          console.error('[SYSTEM-STATUS] DB Check Failed:', err);
+        }
       }
-    }
 
-    return ctx.json({
-      status: 'ok',
-      hasDbUrl,
-      isDbConnected,
-      isAdminCreated,
+      return ctx.json({
+        status: 'ok',
+        hasDbUrl,
+        isDbConnected,
+        isAdminCreated,
+      });
     });
-  });
 
   // --- LEAST SPECIFIC / BROAD PREFIX (RUN LAST) ---
   // Auth App registered last to avoid shadowing other /api/* routes

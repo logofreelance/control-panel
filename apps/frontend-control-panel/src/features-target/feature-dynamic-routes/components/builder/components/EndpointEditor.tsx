@@ -390,6 +390,15 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
 
                 <div className="max-w-md">
                   <Label className="lowercase mb-2 block px-1">operation type</Label>
+                  <Select
+                    value={form.operationType || 'create'}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        operationType: e.target.value as 'create' | 'update' | 'delete',
+                      })
+                    }
+                    fullWidth
                     options={[
                       { label: 'create (insert new record)', value: 'create' },
                       { label: 'update (modify existing record)', value: 'update' },
@@ -397,49 +406,6 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                     ]}
                   />
                 </div>
-
-                {form.operationType === 'delete' && (
-                  <div className="pt-2 animate-in slide-in-from-top-2 duration-300">
-                    <TextHeading as="h3" size="h4" className="lowercase mb-4">
-                      delete scope
-                    </TextHeading>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setForm({ ...form, isBatchOperation: false })}
-                        className={cn(
-                          "flex-1 p-4 rounded-xl border-2 transition-all text-left",
-                          !form.isBatchOperation 
-                            ? "border-primary bg-primary/5 ring-4 ring-primary/5" 
-                            : "border-border/40 hover:border-border/70"
-                        )}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Icons.user className="size-4 text-primary" />
-                          <span className="font-semibold lowercase">single record</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground lowercase">delete a specific record using a lookup key (id, slug, etc.)</p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setForm({ ...form, isBatchOperation: true })}
-                        className={cn(
-                          "flex-1 p-4 rounded-xl border-2 transition-all text-left",
-                          form.isBatchOperation 
-                            ? "border-destructive bg-destructive/5 ring-4 ring-destructive/5" 
-                            : "border-border/40 hover:border-border/70"
-                        )}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Icons.trash className="size-4 text-destructive" />
-                          <span className="font-semibold lowercase text-destructive">batch / all</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground lowercase">delete multiple records or clear the entire table.</p>
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 <div className="pt-2">
                   <TextHeading as="h3" size="h4" className="lowercase mb-4">

@@ -149,6 +149,7 @@ import {
   GitBranch,
   Layout,
   Workflow,
+  Layers,
 
   // Types
   type LucideIcon,
@@ -322,6 +323,7 @@ export const Icons = {
   diamond: Gem,
   layout: Layout,
   workflow: Workflow,
+  layers: Layers,
   // Aliases for consistency
   trash2: Trash2,
   alertTriangle: AlertTriangle,

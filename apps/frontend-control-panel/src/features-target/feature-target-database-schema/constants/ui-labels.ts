@@ -128,7 +128,9 @@ export const DATABASE_SCHEMA_LABELS = {
         forSource: 'for',
         // Resource Form
         endpointDetails: 'Endpoint Details',
+        basicInformation: 'Basic Information',
         internalName: 'Internal Name',
+        editing: 'Editing',
         urlSlug: 'URL Slug',
         responseFields: 'Response Fields',
         selectFieldsHint: 'Select which columns to include in the JSON response.',

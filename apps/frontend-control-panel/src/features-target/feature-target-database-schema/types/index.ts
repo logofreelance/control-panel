@@ -20,8 +20,23 @@ export interface SchemaDefinition {
     softDelete?: boolean;
 }
 
+export interface DatabaseCategory {
+    id: string;
+    name: string;
+    color?: string;
+    icon?: string;
+    orderIndex?: number;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export interface DatabaseTable {
     id: string | number;
+    categoryId?: string | null;
+    category_id?: string | null;
+    categoryName?: string;
+    categoryColor?: string;
+    categoryIcon?: string;
     name: string;
     tableName: string;
     description?: string;

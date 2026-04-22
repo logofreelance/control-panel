@@ -25,7 +25,7 @@ import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { ColumnBuilder } from './ColumnBuilder';
-import { useCreateSchema } from '../composables';
+import { useCreateSchema, useDatabaseCategories } from '../composables';
 import { useConfig } from '@/modules/_core';
 import type { ColumnDefinition } from '../types';
 
@@ -55,7 +55,10 @@ export const CreateSchemaForm = () => {
         name: '',
         tableName: '',
         description: '',
+        categoryId: '',
     });
+
+    const { items: categories = [] } = useDatabaseCategories();
 
     const [columns, setColumns] = useState<ColumnDefinition[]>([
         { name: 'title', type: 'string', required: true },
@@ -90,6 +93,7 @@ export const CreateSchemaForm = () => {
             name: form.name,
             tableName: form.tableName,
             description: form.description,
+            category_id: form.categoryId || null,
             schema: {
                 columns,
                 timestamps: options.timestamps,
@@ -109,6 +113,7 @@ export const CreateSchemaForm = () => {
             name: form.name || tpl.name,
             tableName: form.tableName || '',
             description: tpl.description,
+            categoryId: form.categoryId || '',
         });
         setColumns(tpl.schema.columns);
         setOptions(prev => ({
@@ -202,7 +207,43 @@ export const CreateSchemaForm = () => {
                                     value={form.description}
                                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                                     placeholder={L.forms.descriptionPlaceholder}
+                                    className="min-h-[80px]"
                                 />
+                            </Field>
+
+                            <Field className="md:col-span-2">
+                                <FieldLabel>category</FieldLabel>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setForm({ ...form, categoryId: '' })}
+                                        className={cn(
+                                            "flex items-center gap-3 px-4 py-3 rounded-xl border text-sm transition-all",
+                                            !form.categoryId ? "ring-2 ring-primary bg-primary/5 border-primary/20" : "hover:bg-muted/50 border-transparent bg-muted/20"
+                                        )}
+                                    >
+                                        <Icons.layers className="size-5 opacity-40" />
+                                        <span className="font-semibold lowercase">no category</span>
+                                    </button>
+                                    {categories.map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            type="button"
+                                            onClick={() => setForm({ ...form, categoryId: cat.id })}
+                                            className={cn(
+                                                "flex items-center gap-3 px-4 py-3 rounded-xl border text-sm transition-all",
+                                                form.categoryId === cat.id ? "ring-2 ring-primary bg-primary/5 border-primary/20" : "hover:bg-muted/50 border-transparent bg-muted/20"
+                                            )}
+                                            style={{ color: form.categoryId === cat.id ? cat.color : undefined }}
+                                        >
+                                            {(() => {
+                                                const IconComp = (Icons as any)[cat.icon || 'folder'] || Icons.layers;
+                                                return <IconComp className="size-5 opacity-40" />;
+                                            })()}
+                                            <span className="font-semibold lowercase truncate">{cat.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </Field>
                         </div>
                     </CardContent>

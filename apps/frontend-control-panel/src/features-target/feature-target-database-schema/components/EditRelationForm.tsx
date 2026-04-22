@@ -1,19 +1,22 @@
 'use client';
 
-/**
- * EditRelationForm - Flat Luxury UI Refactor
- * Form for editing table relations with consistent design system and TargetLayout integration
- */
-
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Card, CardContent, Badge } from '@/components/ui';
+import { 
+    Button, 
+    Card, 
+    CardHeader, 
+    CardTitle, 
+    CardDescription, 
+    CardContent, 
+    Badge,
+} from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
 import { useConfig } from '@/modules/_core';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
-import { useRelations, type Relation } from '../composables';
+import { useRelations, type Relation, useDatabaseSchema } from '../composables';
 import { RELATION_TYPES } from '../registry';
 
 const L = MODULE_LABELS.databaseSchema;
@@ -28,12 +31,12 @@ export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFo
     const params = useParams();
     const nodeId = params.id as string;
     
-    const { labels, icons: Icons } = useConfig();
+    const { labels, icons: configIcons } = useConfig();
     const C = labels.common;
 
     const { relations, loading, updateRelation } = useRelations(DatabaseTableId);
+    const { items: sources = [] } = useDatabaseSchema();
 
-    // Find the relation being edited
     const [relation, setRelation] = useState<Relation | null>(null);
     const [form, setForm] = useState({
         type: 'belongs_to' as Relation['type'],
@@ -41,10 +44,11 @@ export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFo
     });
     const [submitting, setSubmitting] = useState(false);
 
+    // Initial state setup
     useEffect(() => {
         if (!loading && relations.length > 0) {
             const ridStr = String(relationId);
-            const found = relations.find(r => String(r.id) === ridStr || r.localKey === ridStr);
+            const found = relations.find((r) => String(r.id) === ridStr || r.localKey === ridStr);
             if (found) {
                 setRelation(found);
                 setForm({
@@ -55,18 +59,21 @@ export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFo
         }
     }, [relations, loading, relationId]);
 
+    const DatabaseTableName = sources.find(s => String(s.id) === String(DatabaseTableId))?.name || 'unknown';
+
     const handleSubmit = async () => {
         setSubmitting(true);
         const success = await updateRelation(relationId, form);
+        setSubmitting(false);
+
         if (success) {
-            router.back();
+            const path = nodeId ? `/target/${nodeId}/database-schema` : `/database-schema`;
+            router.push(path);
             router.refresh();
         }
-        setSubmitting(false);
     };
 
-
-    if (!relation) {
+    if (!relation && !loading) {
         return (
             <TargetLayout>
                 <div className="flex flex-col items-center justify-center py-32 text-center max-w-md mx-auto space-y-8 animate-page-enter">
@@ -74,8 +81,13 @@ export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFo
                         <Icons.warning className="size-10" />
                     </div>
                     <div className="space-y-3">
-                         <TextHeading size="h4" className="lowercase text-foreground/80">{C.messages.notFound || "relation not found"}</TextHeading>
-                         <p className="text-sm text-muted-foreground lowercase opacity-60">could not find relation for column: <code className="font-mono bg-muted px-1 rounded">{relationId}</code></p>
+                        <TextHeading size="h4" className="lowercase text-foreground/80">
+                            {C.messages.notFound || 'relation not found'}
+                        </TextHeading>
+                        <p className="text-sm text-muted-foreground lowercase opacity-60">
+                            could not find relation for column:{' '}
+                            <code className="font-mono bg-muted px-1 rounded">{relationId}</code>
+                        </p>
                     </div>
                     <Button
                         variant="outline"
@@ -91,147 +103,179 @@ export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFo
 
     return (
         <TargetLayout>
-            <div className="flex flex-col gap-10 animate-page-enter max-w-5xl mx-auto pb-32">
+            <div className="flex flex-col gap-6 animate-page-enter max-w-5xl mx-auto pb-20">
                 {/* Page Header */}
-                <header className="px-1 space-y-4">
+                <header className="px-1 space-y-3">
                     <Button
                         variant="ghost"
                         onClick={() => router.back()}
-                        className="h-9 px-0 hover:bg-transparent -ml-1 text-muted-foreground/40 hover:text-foreground transition-colors group lowercase text-xs font-bold"
+                        className="h-9 px-0 hover:bg-transparent -ml-1 text-muted-foreground/60 hover:text-foreground transition-colors group lowercase text-sm font-medium"
                     >
-                        <Icons.arrowLeft className="size-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        <Icons.arrowLeft className="size-5 mr-3 group-hover:-translate-x-1 transition-transform" />
                         back to database
                     </Button>
                     <div className="flex items-center gap-4">
-                         <div className="size-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-sm shadow-indigo-500/5">
+                         <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                             <Icons.edit className="size-6" />
                          </div>
-                         <div className="space-y-0.5">
-                            <TextHeading as="h1" size="h4" className="font-bold lowercase leading-tight">edit relation</TextHeading>
-                            <p className="text-xs text-muted-foreground lowercase opacity-60 font-medium">update metadata for <strong>{relation.target?.name}</strong></p>
+                         <div>
+                            <TextHeading as="h1" size="h3" className="font-semibold lowercase leading-tight">edit relation</TextHeading>
+                            <p className="text-base md:text-lg text-muted-foreground font-normal lowercase opacity-70">update relationship metadata to another data source</p>
                          </div>
                     </div>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                    {/* Left: Read-only Props */}
-                    <Card className="lg:col-span-4 border-none shadow-sm bg-card/40 opacity-70">
-                        <CardContent className="p-8 space-y-8">
-                            <div className="flex items-center gap-3 border-b border-border/5 pb-6 mb-2">
-                                <div className="size-10 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground shrink-0"><Icons.lock className="size-5" /></div>
-                                <div className="space-y-0.5">
-                                    <TextHeading size="h5" className="text-base font-semibold lowercase leading-none">immutable properties</TextHeading>
-                                    <p className="text-[10px] text-muted-foreground lowercase mt-1.5">fixed physical link details.</p>
-                                </div>
+                <div className="flex flex-col gap-6">
+                    {/* Section: Read-only Identity (Styled like Target Table selection) */}
+                    <Card className="opacity-80">
+                        <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-4 border-b border-border/50">
+                            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                <Icons.database className="size-5" />
                             </div>
-
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/30 px-1">target table</label>
-                                    <div className="p-4 bg-muted/40 rounded-2xl flex items-center gap-4">
-                                        <div className="size-10 rounded-xl bg-background flex items-center justify-center text-primary"><Icons.database className="size-5" /></div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-bold truncate lowercase">{relation.target?.name}</p>
-                                            <p className="text-[10px] font-mono text-muted-foreground/40">{relation.target?.tableName}</p>
-                                        </div>
+                            <div className="flex-1">
+                                <CardTitle className="text-xl md:text-2xl font-semibold lowercase leading-none mb-1">
+                                    target table
+                                </CardTitle>
+                                <CardDescription className="text-base text-muted-foreground font-normal lowercase">
+                                    fixed identity of the establish link.
+                                </CardDescription>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-4 rounded-2xl border border-primary/20 bg-primary/5 flex items-center gap-3">
+                                    <div className="size-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                                        <Icons.table className="size-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <TextHeading size="h5" className="font-semibold truncate lowercase text-primary leading-none mb-1 mt-1">{relation?.target?.name || 'unknown'}</TextHeading>
+                                        <p className="text-sm text-muted-foreground font-normal lowercase">{relation?.target?.tableName || 'unknown_table'}</p>
+                                    </div>
+                                    <div className="size-5 rounded-full bg-primary text-white flex items-center justify-center">
+                                        <Icons.lock className="size-3" />
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/30 px-1">foreign key</label>
-                                    <div className="p-4 bg-muted/40 rounded-2xl flex items-center gap-4">
-                                        <div className="size-10 rounded-xl bg-background flex items-center justify-center text-amber-500"><Icons.key className="size-5" /></div>
-                                        <p className="text-sm font-mono font-bold text-foreground lowercase">{relation.localKey}</p>
+                                <div className="p-4 rounded-2xl border border-border bg-muted/10 flex items-center gap-3">
+                                    <div className="size-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center">
+                                        <Icons.key className="size-5" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <TextHeading size="h5" className="font-semibold truncate lowercase text-foreground leading-none mb-1 mt-1">{relation?.localKey}</TextHeading>
+                                        <p className="text-sm text-muted-foreground font-normal lowercase">foreign key link</p>
                                     </div>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Right: Editable Config */}
-                    <div className="lg:col-span-8 flex flex-col gap-8">
-                        <Card className="border-none shadow-sm bg-card/40">
-                             <CardContent className="p-8 space-y-10">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/5 pb-6 mb-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0"><Icons.settings className="size-5" /></div>
-                                        <div className="space-y-0.5">
-                                            <TextHeading size="h5" className="text-base font-semibold lowercase leading-none">{L.messages.relations.relationType}</TextHeading>
-                                            <p className="text-[11px] text-muted-foreground lowercase mt-1.5 opacity-60">update the relationship behavior.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="max-w-xs w-full">
-                                        <input
-                                            type="text"
-                                            value={form.alias}
-                                            onChange={(e) => setForm(prev => ({ ...prev, alias: e.target.value }))}
-                                            placeholder="custom alias name..."
-                                            className="w-full h-10 px-5 rounded-xl bg-muted/20 border-none focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/30 lowercase text-xs font-medium"
-                                        />
-                                    </div>
+                    {/* Section: Relation Type Grid (Adopted from CreateRelationForm) */}
+                    <Card>
+                        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-4">
+                            <div className="flex items-center gap-4">
+                                <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                    <Icons.settings className="size-5" />
                                 </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {RELATION_TYPES.map(type => {
-                                        const isSelected = form.type === type.value;
-                                        return (
-                                            <button
-                                                key={type.value}
-                                                onClick={() => setForm(prev => ({ ...prev, type: type.value as any }))}
-                                                className={cn(
-                                                    "p-5 rounded-3xl transition-all duration-300 ring-1 text-left flex items-start gap-4 relative group",
-                                                    isSelected 
-                                                        ? 'bg-primary/5 ring-primary/40 shadow-xl shadow-primary/5' 
-                                                        : 'bg-muted/10 ring-border/5 hover:ring-primary/10 hover:bg-muted/20'
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    "size-12 rounded-xl flex items-center justify-center text-xl transition-all duration-500 shrink-0",
-                                                    isSelected ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-background text-muted-foreground/20 group-hover:bg-primary/5'
-                                                )}>
-                                                    {type.icon}
-                                                </div>
-                                                <div className="space-y-1 pr-6">
-                                                    <TextHeading size="h6" className={cn(
-                                                        "text-xs font-bold lowercase leading-none",
-                                                        isSelected ? "text-primary" : "text-muted-foreground/60"
-                                                    )}>{type.label}</TextHeading>
-                                                    <p className="text-[10px] text-muted-foreground/40 lowercase leading-relaxed">{type.desc.toLowerCase()}</p>
-                                                </div>
-                                                {isSelected && (
-                                                    <div className="absolute top-5 right-5 text-primary flex items-center justify-center animate-in zoom-in-75 duration-300">
-                                                        <Icons.check className="size-4 stroke-4" />
-                                                    </div>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
+                                <div className="flex-1">
+                                    <CardTitle className="text-xl md:text-2xl font-semibold lowercase leading-none mb-1">
+                                        {L.messages.relations.relationType}
+                                    </CardTitle>
+                                    <CardDescription className="text-base text-muted-foreground font-normal lowercase">
+                                        define the nature of the relationship.
+                                    </CardDescription>
                                 </div>
-                             </CardContent>
-                        </Card>
-                    </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {RELATION_TYPES.map(type => {
+                                    const isSelected = form.type === type.value;
+                                    return (
+                                        <button
+                                            key={type.value}
+                                            type="button"
+                                            onClick={() => setForm(prev => ({ ...prev, type: type.value as any }))}
+                                            className={cn(
+                                                "p-4 rounded-2xl transition-all duration-300 border text-left flex items-start gap-4 relative group",
+                                                isSelected 
+                                                    ? 'bg-primary/5 border-primary/40 shadow-sm' 
+                                                    : 'bg-muted/10 border-transparent hover:border-primary/10 hover:bg-muted/20'
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "size-12 rounded-xl flex items-center justify-center text-2xl transition-all duration-300 shrink-0",
+                                                isSelected ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'bg-background text-muted-foreground group-hover:bg-primary/5'
+                                            )}>
+                                                {type.icon}
+                                            </div>
+                                            <div className="flex-1">
+                                                <TextHeading size="h5" className={cn(
+                                                    "font-semibold lowercase leading-none mb-1.5",
+                                                    isSelected ? "text-primary" : "text-foreground"
+                                                )}>{type.label}</TextHeading>
+                                                <p className="text-base text-muted-foreground font-normal lowercase leading-snug">{type.desc.toLowerCase()}</p>
+                                            </div>
+                                            {isSelected && (
+                                                <div className="size-5 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+                                                    <Icons.check className="size-3" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Section: Configuration */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-4 border-b border-border/50">
+                            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                <Icons.code className="size-5" />
+                            </div>
+                            <div className="flex-1">
+                                <CardTitle className="text-xl md:text-2xl font-semibold lowercase leading-none mb-1">
+                                    Display Alias
+                                </CardTitle>
+                                <CardDescription className="text-base text-muted-foreground font-normal lowercase">
+                                    customize how this relationship is identified in queries.
+                                </CardDescription>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                            <div className="space-y-3">
+                                <label className="text-base font-semibold lowercase text-foreground block px-1">
+                                    Relationship Display Alias
+                                </label>
+                                <input
+                                    type="text"
+                                    value={form.alias}
+                                    onChange={(e) => setForm(prev => ({ ...prev, alias: e.target.value }))}
+                                    placeholder="optional: custom alias name (e.g. author_details)"
+                                    className="w-full h-12 px-4 rounded-xl bg-muted/20 border-border border focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground lowercase text-base font-normal"
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                {/* Floating Footer Actions */}
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-50">
-                    <div className="bg-background/80 backdrop-blur-xl border border-border/40 p-4 rounded-3xl shadow-2xl flex items-center justify-between gap-4">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => router.back()}
-                            className="h-11 rounded-xl px-8 lowercase font-bold text-muted-foreground hover:bg-muted"
-                        >
-                            {C.actions.cancel}
-                        </Button>
-                        <Button
-                            onClick={handleSubmit}
-                            isLoading={submitting}
-                            className="h-11 min-w-[200px] rounded-xl lowercase shadow-lg shadow-primary/20 font-bold"
-                        >
-                            {C.actions.saveChanges.toLowerCase()}
-                        </Button>
-                    </div>
+                {/* Form Actions */}
+                <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/50 mt-4 px-1">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => router.back()}
+                        className="h-11 px-8 rounded-xl font-medium lowercase"
+                    >
+                        cancel
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        isLoading={submitting}
+                        className="h-11 px-10 rounded-xl font-semibold lowercase shadow-lg shadow-primary/10"
+                    >
+                        save changes
+                    </Button>
                 </div>
             </div>
         </TargetLayout>

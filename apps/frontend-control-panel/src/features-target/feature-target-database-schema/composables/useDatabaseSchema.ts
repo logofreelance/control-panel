@@ -67,6 +67,49 @@ export function useDatabaseSchema() {
 }
 
 /**
+ * useDatabaseCategories - Categories management
+ */
+export function useDatabaseCategories() {
+    const { addToast } = useToast();
+    const params = useParams();
+    const targetId = params?.id as string;
+    
+    // Create headers memoized
+    const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : undefined, [targetId]);
+
+    const endpoints = useMemo(() => ({
+        list: API.categories,
+        create: API.categories,
+        detail: (id: string | number) => `${API.categories}/${id}`,
+        update: (id: string | number) => `${API.categories}/${id}`,
+        delete: (id: string | number) => `${API.categories}/${id}`,
+    }), []);
+
+    const handleSuccess = useCallback((action: any) => {
+        const messages: Record<string, string> = {
+            create: 'category created successfully',
+            update: 'category updated successfully',
+            delete: 'category deleted successfully',
+        };
+        if (messages[action]) {
+            addToast(messages[action], TOAST_TYPE.SUCCESS);
+        }
+    }, [addToast]);
+
+    const handleError = useCallback((error: any) => {
+        addToast(error.message || 'category operation failed', TOAST_TYPE.ERROR);
+    }, [addToast]);
+
+    const options = useMemo(() => ({
+        onSuccess: handleSuccess,
+        onError: handleError,
+        headers,
+    }), [handleSuccess, handleError, headers]);
+
+    return useCrud<import('../types').DatabaseCategory>(endpoints, options);
+}
+
+/**
  * Additional database schema actions (clone, archive, etc.)
  * Uses Pure DI via useConfig() hook
  */

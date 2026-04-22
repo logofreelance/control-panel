@@ -44,4 +44,7 @@ export const API = {
   insertRow: (id: string | number) => `${BASE}/${id}/data`,
   updateRow: (id: string | number, rowId: string | number) => `${BASE}/${id}/data/${rowId}`,
   deleteRow: (id: string | number, rowId: string | number) => `${BASE}/${id}/data/${rowId}`,
+
+  // Categories
+  categories: `${BASE}/categories`,
 };

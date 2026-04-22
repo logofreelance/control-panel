@@ -301,7 +301,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                     {L.labels.noColumnsInSchema}
                   </p>
                 )}
-                {columns.map((col) => {
+                {columns.map((col: any) => {
                   const isSelected = form.fields.length === 0 || form.fields.includes(col.name);
                   return (
                     <Button
@@ -482,7 +482,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                 </div>
               ) : (
                 <div className="space-y-4 max-w-4xl mx-auto">
-                  {form.aggregates.map((agg, idx) => (
+                  {form.aggregates?.map((agg: any, idx: number) => (
                     <div key={idx} className="flex items-center gap-4">
                       <Select
                         value={agg.function}
@@ -508,7 +508,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                         }}
                         options={[
                           { label: `* ALL`, value: '*' },
-                          ...columns.map((c) => ({ label: c.name, value: c.name })),
+                          ...columns.map((c: any) => ({ label: c.name, value: c.name })),
                         ]}
                       />
                       <Input
@@ -588,7 +588,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                 </div>
               ) : (
                 <div className="space-y-6 max-w-4xl mx-auto">
-                  {form.joins.map((join, idx) => (
+                  {form.joins.map((join: any, idx: number) => (
                     <div key={idx} className="space-y-3">
                       <Select
                         value={join.type}
@@ -682,7 +682,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                 </div>
               ) : (
                 <div className="space-y-4 max-w-4xl mx-auto">
-                  {form.filters.map((filter, idx) => (
+                  {form.filters.map((filter: any, idx: number) => (
                     <div key={idx} className="flex items-center gap-3">
                       <Select
                         value={filter.field}
@@ -691,7 +691,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                           newFilters[idx].field = e.target.value;
                           setForm({ ...form, filters: newFilters });
                         }}
-                        options={columns.map((c) => ({ label: c.name, value: c.name }))}
+                        options={columns.map((c: any) => ({ label: c.name, value: c.name }))}
                       />
                       <Select
                         value={filter.operator}
@@ -775,7 +775,7 @@ export const ResourceForm = ({ DatabaseTable, resource }: ResourceFormProps) => 
                       value={form.orderBy}
                       onChange={(e) => setForm({ ...form, orderBy: e.target.value })}
                       fullWidth
-                      options={columns.map((c) => ({ label: c.name, value: c.name }))}
+                      options={columns.map((c: any) => ({ label: c.name, value: c.name }))}
                     />
                     <div className="flex bg-muted/40 p-1 rounded-xl h-10 ring-1 ring-border/5">
                       <button

@@ -6,7 +6,11 @@
 
 export async function findAllSchemas(db: any, isArchived: number) {
   const res: any = await db.execute(
-    'SELECT * FROM database_tables WHERE is_archived = ? ORDER BY created_at DESC',
+    `SELECT t.*, c.name as category_name, c.color as category_color, c.icon as category_icon 
+     FROM database_tables t
+     LEFT JOIN database_categories c ON t.category_id = c.id
+     WHERE t.is_archived = ? 
+     ORDER BY t.created_at DESC`,
     [isArchived]
   );
   return Array.isArray(res) ? res : res.rows || [];

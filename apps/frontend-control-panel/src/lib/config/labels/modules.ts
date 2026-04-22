@@ -137,7 +137,9 @@ export const MODULE_LABELS = {
             forSource: 'for',
             // Resource Form
             endpointDetails: 'Endpoint Details',
+            basicInformation: 'Basic Information',
             internalName: 'Internal Name',
+            editing: 'Editing',
             urlSlug: 'URL Slug',
             responseFields: 'Response Fields',
             selectFieldsHint: 'Select which columns to include in the JSON response.',
@@ -573,6 +575,11 @@ export const MODULE_LABELS = {
             edit: 'Edit',
             test: 'Test',
             endpointNotFound: 'Endpoint not found',
+            integration: 'Integration',
+            mutationRules: 'Mutation Rules',
+            writableFields: 'Writable Fields',
+            protectedFields: 'Protected Fields',
+            autoPopulateFields: 'Auto-Populate Fields',
             // Error Response Info for Frontend Integration
             errorResponses: 'Error Responses',
             errorResponsesHint: 'Use errorCode for i18n translations in your frontend',
@@ -662,6 +669,7 @@ export const MODULE_LABELS = {
             noBinding: 'No Binding (Static / Custom Logic)',
             rawTableData: 'Raw Table Data (Default)',
             noSpecificResources: 'No specific resources defined for this source. Using raw table access.',
+            arrow: '→',
         },
 
         options: {

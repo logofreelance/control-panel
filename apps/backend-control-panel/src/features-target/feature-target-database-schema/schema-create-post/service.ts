@@ -22,6 +22,7 @@ export async function executeCreateSchema(db: any, body: any) {
   const schemaJson = body.schema ? JSON.stringify(body.schema) : '{}';
   await insertSchemaRecord(db, {
     id,
+    category_id: body.category_id || body.categoryId || null,
     name: body.name || tableName,
     table_name: tableName,
     description: body.description || '',

@@ -102,6 +102,23 @@ function extractRows(result: any): any[] {
 }
 
 async function ensureMetadataTables(db: any) {
+  // --- database_categories ---
+  const categoriesExist: any = await db.execute("SHOW TABLES LIKE 'database_categories'");
+  const categoriesExistRows = extractRows(categoriesExist);
+  if (categoriesExistRows.length === 0) {
+    await db.execute(`
+      CREATE TABLE database_categories (
+        id VARCHAR(36) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        color VARCHAR(50),
+        icon VARCHAR(50),
+        order_index INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+  }
+
   // --- database_tables ---
   const exists: any = await db.execute("SHOW TABLES LIKE 'database_tables'");
   const existsRows = extractRows(exists);
@@ -109,6 +126,7 @@ async function ensureMetadataTables(db: any) {
     await db.execute(`
       CREATE TABLE database_tables (
         id VARCHAR(36) PRIMARY KEY,
+        category_id VARCHAR(36),
         name VARCHAR(255) NOT NULL,
         table_name VARCHAR(255) NOT NULL,
         display_name VARCHAR(255),
@@ -117,14 +135,29 @@ async function ensureMetadataTables(db: any) {
         is_archived TINYINT DEFAULT 0,
         connection_config TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_category (category_id)
       )
     `);
   } else {
-    try {
+    // Migrations
+    const columns: any = await db.execute("DESCRIBE database_tables");
+    const columnRows = extractRows(columns);
+    
+    const hasColumn = (name: string) => columnRows.some((c: any) => 
+      (c.Field?.toLowerCase() === name.toLowerCase()) || 
+      (c.field?.toLowerCase() === name.toLowerCase())
+    );
+
+    // Add schema_json if missing
+    if (!hasColumn('schema_json')) {
       await db.execute("ALTER TABLE database_tables ADD COLUMN schema_json TEXT AFTER description");
-    } catch (e) {
-      // Column already exists
+    }
+    
+    // Add category_id if missing
+    if (!hasColumn('category_id')) {
+      await db.execute("ALTER TABLE database_tables ADD COLUMN category_id VARCHAR(36) AFTER id");
+      await db.execute("ALTER TABLE database_tables ADD INDEX idx_category (category_id)");
     }
   }
 

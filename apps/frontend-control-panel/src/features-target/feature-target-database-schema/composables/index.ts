@@ -5,7 +5,7 @@
  */
 
 // Core database schema management
-export { useDatabaseSchema, useSchemaActions } from './useDatabaseSchema';
+export { useDatabaseSchema, useSchemaActions, useDatabaseCategories } from './useDatabaseSchema';
 export { useSchemaStats } from './useSchemaStats';
 
 // Creation and validation

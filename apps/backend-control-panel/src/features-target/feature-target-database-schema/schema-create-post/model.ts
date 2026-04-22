@@ -53,6 +53,7 @@ export async function createPhysicalTable(
 
 export async function insertSchemaRecord(db: any, data: {
   id: string;
+  category_id?: string | null;
   name: string;
   table_name: string;
   description: string;
@@ -60,8 +61,8 @@ export async function insertSchemaRecord(db: any, data: {
   connection_config: string;
 }) {
   await db.execute(
-    `INSERT INTO database_tables (id, name, table_name, display_name, description, schema_json, connection_config)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [data.id, data.name, data.table_name, data.name, data.description, data.schema_json, data.connection_config]
+    `INSERT INTO database_tables (id, category_id, name, table_name, display_name, description, schema_json, connection_config)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [data.id, data.category_id || null, data.name, data.table_name, data.name, data.description, data.schema_json, data.connection_config]
   );
 }

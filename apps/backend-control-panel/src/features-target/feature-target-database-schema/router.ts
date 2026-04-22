@@ -19,6 +19,7 @@ import { handler as schemaDetailGet } from './schema-detail-get/handler';
 import { handler as schemaArchiveDelete } from './schema-archive-delete/handler';
 import { handler as schemaRestorePost } from './schema-restore-post/handler';
 import { handler as schemaDestroyDelete } from './schema-destroy-delete/handler';
+import { handler as schemaUpdatePut } from './schema-update-put/handler';
 import { handler as schemaColumnAddPost } from './schema-column-add-post/handler';
 import { handler as schemaColumnDropDelete } from './schema-column-drop-delete/handler';
 
@@ -36,6 +37,10 @@ import { handler as availableTargetsGet } from './available-targets-get/handler'
 import { handler as relationListGet } from './relation-list-get/handler';
 import { handler as relationCreatePost } from './relation-create-post/handler';
 import { handler as relationDeleteDelete } from './relation-delete-delete/handler';
+import { handler as categoryListGet } from './category-list-get/handler';
+import { handler as categoryCreatePost } from './category-create-post/handler';
+import { handler as categoryUpdatePut } from './category-update-put/handler';
+import { handler as categoryDeleteDelete } from './category-delete-delete/handler';
 
 import type { EnvironmentConfig } from '../../env';
 
@@ -50,6 +55,10 @@ export function createFeatureTargetDatabaseSchema(env: EnvironmentConfig) {
   router.get('/stats', statsGet);
   router.get('/templates', templatesGet);
   router.post('/validate', validatePost);
+  router.get('/categories', categoryListGet);
+  router.post('/categories', categoryCreatePost);
+  router.put('/categories/:cid', categoryUpdatePut);
+  router.delete('/categories/:cid', categoryDeleteDelete);
 
   // --- Collection ---
   router.get('/', schemaListGet);
@@ -79,6 +88,7 @@ export function createFeatureTargetDatabaseSchema(env: EnvironmentConfig) {
 
   // --- Generic (LAST to avoid catching specific routes) ---
   router.get('/:id', schemaDetailGet);
+  router.put('/:id', schemaUpdatePut);
   router.delete('/:id', schemaArchiveDelete);
 
   return router as any;

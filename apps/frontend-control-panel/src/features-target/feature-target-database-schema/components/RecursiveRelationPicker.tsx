@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/lib/config/client';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { TextHeading } from '@/components/ui/TextHeading';
+import { Badge, Button } from '@/components/ui';
+import { TextHeading } from '@/components/ui/text-heading';
 import { useRelations } from '@/features-target/feature-target-database-schema/composables/useRelations';
 
 interface RecursiveRelationPickerProps {

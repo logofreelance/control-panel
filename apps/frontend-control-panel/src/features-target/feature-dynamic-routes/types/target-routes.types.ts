@@ -44,6 +44,16 @@ export interface ApiEndpoint {
     autoPopulateFields?: string; // JSON
     ownershipColumn?: string;
     allowOwnerOnly?: boolean;
+    
+    // Query & Pagination
+    allowDynamicPagination?: boolean;
+    defaultLimit?: number;
+    allowDynamicFilters?: boolean;
+    filterableFields?: string; // JSON
+    allowDynamicSort?: boolean;
+    sortableFields?: string; // JSON
+    allowDetailView?: boolean;
+    lookupColumn?: string;
 }
 
 export type ApiLog = {

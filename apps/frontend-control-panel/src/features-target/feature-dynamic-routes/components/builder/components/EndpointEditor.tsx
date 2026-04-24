@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 
 import { Button, Input, Select, Switch, Card, CardContent, Badge, Label } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
@@ -55,7 +56,11 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
     executeDelete,
     deleteConfirm,
     setDeleteConfirm,
+    tableColumnsMap,
+    fetchTableColumns,
   } = useEndpointEditor(targetId, endpointId, onBack);
+
+  const [activeRel, setActiveRel] = useState<string | null>(null);
 
   const getValidationRule = (colName: string): string => {
     try {
@@ -151,6 +156,128 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
     const parsed = JSON.parse(autoTemplate);
     return { isCustom: false, template: autoTemplate, errorCode: parsed.errorCode };
   };
+
+  const [showGuide, setShowGuide] = useState(false);
+  const [copiedRule, setCopiedRule] = useState<string | null>(null);
+
+  const copyRule = (rule: string) => {
+    navigator.clipboard.writeText(rule);
+    setCopiedRule(rule);
+    setTimeout(() => setCopiedRule(null), 1500);
+  };
+
+  const VALIDATION_RULES = [
+    { rule: 'required', desc: 'field wajib diisi' },
+    { rule: 'min:3', desc: 'minimal 3 karakter' },
+    { rule: 'max:255', desc: 'maksimal 255 karakter' },
+    { rule: 'email', desc: 'harus format email' },
+    { rule: 'numeric', desc: 'harus angka' },
+    { rule: 'url', desc: 'harus format URL' },
+    { rule: 'boolean', desc: 'harus true/false/0/1' },
+    { rule: 'date', desc: 'harus format tanggal' },
+    { rule: 'json', desc: 'harus JSON valid' },
+    { rule: 'in:a,b,c', desc: 'harus salah satu dari daftar' },
+    { rule: 'uuid', desc: 'harus format UUID' },
+    { rule: 'slug', desc: 'huruf kecil, angka, strip' },
+  ];
+
+  const AUTOPOPULATE_RULES = [
+    { rule: '{{USER_ID}}', desc: 'ID user yang login' },
+    { rule: '{{NOW}}', desc: 'timestamp sekarang' },
+    { rule: '0', desc: 'nilai default angka' },
+    { rule: 'default_text', desc: 'nilai default teks' },
+  ];
+
+  const renderValidationGuide = () => (
+    <div className="rounded-xl border border-border/20 bg-muted/10 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setShowGuide(!showGuide)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <span className="flex items-center gap-2 lowercase font-medium">
+          <Icons.info className="size-3.5" />
+          validation guide — click to {showGuide ? 'hide' : 'expand'}
+        </span>
+        <Icons.chevronDown className={cn('size-3.5 transition-transform', showGuide && 'rotate-180')} />
+      </button>
+      {showGuide && (
+        <div className="px-4 pb-4 space-y-3 animate-in slide-in-from-top-2 duration-200 border-t border-border/10 pt-3">
+          <div>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">validation rules <span className="font-normal lowercase">(click to copy)</span></p>
+            <div className="flex flex-wrap gap-1.5">
+              {VALIDATION_RULES.map(v => (
+                <button
+                  key={v.rule}
+                  type="button"
+                  onClick={() => copyRule(v.rule)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all border flex items-center gap-1.5',
+                    copiedRule === v.rule
+                      ? 'bg-green-500/10 text-green-600 border-green-500/30'
+                      : 'bg-background text-foreground border-border/30 hover:border-primary/40 hover:bg-primary/5'
+                  )}
+                >
+                  {copiedRule === v.rule ? <Icons.check className="size-2.5" /> : <Icons.copy className="size-2.5 opacity-40" />}
+                  {v.rule}
+                  <span className="opacity-50 font-sans text-[10px]">— {v.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">combine with pipe <code className="text-primary">|</code></p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                'required|min:3',
+                'required|email',
+                'required|min:1|max:255',
+                'numeric|min:0',
+                'required|in:active,inactive',
+              ].map(combo => (
+                <button
+                  key={combo}
+                  type="button"
+                  onClick={() => copyRule(combo)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all border',
+                    copiedRule === combo
+                      ? 'bg-green-500/10 text-green-600 border-green-500/30'
+                      : 'bg-primary/5 text-primary border-primary/20 hover:bg-primary/10'
+                  )}
+                >
+                  {copiedRule === combo ? <Icons.check className="size-2.5 mr-1" /> : <Icons.copy className="size-2.5 opacity-40 mr-1" />}
+                  {combo}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">auto-populate values <span className="font-normal lowercase">(click to copy)</span></p>
+            <div className="flex flex-wrap gap-1.5">
+              {AUTOPOPULATE_RULES.map(v => (
+                <button
+                  key={v.rule}
+                  type="button"
+                  onClick={() => copyRule(v.rule)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all border flex items-center gap-1.5',
+                    copiedRule === v.rule
+                      ? 'bg-green-500/10 text-green-600 border-green-500/30'
+                      : 'bg-background text-foreground border-border/30 hover:border-primary/40 hover:bg-primary/5'
+                  )}
+                >
+                  {copiedRule === v.rule ? <Icons.check className="size-2.5" /> : <Icons.copy className="size-2.5 opacity-40" />}
+                  {v.rule}
+                  <span className="opacity-50 font-sans text-[10px]">— {v.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const TABS = [
     { id: 'basic', label: 'basic info', Icon: Icons.globe },
@@ -408,6 +535,34 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                   />
                 </div>
 
+                {/* Lookup Column - Only for PUT/PATCH/DELETE */}
+                {['PUT', 'PATCH', 'DELETE'].includes(form.method || '') && (
+                  <div className="pt-2">
+                    <TextHeading as="h3" size="h4" className="lowercase mb-1">
+                      record lookup column
+                    </TextHeading>
+                    <p className="text-base text-muted-foreground lowercase mb-4">
+                      the database column used to match the URL parameter (e.g. <code className="text-primary">/api/v1/packages/:slug</code>). default is <b>id</b>.
+                    </p>
+                    <div className="max-w-md">
+                      <Select
+                        value={form.lookupColumn || 'id'}
+                        onChange={(e) => setForm({ ...form, lookupColumn: e.target.value })}
+                        fullWidth
+                        options={[
+                          { label: 'id (default)', value: 'id' },
+                          ...columns
+                            .filter(c => c.name !== 'id' && c.name !== 'created_at' && c.name !== 'updated_at')
+                            .map(c => ({ label: `${c.name} (${c.type})`, value: c.name }))
+                        ]}
+                      />
+                      <p className="text-xs text-muted-foreground mt-2 italic px-1">
+                        choose a unique column. the URL parameter value will be matched against this column.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-2">
                   <TextHeading as="h3" size="h4" className="lowercase mb-4">
                     ownership security
@@ -555,6 +710,247 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                         })()}
                       </div>
 
+                      {/* --- RELATIONAL WRITE PERMISSIONS --- */}
+                      <div className="pt-8 border-t border-border/10 mt-8">
+                        <TextHeading as="h3" size="h4" className="lowercase mb-1">
+                          relational write permissions
+                        </TextHeading>
+                        <p className="text-base text-muted-foreground lowercase mb-4">
+                          select which child relations can be modified or created through this endpoint.
+                        </p>
+
+                        {relations.length === 0 ? (
+                          <div className="p-4 rounded-xl bg-muted/10 border border-dashed border-border/20">
+                            <p className="text-base text-muted-foreground lowercase text-center py-4">no relations found for this data source.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-6">
+                            <div className="flex flex-wrap gap-2">
+                              {(() => {
+                                // Normalize: support legacy array format and new object format  
+                                const rawRels = form.writableRelations ? JSON.parse(form.writableRelations) : {};
+                                const normalizeRel = (val: any) => {
+                                  if (Array.isArray(val)) return { fields: val, validation: {}, autoPopulate: {} };
+                                  if (val && typeof val === 'object' && val.fields) return val;
+                                  return { fields: [], validation: {}, autoPopulate: {} };
+                                };
+                                const writableRels: Record<string, any> = {};
+                                for (const [k, v] of Object.entries(rawRels)) {
+                                  writableRels[k] = normalizeRel(v);
+                                }
+
+                                return relations.map(rel => {
+                                  const alias = rel.alias || rel.targetTable || rel.target?.tableName;
+                                  if (!alias || !isNaN(Number(alias))) return null;
+                                  
+                                  const isWritable = alias in writableRels;
+                                  const isActive = activeRel === alias;
+                                  const fieldCount = isWritable ? (writableRels[alias]?.fields?.length || 0) : 0;
+
+                                  const toggleRelation = () => {
+                                    const newObj = { ...writableRels };
+                                    if (isWritable) {
+                                      delete newObj[alias];
+                                      if (activeRel === alias) setActiveRel(null);
+                                    } else {
+                                      newObj[alias] = { fields: [], validation: {}, autoPopulate: {} };
+                                      if (rel.targetId) fetchTableColumns(rel.targetId);
+                                    }
+                                    setForm({ ...form, writableRelations: JSON.stringify(newObj) });
+                                  };
+
+                                  const openDetail = (e: React.MouseEvent) => {
+                                    e.stopPropagation();
+                                    if (!isWritable) {
+                                       const newObj = { ...writableRels, [alias]: { fields: [], validation: {}, autoPopulate: {} } };
+                                       setForm({ ...form, writableRelations: JSON.stringify(newObj) });
+                                    }
+                                    setActiveRel(activeRel === alias ? null : alias);
+                                    if (rel.targetId) fetchTableColumns(rel.targetId);
+                                  };
+
+                                  return (
+                                    <div key={alias} className="relative group">
+                                      <button
+                                        type="button"
+                                        onClick={openDetail}
+                                        className={cn(
+                                          'px-4 py-2.5 rounded-xl text-base transition-all flex items-center gap-2 border',
+                                          isWritable
+                                            ? 'bg-primary/5 text-primary border-primary/10 hover:bg-primary/10'
+                                            : 'bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50',
+                                          activeRel === alias && 'ring-2 ring-primary ring-offset-2'
+                                        )}
+                                      >
+                                        <Icons.link className="size-3.5" />
+                                        {alias}
+                                        <Badge variant="outline" className="text-[10px] lowercase px-1.5 h-5 border-primary/20">
+                                          {String(rel.type || 'rel').toLowerCase().replace('_', ' ')}
+                                        </Badge>
+                                        {isWritable && (
+                                          <div className="flex items-center gap-1 ml-1 pl-2 border-l border-primary/20">
+                                             <span className="text-[10px] font-bold">{fieldCount} cols</span>
+                                             <Icons.chevronDown className={cn("size-3 transition-transform", activeRel === alias && "rotate-180")} />
+                                          </div>
+                                        )}
+                                      </button>
+                                      
+                                      {/* Quick Toggle Switch (Unbind) */}
+                                      {isWritable && (
+                                         <button 
+                                          onClick={(e) => { e.stopPropagation(); toggleRelation(); }}
+                                          className="absolute -top-2 -right-2 size-5 rounded-full bg-destructive text-white flex items-center justify-center scale-0 group-hover:scale-100 transition-transform shadow-lg"
+                                         >
+                                           <Icons.close className="size-3" />
+                                         </button>
+                                      )}
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+
+                            {/* --- RELATION COLUMN SELECTOR (ACTIVE) --- */}
+                            {(() => {
+                               if (!activeRel) return null;
+                               
+                               const rel = relations.find(r => (r.alias || r.targetTable || r.target?.tableName) === activeRel);
+                               if (!rel) return null;
+
+                               const targetId = rel.targetId;
+                               const targetCols = tableColumnsMap[targetId] || [];
+                                                              const rawRels = form.writableRelations ? JSON.parse(form.writableRelations) : {};
+                               
+                               // Normalize: support legacy array format and new object format
+                               const normalizeRelConfig = (val: any): { fields: string[]; validation: Record<string,string>; autoPopulate: Record<string,string> } => {
+                                 if (Array.isArray(val)) return { fields: val, validation: {}, autoPopulate: {} };
+                                 if (val && typeof val === 'object' && val.fields) return { fields: val.fields || [], validation: val.validation || {}, autoPopulate: val.autoPopulate || {} };
+                                 return { fields: [], validation: {}, autoPopulate: {} };
+                               };
+                               
+                               const writableRels: Record<string, any> = {};
+                               for (const [k, v] of Object.entries(rawRels)) {
+                                 writableRels[k] = normalizeRelConfig(v);
+                               }
+                               
+                               const relConfig = writableRels[activeRel] || { fields: [], validation: {}, autoPopulate: {} };
+                               const selectedCols: string[] = relConfig.fields;
+
+                               const updateRelConfig = (newConfig: any) => {
+                                  const newObj = { ...writableRels, [activeRel]: newConfig };
+                                  setForm({ ...form, writableRelations: JSON.stringify(newObj) });
+                               };
+
+                               const toggleChildCol = (colName: string) => {
+                                  const newFields = selectedCols.includes(colName)
+                                    ? selectedCols.filter(c => c !== colName)
+                                    : [...selectedCols, colName];
+                                  updateRelConfig({ ...relConfig, fields: newFields });
+                               };
+
+                               const setChildValidation = (colName: string, rule: string) => {
+                                  const newVal = { ...relConfig.validation };
+                                  if (rule) { newVal[colName] = rule; } else { delete newVal[colName]; }
+                                  updateRelConfig({ ...relConfig, validation: newVal });
+                               };
+
+                               const setChildAutoPopulate = (colName: string, value: string) => {
+                                  const newAP = { ...relConfig.autoPopulate };
+                                  if (value) { newAP[colName] = value; } else { delete newAP[colName]; }
+                                  updateRelConfig({ ...relConfig, autoPopulate: newAP });
+                               };
+
+                               return (
+                                 <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 animate-in zoom-in-95 duration-200">
+                                    <div className="flex items-center justify-between mb-4">
+                                       <div className="flex items-center gap-2">
+                                          <Icons.settings className="size-4 text-primary" />
+                                          <TextHeading as="h4" size="h5" className="lowercase">
+                                            configuring columns for: <span className="text-primary">{activeRel}</span>
+                                          </TextHeading>
+                                       </div>
+                                       <Button variant="ghost" size="sm" onClick={() => setActiveRel(null)}>
+                                          <Icons.close className="size-4" />
+                                       </Button>
+                                    </div>
+
+                                    {targetCols.length === 0 ? (
+                                       <p className="text-base text-muted-foreground lowercase text-center py-4 italic">loading child schema...</p>
+                                    ) : (
+                                       <div className="space-y-6">
+                                          {/* Column Chips */}
+                                          <div>
+                                            <p className="text-xs text-muted-foreground lowercase mb-2 font-medium">writable columns</p>
+                                            <div className="flex flex-wrap gap-2">
+                                               {targetCols.map((col: any) => {
+                                                  const isColWritable = selectedCols.includes(col.name);
+                                                  return (
+                                                    <button
+                                                      key={col.name}
+                                                      type="button"
+                                                      onClick={() => toggleChildCol(col.name)}
+                                                      className={cn(
+                                                        'px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-2 border',
+                                                        isColWritable
+                                                          ? 'bg-primary text-primary-foreground border-primary'
+                                                          : 'bg-background text-muted-foreground border-border hover:border-primary/50'
+                                                      )}
+                                                    >
+                                                      {isColWritable ? <Icons.check className="size-3" /> : <Icons.plus className="size-3 opacity-50" />}
+                                                      {col.name}
+                                                      <span className="opacity-60 text-[10px]">({col.type})</span>
+                                                    </button>
+                                                  );
+                                               })}
+                                            </div>
+                                          </div>
+
+                                          {/* Validation & Auto-Populate for selected columns */}
+                                          {selectedCols.length > 0 && (
+                                            <div className="space-y-4 pt-4 border-t border-primary/10">
+                                              <p className="text-xs text-muted-foreground lowercase font-medium flex items-center gap-2">
+                                                <Icons.shield className="size-3.5" /> validation rules & auto-populate
+                                              </p>
+                                              {renderValidationGuide()}
+                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {selectedCols.map(colName => (
+                                                  <div key={colName} className="p-3 rounded-xl bg-background border border-border/30 space-y-2">
+                                                    <p className="text-sm font-medium text-primary lowercase">{colName}</p>
+                                                    <div>
+                                                      <Label className="text-[11px] text-muted-foreground lowercase block mb-1">validation</Label>
+                                                      <Input
+                                                        className="h-8 text-sm"
+                                                        placeholder="e.g. required|min:3|max:255"
+                                                        value={relConfig.validation[colName] || ''}
+                                                        onChange={(e) => setChildValidation(colName, e.target.value)}
+                                                      />
+                                                    </div>
+                                                    <div>
+                                                      <Label className="text-[11px] text-muted-foreground lowercase block mb-1">auto-populate</Label>
+                                                      <Input
+                                                        className="h-8 text-sm"
+                                                        placeholder="e.g. 0, {{USER_ID}}, default_value"
+                                                        value={relConfig.autoPopulate[colName] || ''}
+                                                        onChange={(e) => setChildAutoPopulate(colName, e.target.value)}
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+                                       </div>
+                                    )}
+                                    <p className="mt-4 text-xs text-muted-foreground italic">
+                                       * only checked columns will be allowed to be written during nested save operations.
+                                    </p>
+                                 </div>
+                               );
+                            })()}
+                          </div>
+                        )}
+                      </div>
+
                       {/* --- PAYLOAD DISCOVERY SECTION --- */}
                       <div className="pt-8 border-t border-border/10 mt-8 space-y-4">
                           <TextHeading as="h3" size="h4" className="lowercase flex items-center gap-2">
@@ -580,11 +976,27 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
     });
 
     // Virtual Relations (Nested Writes)
+    const rawRels = form.writableRelations ? JSON.parse(form.writableRelations) : {};
+    const normalizeRel = (val: any) => {
+      if (Array.isArray(val)) return { fields: val };
+      if (val && typeof val === 'object' && val.fields) return val;
+      return { fields: [] };
+    };
+
     if (relations && relations.length > 0) {
         relations.forEach(rel => {
-            const alias = rel.alias || rel.target?.tableName;
-            if (alias && (rel.type === 'has_many' || rel.type === 'has_one')) {
-                example[alias] = rel.type === 'has_many' ? [{ /* child data */ }] : { /* child data */ };
+            const alias = rel.alias || rel.targetTable || rel.target?.tableName;
+            if (alias && alias in rawRels) {
+                const relConfig = normalizeRel(rawRels[alias]);
+                const childExample: Record<string, any> = {};
+                const childCols: string[] = relConfig.fields || [];
+                if (childCols.length > 0) {
+                    childCols.forEach((c: string) => childExample[c] = "value");
+                } else {
+                    childExample["..."] = "all fields allowed";
+                }
+                
+                example[alias] = (rel.type === 'HAS_MANY' || rel.type === 'has_many') ? [childExample] : childExample;
             }
         });
     }
@@ -670,6 +1082,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                             <TextHeading as="h3" size="h4" className="lowercase">
                               validation rules
                             </TextHeading>
+                            {renderValidationGuide()}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               {writableList.map((colName) => (
                                 <div

@@ -48,7 +48,7 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
   };
 
   // Data from composables
-  const { fetchOne } = useDatabaseSchema();
+  const { fetchOne, update } = useDatabaseSchema();
   const { addColumn, dropColumn, loading: schemaLoading } = useSchemaEditor(DatabaseTableId);
 
   // Local state for UI
@@ -75,13 +75,19 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
       if (data) {
         setSource(data);
 
-        // Fetch physical columns from backend
+        // 1. Parse metadata for order and custom settings
+        const metadataSchema = data.schemaJson ? JSON.parse(data.schemaJson) : { columns: [] };
+        const metadataColumns: ColumnDefinition[] = metadataSchema.columns || [];
+
+        // 2. Fetch physical columns from backend
         try {
           const res = await apiClient.get<any[]>(api.databaseSchema.columns(DatabaseTableId), {
             headers: nodeId ? { 'x-target-id': nodeId } : {},
           });
+          
           if (res.status === 'success' && res.data) {
-            const mappedCols: ColumnDefinition[] = res.data.map((pc: any) => {
+            // Map physical columns to our internal type
+            const physicalCols: ColumnDefinition[] = res.data.map((pc: any) => {
               const type = pc.type.toLowerCase();
               let mappedType = 'string';
 
@@ -102,18 +108,40 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
                 unique: pc.isPrimary,
               };
             });
-            setColumns(mappedCols);
-            setOriginalColumns(JSON.parse(JSON.stringify(mappedCols)));
+
+            // 3. Merge: Order physical columns based on metadata
+            const orderedCols: ColumnDefinition[] = [];
+            const physicalMap = new Map(physicalCols.map(c => [c.name, c]));
+
+            // First, add columns that exist in both metadata and physical DB (respect metadata order)
+            for (const metaCol of metadataColumns) {
+              const physicalMatch = physicalMap.get(metaCol.name);
+              if (physicalMatch) {
+                orderedCols.push({
+                  ...metaCol, // Priority: metadata (custom types/labels)
+                  required: physicalMatch.required, // Truth: physical DB
+                  unique: physicalMatch.unique, // Truth: physical DB
+                });
+                physicalMap.delete(metaCol.name);
+              }
+            }
+
+            // Then, add any physical columns that are NOT in metadata (appended to end)
+            for (const physCol of physicalMap.values()) {
+              orderedCols.push(physCol);
+            }
+
+            setColumns(orderedCols);
+            setOriginalColumns(JSON.parse(JSON.stringify(orderedCols)));
           } else {
-            // Fallback to schemaJson if physical fetch fails
-            const schema = data.schemaJson ? JSON.parse(data.schemaJson) : { columns: [] };
-            setColumns(schema.columns || []);
-            setOriginalColumns(JSON.parse(JSON.stringify(schema.columns || [])));
+            // Fallback to pure schemaJson if physical fetch fails
+            setColumns(metadataColumns);
+            setOriginalColumns(JSON.parse(JSON.stringify(metadataColumns)));
           }
         } catch (e) {
-          const schema = data.schemaJson ? JSON.parse(data.schemaJson) : { columns: [] };
-          setColumns(schema.columns || []);
-          setOriginalColumns(JSON.parse(JSON.stringify(schema.columns || [])));
+          // Fallback on error
+          setColumns(metadataColumns);
+          setOriginalColumns(JSON.parse(JSON.stringify(metadataColumns)));
         }
       }
     };
@@ -122,6 +150,11 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
   }, [DatabaseTableId, fetchOne, api.databaseSchema]);
 
   const handleSave = async () => {
+    if (!isDirty) {
+      addToast(C.validation.noChanges || 'No changes to save', 'info');
+      return;
+    }
+
     setSaving(true);
     const originalMap = new Map(originalColumns.map((c) => [c.name, c]));
     const newMap = new Map(columns.map((c) => [c.name, c]));
@@ -132,19 +165,22 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
     for (const col of columns) if (!originalMap.has(col.name)) toAdd.push(col);
     for (const orgCol of originalColumns) if (!newMap.has(orgCol.name)) toDrop.push(orgCol.name);
 
-    if (toAdd.length === 0 && toDrop.length === 0) {
-      addToast(C.validation.noChanges || 'No changes to save', 'info');
-      setSaving(false);
-      return;
-    }
-
     let hasError = false;
     try {
+      // 1. Sync physical columns (Add/Drop)
       for (const colName of toDrop) {
         if (!(await dropColumn(colName))) hasError = true;
       }
       for (const col of toAdd) {
         if (!(await addColumn(col))) hasError = true;
+      }
+
+      // 2. Persist entire schema metadata (including order)
+      if (!hasError) {
+        const res = await update(DatabaseTableId, {
+          schemaJson: JSON.stringify({ columns }),
+        });
+        if (!res) hasError = true;
       }
     } catch (e) {
       hasError = true;

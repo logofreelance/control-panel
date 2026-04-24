@@ -159,7 +159,7 @@ export function TargetLayout({ children }: TargetLayoutProps) {
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 bg-background relative lg:mx-0 mx-2">
+        <main className="flex-1 min-w-0 bg-background relative lg:mx-0 mx-2">
           {children}
         </main>
       </div>

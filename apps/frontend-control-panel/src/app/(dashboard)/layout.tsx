@@ -3,7 +3,6 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { BRAND } from '@/lib/config';
 import { apiClient } from '@/lib/api-client';
-import { ToastProvider, ToastContainer, PageLoadingProvider } from '@/modules/_core';
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -81,17 +80,12 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
     return (
         <div className="min-h-screen w-full bg-background selection:bg-foreground selection:text-background font-instrument overflow-hidden">
             {children}
-            <ToastContainer />
         </div>
     );
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return (
-        <ToastProvider>
-            <PageLoadingProvider>
-                <DashboardLayoutInner>{children}</DashboardLayoutInner>
-            </PageLoadingProvider>
-        </ToastProvider>
+        <DashboardLayoutInner>{children}</DashboardLayoutInner>
     );
 }

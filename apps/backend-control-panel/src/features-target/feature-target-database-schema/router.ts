@@ -26,6 +26,8 @@ import { handler as schemaColumnDropDelete } from './schema-column-drop-delete/h
 import { handler as columnsGet } from './columns-get/handler';
 import { handler as dataListGet } from './data-list-get/handler';
 import { handler as dataInsertPost } from './data-insert-post/handler';
+import { handler as dataUpdatePut } from './data-update-put/handler';
+import { handler as dataDeleteDelete } from './data-delete-delete/handler';
 import { handler as dataSeedPost } from './data-seed-post/handler';
 
 import { handler as resourceListGet } from './resource-list-get/handler';
@@ -69,6 +71,8 @@ export function createFeatureTargetDatabaseSchema(env: EnvironmentConfig) {
   router.get('/:id/columns', columnsGet);
   router.get('/:id/data', dataListGet);
   router.post('/:id/data', dataInsertPost);
+  router.put('/:id/data/:rowId', dataUpdatePut);
+  router.delete('/:id/data/:rowId', dataDeleteDelete);
   router.post('/:id/restore', schemaRestorePost);
   router.delete('/:id/destroy', schemaDestroyDelete);
   router.post('/:id/schema/column', schemaColumnAddPost);

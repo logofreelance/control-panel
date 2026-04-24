@@ -81,7 +81,8 @@ export const CreateSchemaForm = () => {
 
     const handleNameChange = (val: string) => {
         const newForm = { ...form, name: val };
-        if (!form.tableName && val) {
+        const expectedOldTableName = generateTableName(form.name);
+        if (!form.tableName || form.tableName === expectedOldTableName) {
             newForm.tableName = generateTableName(val);
         }
         setForm(newForm);
@@ -89,13 +90,23 @@ export const CreateSchemaForm = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Clean up column values before submitting
+        const cleanedColumns = columns.map(col => {
+            const cleanedCol = { ...col };
+            if (cleanedCol.values) {
+                cleanedCol.values = cleanedCol.values.map(v => v.trim()).filter(Boolean);
+            }
+            return cleanedCol;
+        });
+
         const payload = {
             name: form.name,
             tableName: form.tableName,
             description: form.description,
             category_id: form.categoryId || null,
             schema: {
-                columns,
+                columns: cleanedColumns,
                 timestamps: options.timestamps,
                 softDelete: options.softDelete,
             },
@@ -218,7 +229,7 @@ export const CreateSchemaForm = () => {
                                         type="button"
                                         onClick={() => setForm({ ...form, categoryId: '' })}
                                         className={cn(
-                                            "flex items-center gap-3 px-4 py-3 rounded-xl border text-sm transition-all",
+                                            "flex items-center gap-3 px-4 py-3 rounded-xl border text-base transition-all",
                                             !form.categoryId ? "ring-2 ring-primary bg-primary/5 border-primary/20" : "hover:bg-muted/50 border-transparent bg-muted/20"
                                         )}
                                     >
@@ -231,7 +242,7 @@ export const CreateSchemaForm = () => {
                                             type="button"
                                             onClick={() => setForm({ ...form, categoryId: cat.id })}
                                             className={cn(
-                                                "flex items-center gap-3 px-4 py-3 rounded-xl border text-sm transition-all",
+                                                "flex items-center gap-3 px-4 py-3 rounded-xl border text-base transition-all",
                                                 form.categoryId === cat.id ? "ring-2 ring-primary bg-primary/5 border-primary/20" : "hover:bg-muted/50 border-transparent bg-muted/20"
                                             )}
                                             style={{ color: form.categoryId === cat.id ? cat.color : undefined }}

@@ -1,7 +1,7 @@
 import { Instrument_Sans } from 'next/font/google';
 import { cookies } from 'next/headers';
 import './globals.css';
-import { ToastProvider, ConfigProvider, PageLoadingProvider } from '@/modules/_core';
+import { ToastProvider, ConfigProvider, PageLoadingProvider, ToastContainer } from '@/modules/_core';
 import { BRAND } from '@/lib/config';
 
 const fontBrand = Instrument_Sans({ 
@@ -101,6 +101,7 @@ export default async function RootLayout({
           <PageLoadingProvider>
             <ToastProvider>
               {children}
+              <ToastContainer />
             </ToastProvider>
           </PageLoadingProvider>
         </ConfigProvider>

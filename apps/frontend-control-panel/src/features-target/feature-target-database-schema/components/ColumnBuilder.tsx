@@ -39,16 +39,39 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
     onChange([...columns, { name: '', type: 'string' }]);
   };
 
+  const SMART_DEFAULTS: Record<string, string> = {
+    integer: '0',
+    bigint: '0',
+    decimal: '0.00',
+    float: '0.0',
+    boolean: '0',
+    timestamp: 'CURRENT_TIMESTAMP',
+    datetime: 'CURRENT_TIMESTAMP',
+    status: 'active',
+  };
+
   const updateColumn = (
     index: number,
     field: keyof ColumnDefinition,
     value: ColumnDefinition[keyof ColumnDefinition],
   ) => {
     const updated = [...columns];
-    updated[index] = { ...updated[index], [field]: value };
+    const currentCol = updated[index];
+    
+    // Apply the change
+    updated[index] = { ...currentCol, [field]: value };
 
-    if (field === 'type' && value !== 'relation' && updated[index].target) {
-      delete updated[index].target;
+    // SMART DEFAULTS: If type changes and default is empty, suggest a value
+    if (field === 'type') {
+      const type = value as string;
+      if (!currentCol.default && SMART_DEFAULTS[type]) {
+        updated[index].default = SMART_DEFAULTS[type];
+      }
+
+      // Cleanup target if not a relation anymore
+      if (type !== 'relation' && updated[index].target) {
+        delete updated[index].target;
+      }
     }
 
     onChange(updated);
@@ -135,7 +158,7 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
 
                     <div className="flex-1 space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-x-4 gap-y-3">
-                        <div className="md:col-span-4">
+                        <div className="md:col-span-3">
                           <Input
                             label="column name"
                             value={col.name}
@@ -150,7 +173,7 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                           />
                         </div>
 
-                        <Field className="md:col-span-4">
+                        <Field className="md:col-span-3">
                           <FieldLabel>data type</FieldLabel>
                           <Select
                             value={col.type}
@@ -163,7 +186,16 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                           />
                         </Field>
 
-                        <div className="md:col-span-4 flex items-end gap-5 pb-1">
+                        <div className="md:col-span-3">
+                          <Input
+                            label="default value"
+                            value={col.default === undefined ? '' : String(col.default)}
+                            onChange={(e) => updateColumn(index, 'default', e.target.value)}
+                            placeholder="e.g. active"
+                          />
+                        </div>
+
+                        <div className="md:col-span-3 flex items-end gap-5 pb-1">
                           <div className="flex items-center gap-2">
                             <Checkbox
                               id={`required-${index}`}
@@ -206,8 +238,7 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                                       'values',
                                       e.target.value
                                         .split(',')
-                                        .map((v) => v.trim())
-                                        .filter(Boolean),
+                                        .map((v) => v.trimStart())
                                     )
                                   }
                                   placeholder="e.g. active, pending, archive"

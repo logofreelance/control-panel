@@ -25,6 +25,7 @@ import { API } from '../api/endpoints';
 const L = MODULE_LABELS.databaseSchema;
 import type { DatabaseTable } from '../types';
 import { ImportDataModal } from './ImportDataModal';
+import { RowEditorModal } from './RowEditorModal';
 
 const PAGE_SIZES = [10, 20, 50, 100];
 const C = {
@@ -54,24 +55,60 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
   } = useDataViewer(DatabaseTable?.id);
 
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editData, setEditData] = useState<Record<string, any> | null>(null);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // ✅ SAFELY RESOLVE COLUMNS: Parse schema_json string if physical columns haven't loaded yet
+  // ✅ SAFELY RESOLVE COLUMNS: Merge physical truth with metadata order
   const displayColumns = useMemo(() => {
-    if (physicalColumns?.length > 0) return physicalColumns;
-
+    // 1. Get metadata order
+    let metadataColumns: any[] = [];
     try {
       const jsonStr = DatabaseTable?.schemaJson;
       if (jsonStr) {
         const parsed = JSON.parse(jsonStr);
-        return parsed.columns || [];
+        metadataColumns = parsed.columns || [];
       }
     } catch (e) {
       console.error('Failed to parse schemaJson', e);
     }
 
-    return [];
+    // 2. If no physical columns loaded yet, show metadata as skeleton/fallback
+    if (!physicalColumns || physicalColumns.length === 0) return metadataColumns;
+
+    // 3. Merge: Respect metadata order, but ensure physical existence
+    const orderedCols: any[] = [];
+    
+    // Create a case-insensitive map of physical columns
+    const physicalMap = new Map();
+    physicalColumns.forEach((c: any) => {
+      const name = (c.name || c.Field || "").toLowerCase();
+      if (name) physicalMap.set(name, c);
+    });
+
+    // First, add columns that exist in both (respect metadata order)
+    for (const metaCol of metadataColumns) {
+      const nameKey = (metaCol.name || "").toLowerCase();
+      if (!nameKey) continue;
+
+      const physicalMatch = physicalMap.get(nameKey);
+      if (physicalMatch) {
+        orderedCols.push({
+          ...physicalMatch,
+          displayName: metaCol.displayName || metaCol.name || physicalMatch.name,
+        });
+        physicalMap.delete(nameKey);
+      }
+    }
+
+    // Then, add any remaining physical columns (appended at end)
+    // This ensures new columns added directly to DB still show up
+    for (const physCol of physicalMap.values()) {
+      orderedCols.push(physCol);
+    }
+
+    return orderedCols;
   }, [physicalColumns, DatabaseTable?.schemaJson]);
 
   const totalPages = Math.ceil(total / (pagination?.limit || 10)) || 1;
@@ -103,13 +140,31 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
     setDeleteId(null);
   };
 
+  const handleSaveRow = async (data: Record<string, any>) => {
+    if (editData?.id) {
+      return await updateRow(Number(editData.id), data);
+    } else {
+      return await insertRow(data);
+    }
+  };
+
+  const openAddModal = () => {
+    setEditData(null);
+    setIsEditorOpen(true);
+  };
+
+  const openEditModal = (row: any) => {
+    setEditData(row);
+    setIsEditorOpen(true);
+  };
+
   // Export logic moved to useDataViewer
 
   if (!DatabaseTable) return null;
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <Card className="overflow-hidden border-none shadow-sm bg-card/60 backdrop-blur-sm rounded-[32px]">
+      <Card className="w-full max-w-full min-w-0 overflow-hidden border-none shadow-sm bg-card/60 backdrop-blur-sm rounded-[32px]">
         {/* Header Section */}
         <header className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/10">
           <div className="flex items-center gap-4">
@@ -156,6 +211,10 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
 
             <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
 
+            <Button size="sm" variant="default" onClick={openAddModal}>
+              <Icons.plus className="mr-2" /> add record
+            </Button>
+
             <Button size="icon-sm" variant="ghost" onClick={fetchData} isLoading={loading}>
               <Icons.refresh className={cn(loading && 'animate-spin text-primary')} />
             </Button>
@@ -163,7 +222,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
         </header>
 
         {/* Main Table Content */}
-        <div className="relative w-full overflow-x-auto custom-scrollbar min-h-[400px]">
+        <div className="relative w-full max-w-full overflow-x-auto custom-scrollbar min-h-[400px]">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/5 border-b border-border/10">
@@ -251,7 +310,7 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                         return (
                           <TableCell
                             key={`${row.id || i}-${colName}`}
-                            className="max-w-[200px] truncate text-sm font-normal text-foreground lowercase py-5"
+                            className="max-w-[140px] truncate text-sm font-normal text-foreground lowercase py-5"
                           >
                             {val === null || val === undefined ? (
                                <span className="opacity-20">-</span>
@@ -274,14 +333,24 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
                         );
                       })}
                       <TableCell className="text-right pr-6">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="size-10 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive text-muted-foreground"
-                          onClick={() => setDeleteId(row.id as number)}
-                        >
-                          <Icons.trash className="size-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-10 rounded-xl hover:bg-muted text-muted-foreground"
+                            onClick={() => openEditModal(row)}
+                          >
+                            <Icons.edit className="size-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-10 rounded-xl hover:bg-destructive/10 hover:text-destructive text-muted-foreground"
+                            onClick={() => setDeleteId(row.id as number)}
+                          >
+                            <Icons.trash className="size-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -367,6 +436,14 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
         onClose={() => setIsImportOpen(false)}
         DatabaseTableId={DatabaseTable?.id}
         onSuccess={fetchData}
+      />
+
+      <RowEditorModal
+        isOpen={isEditorOpen}
+        onClose={() => setIsEditorOpen(false)}
+        columns={displayColumns}
+        rowData={editData}
+        onSave={handleSaveRow}
       />
     </div>
   );

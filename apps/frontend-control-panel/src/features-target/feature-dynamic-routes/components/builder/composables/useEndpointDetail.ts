@@ -123,13 +123,51 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
 
         // Parse writable fields for body example
         let bodyExample = '{}';
-        if (endpoint.writableFields && ['POST', 'PUT', 'PATCH'].includes(method)) {
-            try {
-                const fields = JSON.parse(endpoint.writableFields);
-                const obj: Record<string, string> = {};
-                fields.forEach((f: string) => { obj[f] = `your_${f}`; });
-                bodyExample = JSON.stringify(obj, null, 2);
-            } catch { /* ignore */ }
+        if (['POST', 'PUT', 'PATCH'].includes(method)) {
+            const obj: Record<string, any> = {};
+            
+            // 1. Add Writable Fields
+            if (endpoint.writableFields) {
+                try {
+                    const fields = JSON.parse(endpoint.writableFields);
+                    fields.forEach((f: string) => { obj[f] = `your_${f}`; });
+                } catch { /* ignore */ }
+            }
+
+            // 2. Add Relations from writableRelations config (Deep Save Support)
+            if (endpoint.writableRelations) {
+                try {
+                    const rawRels = typeof endpoint.writableRelations === 'string' 
+                        ? JSON.parse(endpoint.writableRelations) 
+                        : endpoint.writableRelations;
+                    
+                    if (rawRels && typeof rawRels === 'object' && !Array.isArray(rawRels)) {
+                        Object.entries(rawRels).forEach(([alias, config]: [string, any]) => {
+                            if (!alias || !isNaN(Number(alias))) return;
+                            
+                            const subObj: Record<string, string> = {};
+                            
+                            // Normalize: support legacy array format and new object format
+                            const fields: string[] = Array.isArray(config) 
+                                ? config 
+                                : (config?.fields || []);
+                            
+                            if (fields.length > 0) {
+                                fields.forEach((f: string) => { 
+                                    if (f !== 'id') subObj[f] = `your_rel_${f}`; 
+                                });
+                            } else {
+                                subObj['field'] = 'value';
+                            }
+
+                            // Always show as array (most common for has_many)
+                            obj[alias] = [subObj];
+                        });
+                    }
+                } catch { /* ignore */ }
+            }
+
+            bodyExample = JSON.stringify(obj, null, 2);
         }
 
         const needsBody = ['POST', 'PUT', 'PATCH'].includes(method);

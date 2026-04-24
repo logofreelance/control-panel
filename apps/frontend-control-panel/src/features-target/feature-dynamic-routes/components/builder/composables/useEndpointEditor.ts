@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast, useConfig } from '@/modules/_core';
 import { env } from '@/lib/env';
@@ -76,25 +76,34 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
 
     // Columns state for Mutation configuration
     const [columns, setColumns] = useState<ColumnInfo[]>([]);
+    const [tableColumnsMap, setTableColumnsMap] = useState<Record<string, ColumnInfo[]>>({});
+    const tableColumnsMapRef = useRef<Record<string, ColumnInfo[]>>({});
 
-    const fetchColumns = useCallback(async (dsId: string) => {
+    const fetchTableColumns = useCallback(async (tableId: string) => {
+        if (tableColumnsMapRef.current[tableId]) return tableColumnsMapRef.current[tableId]; // Cache hit via ref
         try {
-            const res = await fetch(api.databaseSchema.columns(dsId), { headers: { 'x-target-id': targetId } });
+            const res = await fetch(api.databaseSchema.columns(tableId), { headers: { 'x-target-id': targetId } });
             const data = await res.json();
             if (data.status === 'success') {
-                setColumns(data.data);
-            } else {
-                setColumns([]);
+                tableColumnsMapRef.current = { ...tableColumnsMapRef.current, [tableId]: data.data };
+                setTableColumnsMap(prev => ({ ...prev, [tableId]: data.data }));
+                return data.data;
             }
-        } catch {
-            setColumns([]);
+        } catch (e) {
+            console.error('Failed to fetch columns for table', tableId, e);
         }
+        return [];
     }, [api.databaseSchema, targetId]);
+
+    const fetchColumns = useCallback(async (dsId: string) => {
+        const cols = await fetchTableColumns(dsId);
+        if (cols) setColumns(cols);
+    }, [fetchTableColumns]);
 
     // Fetch Relations when DataSource changes
     const fetchRelations = useCallback(async (dsId: string) => {
         try {
-            const res = await fetch(`${env.API_URL}/target/database-schema/${dsId}/relations`, { headers: { 'x-target-id': targetId } });
+            const res = await fetch(`${env.API_URL}/database-schema/${dsId}/relations`, { headers: { 'x-target-id': targetId } });
             const data = await res.json();
             if (data.status === 'success') {
                 setRelations(data.data);
@@ -166,7 +175,8 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
             }
         };
         init();
-    }, [endpointId, api.databaseSchema, addToast, fetchResources, fetchColumns]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [endpointId, targetId]);
 
     const handleDataSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const val = e.target.value;
@@ -239,10 +249,21 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
 
         setSaving(true);
         try {
+            // Parse JSON-string fields back to objects before saving 
+            // to prevent double-encoding in handler_config
+            const payload = { ...form };
+            const jsonFields = ['writableRelations', 'writableFields', 'protectedFields', 'autoPopulateFields', 'validationRules', 'filterableFields', 'sortableFields', 'errorTemplatesJson'];
+            for (const key of jsonFields) {
+                const val = (payload as any)[key];
+                if (typeof val === 'string' && val) {
+                    try { (payload as any)[key] = JSON.parse(val); } catch { /* keep as-is */ }
+                }
+            }
+
             const res = await fetch(DYNAMIC_ROUTES_API.endpoints.save, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-target-id': targetId },
-                body: JSON.stringify(form)
+                body: JSON.stringify(payload)
             });
 
             const data = await res.json();
@@ -287,6 +308,8 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         dataSources,
         resources,
         columns, // For Mutation tab column selector
+        tableColumnsMap,
+        fetchTableColumns,
         relations,
         availableRoles,
         availablePermissions,

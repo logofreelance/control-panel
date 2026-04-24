@@ -1009,7 +1009,7 @@ function EditSchemaMetadataForm({
               type="button"
               onClick={() => setForm({ ...form, categoryId: '' })}
               className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all',
+                'flex items-center gap-2 px-3 py-2 rounded-xl border text-base transition-all',
                 !form.categoryId ? 'ring-2 ring-primary bg-primary/5 border-primary/20' : 'hover:bg-muted/50 border-transparent bg-muted/20',
               )}
             >
@@ -1022,7 +1022,7 @@ function EditSchemaMetadataForm({
                 type="button"
                 onClick={() => setForm({ ...form, categoryId: cat.id })}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all',
+                  'flex items-center gap-2 px-3 py-2 rounded-xl border text-base transition-all',
                   form.categoryId === cat.id ? 'ring-2 ring-primary bg-primary/5 border-primary/20' : 'hover:bg-muted/50 border-transparent bg-muted/20',
                 )}
                 style={{ 

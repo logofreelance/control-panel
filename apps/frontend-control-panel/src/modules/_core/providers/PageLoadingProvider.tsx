@@ -62,6 +62,7 @@ interface PageLoadingProviderProps {
 export const PageLoadingProvider = ({ children }: PageLoadingProviderProps) => {
     const [loaders, setLoaders] = useState<Record<string, boolean>>({});
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [transitionNonce, setTransitionNonce] = useState(0);
     const [isGlobalBusy, setIsGlobalBusy] = useState(false);
     const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -103,28 +104,27 @@ export const PageLoadingProvider = ({ children }: PageLoadingProviderProps) => {
         const originalPushState = history.pushState;
         const originalReplaceState = history.replaceState;
 
-        const handleRouteChange = () => {
-            setIsTransitioning(true);
+        const handleRouteChange = (shouldTransition = true) => {
             setLoaders({}); // Clear all loaders on new navigation
-
-            // Clear any existing timeout
-            if (transitionTimeoutRef.current) {
-                clearTimeout(transitionTimeoutRef.current);
+            if (shouldTransition) {
+                setIsTransitioning(true);
+                setTransitionNonce(prev => prev + 1);
             }
         };
 
         history.pushState = function (...args) {
-            handleRouteChange();
+            handleRouteChange(true);
             return originalPushState.apply(this, args);
         };
 
         history.replaceState = function (...args) {
-            handleRouteChange();
+            handleRouteChange(true);
             return originalReplaceState.apply(this, args);
         };
 
-        // Also listen for popstate (back/forward buttons)
-        const handlePopState = () => handleRouteChange();
+        // For back/forward navigation, clear loaders but don't trigger 
+        // artificial transition state to avoid sticking on cached pages.
+        const handlePopState = () => handleRouteChange(false);
         window.addEventListener('popstate', handlePopState);
 
         return () => {
@@ -148,6 +148,9 @@ export const PageLoadingProvider = ({ children }: PageLoadingProviderProps) => {
     // Timeout fallback - if no loaders register within 2 seconds, end transition
     useEffect(() => {
         if (isTransitioning) {
+            if (transitionTimeoutRef.current) {
+                clearTimeout(transitionTimeoutRef.current);
+            }
             transitionTimeoutRef.current = setTimeout(() => {
                 setIsTransitioning(false);
             }, 2000);
@@ -157,7 +160,7 @@ export const PageLoadingProvider = ({ children }: PageLoadingProviderProps) => {
                 clearTimeout(transitionTimeoutRef.current);
             }
         };
-    }, [isTransitioning]);
+    }, [isTransitioning, transitionNonce]);
 
     return (
         <PageLoadingContext.Provider value={{

@@ -41,6 +41,7 @@ export interface ApiEndpoint {
     operationType?: 'read' | 'create' | 'update' | 'delete';
     writableFields?: string; // JSON
     protectedFields?: string; // JSON
+    writableRelations?: string; // JSON (List of relation aliases allowed for deep save)
     autoPopulateFields?: string; // JSON
     ownershipColumn?: string;
     allowOwnerOnly?: boolean;

@@ -115,7 +115,21 @@ export const EndpointDetailView = ({
       pieces.push(`OPERATION: ${endpoint.operationType || 'create'} ON SOURCE '${dataSource?.name || 'internal'}'`);
       if (endpoint.allowOwnerOnly) pieces.push(`SECURITY: OWNERSHIP RESTRICTED (REF COLUMN: '${endpoint.ownershipColumn || 'user_id'}').`);
       if (writableFields.length > 0) {
-        pieces.push(`EXPECTED JSON BODY: ${writableFields.join(', ')}.`);
+        let bodyText = `EXPECTED JSON BODY: ${writableFields.join(', ')}.`;
+        
+        // Add Relational Save Info for AI
+        try {
+          const relations = JSON.parse(resource?.relations_json || resource?.relationsJson || '{}');
+          const relNames = Object.entries(relations)
+            .filter(([k, v]: [string, any]) => isNaN(Number(k)) && v && (v.targetId || v.table))
+            .map(([k]) => k);
+            
+          if (relNames.length > 0) {
+            bodyText += ` DEEP SAVE SUPPORTED FOR RELATIONS: [${relNames.join(', ')}].`;
+          }
+        } catch { /* ignore */ }
+
+        pieces.push(bodyText);
         if (Object.keys(validationRules).length > 0) {
           pieces.push(`VALIDATION RULES: ${JSON.stringify(validationRules)}`);
         }

@@ -16,6 +16,7 @@ import { Button, Badge, PageTitle } from '@/components/ui';
 import { useConfig } from '@/modules/_core';
 import { apiClient } from '@/lib/frontend-api';
 import { TargetLayout } from '@/components/layout/TargetLayout';
+import { API } from '../api/endpoints';
 import { ResourceForm } from '../components/ResourceForm';
 import type { DatabaseTable, Resource } from '../types';
 
@@ -52,8 +53,8 @@ export function EditResourcePage() {
 
                 // Fetch Source & Resources in parallel
                 const [sourceData, resData] = await Promise.all([
-                    apiClient.get<any>(api.databaseSchema.detail(tableId), { headers }),
-                    apiClient.get<any>(api.databaseSchema.resources(tableId), { headers })
+                    apiClient.get<any>(API.pageResourceEdit.schemaInfo(String(tableId)), { headers }),
+                    apiClient.get<any>(API.pageSchemaList.resources(String(tableId)), { headers })
                 ]);
 
                 if (sourceData.status === API_STATUS.SUCCESS) {

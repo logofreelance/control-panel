@@ -52,9 +52,9 @@ export function useImportData(DatabaseTableId: string | number): UseImportDataRe
             }
 
             const response = await apiClient.post(
-                `${API.data(DatabaseTableId)}/bulk`,
+                API.pageDataViewer.importBulk(String(DatabaseTableId)),
                 jsonData,
-                { headers: getHeaders() }
+                { headers: getHeaders(), transformRequest: false }
             );
 
             if (response.status === API_STATUS.SUCCESS) {

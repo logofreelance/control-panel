@@ -139,7 +139,7 @@ export function useCreateSchema() {
         const fetchTemplates = async () => {
             setLoadingTemplates(true);
             try {
-                const response = await apiClient.get<Template[]>(`${API.list}/templates`, { headers: getHeaders() });
+                const response = await apiClient.get<Template[]>(API.pageSchemaCreate.templates, { headers: getHeaders() });
                 if (response.status === API_STATUS.SUCCESS && Array.isArray(response.data) && response.data.length > 0) {
                     setTemplates(response.data);
                 }
@@ -156,7 +156,7 @@ export function useCreateSchema() {
     useEffect(() => {
         const fetchSources = async () => {
             try {
-                const response = await apiClient.get<DatabaseTable[]>(API.list, { headers: getHeaders() });
+                const response = await apiClient.get<DatabaseTable[]>(API.pageSchemaCreate.existingTables, { headers: getHeaders() });
                 if (response.status === API_STATUS.SUCCESS && response.data) {
                     setAvailableSources(
                         response.data.map((s: any) => ({
@@ -185,10 +185,10 @@ export function useCreateSchema() {
 
         setValidating(true);
         try {
-            const response = await apiClient.post<ValidationResult>(API.validate, {
+            const response = await apiClient.post<ValidationResult>(API.pageSchemaCreate.validate, {
                 tableName,
                 schema: { columns, ...options },
-            }, { headers: getHeaders() });
+            }, { headers: getHeaders(), transformRequest: false });
 
             const result = 'data' in response && response.data ? (response.data as ValidationResult) : (response as unknown as ValidationResult);
             setValidationResult(result);
@@ -210,7 +210,7 @@ export function useCreateSchema() {
 
         setSubmitting(true);
         try {
-            const response = await apiClient.post<DatabaseTable>(API.save, payload, { headers: getHeaders() });
+            const response = await apiClient.post<DatabaseTable>(API.pageSchemaCreate.submit, payload, { headers: getHeaders(), transformRequest: false });
             if (response.status === API_STATUS.SUCCESS && response.data) {
                 addToast(FEATURE_MESSAGES.success.sourceCreated, TOAST_TYPE.SUCCESS);
                 return response.data;

@@ -50,7 +50,7 @@ export function DataPage() {
       const headers: Record<string, string> = {};
       if (nodeId) headers['x-target-id'] = nodeId;
 
-      const res = await apiClient.get<DatabaseTable>(API.detail(tableId), { headers });
+      const res = await apiClient.get<DatabaseTable>(API.pageDataViewer.header(String(tableId)), { headers });
 
       if (res.status === API_STATUS.SUCCESS && res.data) {
         setSource(res.data);

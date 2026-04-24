@@ -64,7 +64,7 @@ export function useResources(
     setError(null);
     try {
       const response = await apiClient.get<Resource[]>(
-        API.resources(DatabaseTableId),
+        API.pageSchemaList.resources(String(DatabaseTableId)),
         { headers: getHeaders() }
       );
       if (response.status === API_STATUS.SUCCESS && response.data) {
@@ -85,7 +85,7 @@ export function useResources(
 
       try {
         const response = await apiClient.get<Resource>(
-          `${API.resources(DatabaseTableId)}/${resourceId}`,
+          API.pageResourceEdit.resource(String(DatabaseTableId), String(resourceId)),
           { headers: getHeaders() }
         );
         if (response.status === API_STATUS.SUCCESS && response.data) {
@@ -105,7 +105,7 @@ export function useResources(
 
       try {
         const response = await apiClient.post<Resource>(
-          API.createResource(DatabaseTableId),
+          API.pageResourceCreate.submit(String(DatabaseTableId)),
           data,
           { headers: getHeaders() }
         );
@@ -128,7 +128,7 @@ export function useResources(
 
       try {
         const response = await apiClient.put<Resource>(
-          API.updateResource(DatabaseTableId, resourceId),
+          API.pageResourceEdit.submit(String(DatabaseTableId), String(resourceId)),
           data,
           { headers: getHeaders() }
         );
@@ -153,7 +153,7 @@ export function useResources(
 
       try {
         const response = await apiClient.delete(
-          API.deleteResource(DatabaseTableId, resourceId),
+          API.pageSchemaList.deleteResource(String(DatabaseTableId), String(resourceId)),
           { headers: getHeaders() }
         );
         if (response.status === API_STATUS.SUCCESS) {

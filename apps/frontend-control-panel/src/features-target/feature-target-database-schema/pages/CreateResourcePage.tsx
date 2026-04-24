@@ -17,7 +17,7 @@ import { useConfig } from '@/modules/_core';
 import { apiClient } from '@/lib/frontend-api';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { ResourceForm } from '../components/ResourceForm';
-import type { DatabaseTable } from '../types';
+import { API } from '../api/endpoints';
 
 export function CreateResourcePage() {
     const params = useParams();
@@ -51,7 +51,7 @@ export function CreateResourcePage() {
         const fetchSource = async () => {
             setLoading(true);
             try {
-                const data = await apiClient.get<any>(api.databaseSchema.detail(tableId), {
+                const data = await apiClient.get<any>(API.pageResourceCreate.schemaInfo(String(tableId)), {
                     headers: nodeId ? { 'x-target-id': nodeId } : {}
                 });
 
@@ -67,7 +67,7 @@ export function CreateResourcePage() {
                     
                     if (!hasColumns) {
                         console.log('[CreateResourcePage] Columns missing from detail, fetching via DESCRIBE...');
-                        const colsData = await apiClient.get<any>(api.databaseSchema.columns(tableId), {
+                        const colsData = await apiClient.get<any>(API.pageDataViewer.columns(String(tableId)), {
                             headers: nodeId ? { 'x-target-id': nodeId } : {}
                         });
                         console.log('[CreateResourcePage] Columns Response:', colsData);
@@ -76,7 +76,7 @@ export function CreateResourcePage() {
                             
                             // Fallback: try by tableName
                             if ((!resolvedCols || resolvedCols.length === 0) && tableData.tableName) {
-                                const nameColsData = await apiClient.get<any>(api.databaseSchema.columns(tableData.tableName), {
+                                const nameColsData = await apiClient.get<any>(API.pageDataViewer.columns(String(tableData.tableName)), {
                                     headers: nodeId ? { 'x-target-id': nodeId } : {}
                                 });
                                 if (nameColsData.status === API_STATUS.SUCCESS) {

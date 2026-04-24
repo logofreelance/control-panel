@@ -32,7 +32,7 @@ export function useTrash() {
     const fetchTrash = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await apiClient.get<DatabaseTable[]>(`${API.list}?archived=true`, { headers });
+            const response = await apiClient.get<DatabaseTable[]>(API.pageSchemaTrash.schemas, { headers });
             if (response.status === API_STATUS.SUCCESS) {
                 setItems(response.data || []);
             }
@@ -49,7 +49,7 @@ export function useTrash() {
 
     const restore = useCallback(async (id: string | number) => {
         try {
-            const response = await apiClient.post(API.restore(id), undefined, { headers });
+            const response = await apiClient.post(API.pageSchemaTrash.restore(String(id)), undefined, { headers });
             if (response.status === API_STATUS.SUCCESS) {
                 addToast(FEATURE_MESSAGES.success.sourceRestored, TOAST_TYPE.SUCCESS);
                 fetchTrash();
@@ -63,7 +63,7 @@ export function useTrash() {
 
     const destroy = useCallback(async (id: string | number) => {
         try {
-            const response = await apiClient.delete(API.destroy(id), { headers });
+            const response = await apiClient.delete(API.pageSchemaTrash.destroy(String(id)), { headers });
             if (response.status === API_STATUS.SUCCESS) {
                 addToast(FEATURE_MESSAGES.success.sourceDeleted, TOAST_TYPE.SUCCESS);
                 fetchTrash();

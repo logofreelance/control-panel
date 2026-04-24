@@ -23,11 +23,11 @@ export function middleware(env: EnvironmentConfig) {
           async deleteUserSessions(userId: string): Promise<void> { await internalDb.execute('DELETE FROM admin_sessions WHERE user_id = ?', [userId]); },
           async getSessionAndUser(sessionId: string): Promise<[any, any]> {
               const resSession: any = await internalDb.execute('SELECT * FROM admin_sessions WHERE id = ?', [sessionId]);
-              const sessionRows = Array.isArray(resSession) ? resSession : resSession.rows;
+              const sessionRows = Array.isArray(resSession) ? (Array.isArray(resSession[0]) ? resSession[0] : resSession) : resSession.rows;
               if (!sessionRows || sessionRows.length === 0) return [null, null];
               const session = sessionRows[0];
               const resUser: any = await internalDb.execute('SELECT id, username, role FROM admin_users WHERE id = ?', [session.user_id]);
-              const userRows = Array.isArray(resUser) ? resUser : resUser.rows;
+              const userRows = Array.isArray(resUser) ? (Array.isArray(resUser[0]) ? resUser[0] : resUser) : resUser.rows;
               if (!userRows || userRows.length === 0) return [null, null];
               const user = userRows[0];
               return [{ id: session.id, userId: session.user_id, expiresAt: new Date(session.expires_at) }, { id: user.id, username: user.username, role: user.role }];
@@ -66,7 +66,7 @@ export function middleware(env: EnvironmentConfig) {
       try {
         const internalDb = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
         const res: any = await internalDb.execute('SELECT database_url FROM target_systems WHERE id = ? LIMIT 1', [targetId]);
-        const rows = Array.isArray(res) ? res : (res.rows || []);
+        const rows = Array.isArray(res) ? (Array.isArray(res[0]) ? res[0] : res) : (res.rows || []);
         const target = rows.length > 0 ? rows[0] : null;
 
         if (target) {
@@ -181,6 +181,31 @@ async function ensureMetadataTables(db: any) {
         INDEX idx_target (target_id)
       )
     `);
+  } else {
+    // Migrations for database_relations
+    const columns: any = await db.execute("DESCRIBE database_relations");
+    const columnRows = extractRows(columns);
+    
+    const hasColumn = (name: string) => columnRows.some((c: any) => 
+      (c.Field?.toLowerCase() === name.toLowerCase()) || 
+      (c.field?.toLowerCase() === name.toLowerCase())
+    );
+
+    if (hasColumn('source_table_id') && !hasColumn('source_id')) {
+      await db.execute("ALTER TABLE database_relations CHANGE source_table_id source_id VARCHAR(36)");
+    }
+    if (hasColumn('target_table_id') && !hasColumn('target_id')) {
+      await db.execute("ALTER TABLE database_relations CHANGE target_table_id target_id VARCHAR(36)");
+    }
+    if (hasColumn('source_column') && !hasColumn('local_key')) {
+      await db.execute("ALTER TABLE database_relations CHANGE source_column local_key VARCHAR(255)");
+    }
+    if (hasColumn('target_column') && !hasColumn('foreign_key')) {
+      await db.execute("ALTER TABLE database_relations CHANGE target_column foreign_key VARCHAR(255)");
+    }
+    if (hasColumn('relation_type') && hasColumn('type')) {
+        // Just in case it was created with 'type'
+    }
   }
 
   // --- database_resources ---

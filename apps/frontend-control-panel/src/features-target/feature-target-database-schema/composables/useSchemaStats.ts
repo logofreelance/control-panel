@@ -15,9 +15,11 @@ import { apiClient } from '@/lib/frontend-api';
 import { API } from '../api/endpoints';
 
 interface SchemaStats {
-    totalSources: number;
-    totalTables: number;
+    activeSources: number;
+    totalCategories: number;
     totalRecords: number;
+    trashedSources: number;
+    totalStorageBytes: number;
 }
 
 /**
@@ -26,9 +28,11 @@ interface SchemaStats {
  */
 export function useSchemaStats() {
     const [stats, setStats] = useState<SchemaStats>({
-        totalSources: 0,
-        totalTables: 0,
-        totalRecords: 0
+        activeSources: 0,
+        totalCategories: 0,
+        totalRecords: 0,
+        trashedSources: 0,
+        totalStorageBytes: 0
     });
     const [loading, setLoading] = useState(true);
 
@@ -40,7 +44,7 @@ export function useSchemaStats() {
         setLoading(true);
         try {
             const headers = targetId ? { 'x-target-id': targetId } : undefined;
-            const statsUrl = API.stats;
+            const statsUrl = API.widgetStats.summary;
             const response = await apiClient.get<SchemaStats>(statsUrl, { headers });
             
             if (response?.status === 'success' && response?.data) {

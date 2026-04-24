@@ -66,7 +66,7 @@ export function useResourceSubmit(DatabaseTableId: string | number) {
       setSubmitting(true);
       try {
         const response = await apiClient.post<Resource>(
-          API.resources(DatabaseTableId),
+          API.pageResourceCreate.submit(String(DatabaseTableId)),
           { ...payload, is_active: true },
           { headers }
         );
@@ -101,7 +101,7 @@ export function useResourceSubmit(DatabaseTableId: string | number) {
       setSubmitting(true);
       try {
         const response = await apiClient.put<Resource>(
-          API.updateResource(DatabaseTableId, resourceId),
+          API.pageResourceEdit.submit(String(DatabaseTableId), String(resourceId)),
           payload,
           { headers }
         );
@@ -128,7 +128,7 @@ export function useResourceSubmit(DatabaseTableId: string | number) {
   const fetchAvailableSources = useCallback(
     async (excludeId?: string | number): Promise<DatabaseTable[]> => {
       try {
-        const response = await apiClient.get<DatabaseTable[]>(API.list, { headers });
+        const response = await apiClient.get<DatabaseTable[]>(API.pageResourceCreate.availableJoins, { headers });
         if (response.status === API_STATUS.SUCCESS && response.data) {
           const sources = response.data;
           return excludeId ? sources.filter((ds) => ds.id !== excludeId) : sources;

@@ -82,7 +82,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
       const response = await apiClient.get<{
         data: Record<string, unknown>[];
         total: number;
-      }>(`${API.data(DatabaseTableId)}?${searchParams}`, { 
+      }>(`${API.pageDataViewer.rows(String(DatabaseTableId))}?${searchParams}`, { 
         headers: getHeaders(),
         transformResponse: false 
       } as any);
@@ -94,7 +94,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
         
         // Fetch columns if not available
         if (columns.length === 0) {
-            const colRes = await apiClient.get<any[]>(API.columns(DatabaseTableId), { 
+            const colRes = await apiClient.get<any[]>(API.pageDataViewer.columns(String(DatabaseTableId)), { 
               headers: getHeaders(),
               transformResponse: false
             } as any);
@@ -125,7 +125,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
   const insertRow = useCallback(
     async (data: Record<string, unknown>): Promise<boolean> => {
       try {
-        const response = await apiClient.post(API.insertRow(DatabaseTableId), data, { headers: getHeaders() });
+        const response = await apiClient.post(API.pageDataViewer.insertRow(String(DatabaseTableId)), data, { headers: getHeaders(), transformRequest: false });
         if (response.status === API_STATUS.SUCCESS) {
           addToast(FEATURE_MESSAGES.success.rowInserted, TOAST_TYPE.SUCCESS);
           await fetchData();
@@ -144,9 +144,9 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
     async (rowId: number, data: Record<string, unknown>): Promise<boolean> => {
       try {
         const response = await apiClient.put(
-          API.updateRow(DatabaseTableId, rowId),
+          API.pageDataViewer.updateRow(String(DatabaseTableId), String(rowId)),
           data,
-          { headers: getHeaders() },
+          { headers: getHeaders(), transformRequest: false },
         );
         if (response.status === API_STATUS.SUCCESS) {
           addToast(FEATURE_MESSAGES.success.rowUpdated, TOAST_TYPE.SUCCESS);
@@ -166,7 +166,7 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
     async (rowId: number, skipFetch?: boolean): Promise<boolean> => {
       try {
         const response = await apiClient.delete(
-          API.deleteRow(DatabaseTableId, rowId),
+          API.pageDataViewer.deleteRow(String(DatabaseTableId), String(rowId)),
           { headers: getHeaders() },
         );
         if (response.status === API_STATUS.SUCCESS) {
@@ -211,9 +211,10 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
   // Export data
   const exportData = useCallback(async () => {
     try {
-      const response = await fetch(`${API.list}/${DatabaseTableId}/export?format=csv`, {
-        headers: getHeaders(),
-      });
+      throw new Error('Export not yet implemented in BFF');
+      // const response = await fetch(`${API.list}/${DatabaseTableId}/export?format=csv`, {
+      //   headers: getHeaders(),
+      // });
       if (!response.ok) throw new Error('Export failed');
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);

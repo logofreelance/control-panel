@@ -31,11 +31,11 @@ export function useDatabaseSchema() {
 
     // ✅ Use Internal API Endpoints directly
     const endpoints = useMemo(() => ({
-        list: API.list,
-        create: API.save,
-        detail: (id: string | number) => API.detail(id),
-        update: (id: string | number) => API.update(id),
-        delete: (id: string | number) => API.delete(id),
+        list: API.pageSchemaList.schemas,
+        create: '', // Unused in this page
+        detail: (id: string | number) => API.pageSchemaEditor.detail(String(id)),
+        update: (id: string | number) => API.pageSchemaEditor.update(String(id)),
+        delete: (id: string | number) => API.pageSchemaList.archive(String(id)),
     }), []);
 
     // ✅ Memoize Callbacks to prevent infinite loops in useCrud useEffect
@@ -78,11 +78,11 @@ export function useDatabaseCategories() {
     const headers = useMemo(() => targetId ? { 'x-target-id': targetId } : undefined, [targetId]);
 
     const endpoints = useMemo(() => ({
-        list: API.categories,
-        create: API.categories,
-        detail: (id: string | number) => `${API.categories}/${id}`,
-        update: (id: string | number) => `${API.categories}/${id}`,
-        delete: (id: string | number) => `${API.categories}/${id}`,
+        list: API.pageSchemaList.categories,
+        create: API.pageSchemaList.categories,
+        detail: (id: string | number) => API.pageSchemaList.categoryById(String(id)),
+        update: (id: string | number) => API.pageSchemaList.categoryById(String(id)),
+        delete: (id: string | number) => API.pageSchemaList.categoryById(String(id)),
     }), []);
 
     const handleSuccess = useCallback((action: any) => {
@@ -145,7 +145,7 @@ export function useSchemaActions() {
         setLoading(true);
         try {
             // ✅ Use Internal API
-            const response = await apiClient.delete(API.delete(id), { headers: getHeaders() });
+            const response = await apiClient.delete(API.pageSchemaList.archive(String(id)), { headers: getHeaders() });
             if (response.status === 'success') {
                 addToast(FEATURE_MESSAGES.success.sourceArchived, TOAST_TYPE.SUCCESS);
                 return true;
@@ -162,7 +162,7 @@ export function useSchemaActions() {
         setLoading(true);
         try {
             // ✅ Use Internal API
-            const response = await apiClient.post(API.restore?.(id) || `${API.list}/${id}/restore`, undefined, { headers: getHeaders() });
+            const response = await apiClient.post(API.pageSchemaTrash.restore(String(id)), undefined, { headers: getHeaders() });
             if (response.status === 'success') {
                 addToast(FEATURE_MESSAGES.success.sourceRestored, TOAST_TYPE.SUCCESS);
                 return true;

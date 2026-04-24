@@ -71,7 +71,7 @@ export function useRelations(DatabaseTableId: string | number) {
   const fetchRelations = useCallback(async () => {
     try {
       const response = await apiClient.get<Relation[]>(
-        API.relations(DatabaseTableId),
+        API.pageRelationEdit.relations(String(DatabaseTableId)),
         { headers }
       );
       if (response.status === API_STATUS.SUCCESS && response.data) {
@@ -86,7 +86,7 @@ export function useRelations(DatabaseTableId: string | number) {
   const fetchTargets = useCallback(async () => {
     try {
       const response = await apiClient.get<RelationTarget[]>(
-        API.availableTargets(DatabaseTableId),
+        API.pageRelationCreate.targets(String(DatabaseTableId)),
         { headers }
       );
       if (response.status === API_STATUS.SUCCESS && response.data) {
@@ -101,7 +101,7 @@ export function useRelations(DatabaseTableId: string | number) {
   const fetchColumns = useCallback(async (tableId: string | number) => {
     try {
       const response = await apiClient.get<any[]>(
-        API.columns(tableId),
+        API.pageRelationCreate.targetColumns(String(tableId)),
         { headers }
       );
       if (response.status === API_STATUS.SUCCESS && response.data) {
@@ -138,7 +138,7 @@ export function useRelations(DatabaseTableId: string | number) {
       setAdding(true);
       try {
         const response = await apiClient.post<Relation>(
-          API.addRelation(DatabaseTableId),
+          API.pageRelationCreate.submit(String(DatabaseTableId)),
           payload,
           { headers }
         );
@@ -169,7 +169,7 @@ export function useRelations(DatabaseTableId: string | number) {
       setDeleting(true);
       try {
         const response = await apiClient.delete(
-          API.deleteRelation(DatabaseTableId, relationId),
+          API.pageRelationEdit.delete(String(DatabaseTableId), String(relationId)),
           { headers }
         );
         if (response.status === API_STATUS.SUCCESS) {
@@ -200,7 +200,7 @@ export function useRelations(DatabaseTableId: string | number) {
     ): Promise<boolean> => {
       try {
         const response = await apiClient.put(
-          API.updateRelation(DatabaseTableId, relationId),
+          API.pageRelationEdit.submit(String(DatabaseTableId), String(relationId)),
           payload,
           { headers }
         );

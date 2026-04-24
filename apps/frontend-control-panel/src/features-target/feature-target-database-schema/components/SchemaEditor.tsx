@@ -24,6 +24,7 @@ import {
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/frontend-api';
+import { API } from '../api/endpoints';
 import { useToast, useConfig } from '@/modules/_core';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
 import { TargetLayout } from '@/components/layout/TargetLayout';
@@ -81,7 +82,7 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
 
         // 2. Fetch physical columns from backend
         try {
-          const res = await apiClient.get<any[]>(api.databaseSchema.columns(DatabaseTableId), {
+          const res = await apiClient.get<any[]>(API.pageDataViewer.columns(String(DatabaseTableId)), {
             headers: nodeId ? { 'x-target-id': nodeId } : {},
           });
           
@@ -147,7 +148,7 @@ export const SchemaEditor = ({ DatabaseTableId }: SchemaEditorProps) => {
     };
 
     if (DatabaseTableId) loadSource();
-  }, [DatabaseTableId, fetchOne, api.databaseSchema]);
+  }, [DatabaseTableId, fetchOne, api]);
 
   const handleSave = async () => {
     if (!isDirty) {

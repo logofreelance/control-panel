@@ -44,7 +44,7 @@ export function useSchemaEditor(DatabaseTableId: string | number): UseSchemaEdit
     const addColumn = useCallback(async (column: ColumnDefinition): Promise<boolean> => {
         setLoading(true);
         try {
-            const response = await apiClient.post(API.addColumn(DatabaseTableId), column, { headers });
+            const response = await apiClient.post(API.pageSchemaEditor.addColumn(String(DatabaseTableId)), column, { headers });
             if (response.status === API_STATUS.SUCCESS) {
                 addToast('Column added successfully', TOAST_TYPE.SUCCESS);
                 return true;
@@ -62,7 +62,7 @@ export function useSchemaEditor(DatabaseTableId: string | number): UseSchemaEdit
     const dropColumn = useCallback(async (columnName: string): Promise<boolean> => {
         setLoading(true);
         try {
-            const response = await apiClient.delete(API.dropColumn(DatabaseTableId, columnName), { headers });
+            const response = await apiClient.delete(API.pageSchemaEditor.dropColumn(String(DatabaseTableId), columnName), { headers });
             if (response.status === API_STATUS.SUCCESS) {
                 addToast('Column dropped successfully', TOAST_TYPE.SUCCESS);
                 return true;

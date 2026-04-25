@@ -21,7 +21,7 @@ export async function executePhysicalCreate(db: any, tableName: string, schema: 
         } else if (typeof col.default === 'number') {
           defaultVal = `DEFAULT ${col.default}`;
         } else if (col.type === 'string' || col.type === 'text') {
-          defaultVal = `DEFAULT '${col.default}'`;
+          defaultVal = `DEFAULT '${String(col.default).replace(/'/g, "''")}'`;
         }
       }
       
@@ -39,6 +39,7 @@ export async function executePhysicalCreate(db: any, tableName: string, schema: 
   }
 
   const createTableSql = `CREATE TABLE \`${tableName}\` (\n  ${columnsSql.join(',\n  ')}\n)`;
+  console.log('[DEBUG-SQL] Creating physical table:', createTableSql);
   await db.execute(createTableSql);
 }
 

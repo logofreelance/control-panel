@@ -27,6 +27,7 @@ export const handler = async (c: any) => {
     await insertCategory(db, id, name.trim(), description || '');
     return c.json({ status: 'success', data: { id, name: name.trim() } });
   } catch (e: any) {
+    console.error('[CATEGORY-POST-ERROR]', e);
     return c.json({ status: 'error', message: e.message }, 500);
   }
 };

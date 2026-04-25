@@ -3,8 +3,7 @@
  * ROUTE: GET /api/database-schema/page-relation-edit/target-columns/:targetId
  * ═══════════════════════════════════════════════════════════════
  */
-import { getColumns } from '../page-relation-create-source-columns-get/model';
-import { getSchemaInfo } from '../page-resource-create-schema-info-get/model';
+import { getColumns, getSchemaInfo } from './model';
 
 export const handler = async (c: any) => {
   try {

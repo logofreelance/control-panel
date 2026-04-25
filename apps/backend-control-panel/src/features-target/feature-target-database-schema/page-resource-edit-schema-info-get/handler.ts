@@ -3,7 +3,7 @@
  * ROUTE: GET /api/database-schema/page-resource-edit/schema-info/:id
  * ═══════════════════════════════════════════════════════════════
  */
-import { getSchemaInfo } from '../page-resource-create-schema-info-get/model';
+import { getSchemaInfo } from './model';
 
 export const handler = async (c: any) => {
   try {
@@ -16,7 +16,7 @@ export const handler = async (c: any) => {
     let columns: any[] = [];
     if (schema.table_name) {
       try {
-        const res: any = await db.execute(`DESCRIBE ${schema.table_name}`);
+        const res: any = await db.execute(`DESCRIBE \`${schema.table_name}\``);
         const cols = Array.isArray(res) ? (Array.isArray(res[0]) ? res[0] : res) : (res.rows || []);
         columns = cols.map((col: any) => ({
           name: col.Field || col.column_name,

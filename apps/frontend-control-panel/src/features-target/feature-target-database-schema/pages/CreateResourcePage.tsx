@@ -18,6 +18,7 @@ import { apiClient } from '@/lib/frontend-api';
 import { TargetLayout } from '@/components/layout/TargetLayout';
 import { ResourceForm } from '../components/ResourceForm';
 import { API } from '../api/endpoints';
+import type { DatabaseTable } from '../types';
 
 export function CreateResourcePage() {
     const params = useParams();
@@ -28,7 +29,7 @@ export function CreateResourcePage() {
     const L = labels.mod.databaseSchema;
 
     // State
-    const [DatabaseTable, setDatabaseTable] = useState<DatabaseTable | null>(null);
+    const [dbTable, setDbTable] = useState<DatabaseTable | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -89,7 +90,7 @@ export function CreateResourcePage() {
                         }
                     }
                     
-                    setDatabaseTable(tableData);
+                    setDbTable(tableData);
                 } else {
                     setError(data.message || L.messages.error.loadFailed);
                 }
@@ -121,7 +122,7 @@ export function CreateResourcePage() {
     }
 
     // Error state
-    if (error || !DatabaseTable) {
+    if (error || !dbTable) {
         return (
             <TargetLayout>
                 <div className="flex flex-col items-center justify-center p-12 text-center text-red-500 animate-page-enter">
@@ -156,7 +157,7 @@ export function CreateResourcePage() {
                             <span className="flex items-center gap-2">
                                 {L.labels.forSource}{' '}
                                 <Badge variant="secondary" className="font-normal lowercase">
-                                    {DatabaseTable.name}
+                                    {dbTable.name}
                                 </Badge>
                             </span>
                         }
@@ -164,7 +165,7 @@ export function CreateResourcePage() {
                 </header>
 
                 <main>
-                    <ResourceForm DatabaseTable={DatabaseTable} />
+                    <ResourceForm DatabaseTable={dbTable} />
                 </main>
             </div>
         </TargetLayout>

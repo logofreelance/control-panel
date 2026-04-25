@@ -36,3 +36,22 @@ export const SQL_TYPE_MAP: Record<string, string> = {
   // Relational
   relation: 'VARCHAR(36)',
 };
+
+/**
+ * Maps a logical type to a physical SQL type.
+ */
+export function mapTypeToSql(type: string, options?: any): string {
+  // Special case for ENUM
+  if (type === 'enum' && options?.allowedValues) {
+    const values = Array.isArray(options.allowedValues)
+      ? options.allowedValues
+      : String(options.allowedValues).split(',').map((v: string) => v.trim()).filter(Boolean);
+    
+    if (values.length > 0) {
+      return `ENUM('${values.join("', '")}')`;
+    }
+  }
+
+  // Fallback to map or default
+  return SQL_TYPE_MAP[type] || 'TEXT';
+}

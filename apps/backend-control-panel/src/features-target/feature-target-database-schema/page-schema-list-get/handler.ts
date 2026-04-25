@@ -32,7 +32,7 @@ export const handler = async (c: any) => {
         let columns: any[] = [];
         try {
           if (schema.table_name) {
-            const res: any = await db.execute(`DESCRIBE ${schema.table_name}`);
+            const res: any = await db.execute(`DESCRIBE \`${schema.table_name}\``);
             const cols = Array.isArray(res) ? (Array.isArray(res[0]) ? res[0] : res) : (res.rows || []);
             columns = cols.map((col: any) => ({
               name: col.Field || col.column_name,

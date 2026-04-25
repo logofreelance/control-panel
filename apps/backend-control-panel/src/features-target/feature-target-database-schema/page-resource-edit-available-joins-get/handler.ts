@@ -3,7 +3,7 @@
  * ROUTE: GET /api/database-schema/page-resource-edit/available-joins
  * ═══════════════════════════════════════════════════════════════
  */
-import { getAvailableTables } from '../page-resource-create-available-joins-get/model';
+import { getAvailableTables } from './model';
 
 export const handler = async (c: any) => {
   try {

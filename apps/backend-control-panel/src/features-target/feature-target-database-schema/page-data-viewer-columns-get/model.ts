@@ -3,7 +3,7 @@
  */
 
 export async function getPhysicalColumns(db: any, tableName: string) {
-  const res: any = await db.execute(`DESCRIBE ${tableName}`);
+  const res: any = await db.execute(`DESCRIBE \`${tableName}\``);
   const rows = Array.isArray(res) ? (Array.isArray(res[0]) ? res[0] : res) : (res.rows || []);
   return rows.map((col: any) => ({
     name: col.Field || col.column_name,

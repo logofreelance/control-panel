@@ -63,8 +63,9 @@ export const EndpointDetailView = ({
     return L.options?.admin || 'admin only';
   };
 
-  const parseJsonArray = (str?: string): string[] => {
+  const parseJsonArray = (str?: any): string[] => {
     if (!str) return [];
+    if (Array.isArray(str)) return str;
     try {
       return JSON.parse(str);
     } catch {
@@ -72,8 +73,9 @@ export const EndpointDetailView = ({
     }
   };
 
-  const parseJsonObject = (str?: string): Record<string, string> => {
+  const parseJsonObject = (str?: any): Record<string, string> => {
     if (!str) return {};
+    if (typeof str === 'object' && !Array.isArray(str)) return str;
     try {
       return JSON.parse(str);
     } catch {

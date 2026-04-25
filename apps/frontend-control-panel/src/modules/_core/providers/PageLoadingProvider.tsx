@@ -20,6 +20,7 @@ import { LABELS } from '@/lib/config/client';
 export class GlobalLoading {
     private static listeners: ((loading: boolean) => void)[] = [];
     private static activeCount = 0;
+    private static locked = false;
 
     static start() {
         this.activeCount++;
@@ -27,8 +28,20 @@ export class GlobalLoading {
     }
 
     static stop() {
+        if (this.locked) return; // Locked during full-page redirect, do not dismiss
         this.activeCount = Math.max(0, this.activeCount - 1);
         if (this.activeCount === 0) this.notify(false);
+    }
+
+    /**
+     * Lock the loading overlay permanently until browser navigates away.
+     * Used before window.location redirects to prevent the "flash" of the
+     * underlying page between API completion and actual navigation.
+     */
+    static lock() {
+        this.locked = true;
+        this.activeCount = 1;
+        this.notify(true);
     }
 
     static subscribe(listener: (loading: boolean) => void) {

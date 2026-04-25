@@ -62,9 +62,19 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
 
   const [activeRel, setActiveRel] = useState<string | null>(null);
 
+  const safeParseJSON = <T,>(json: unknown, fallback: T): T => {
+    if (json === null || json === undefined || json === '') return fallback;
+    if (typeof json !== 'string') return json as unknown as T;
+    try {
+      return JSON.parse(json);
+    } catch {
+      return fallback;
+    }
+  };
+
   const getValidationRule = (colName: string): string => {
     try {
-      const rules = form.validationRules ? JSON.parse(form.validationRules) : {};
+      const rules = safeParseJSON<Record<string, string>>(form.validationRules, {});
       return rules[colName] || '';
     } catch {
       return '';
@@ -73,7 +83,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
 
   const setValidationRule = (colName: string, value: string) => {
     try {
-      const rules = form.validationRules ? JSON.parse(form.validationRules) : {};
+      const rules = safeParseJSON<Record<string, string>>(form.validationRules, {});
       if (value) {
         rules[colName] = value;
       } else {
@@ -87,7 +97,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
 
   const getErrorTemplate = (statusCode: number): string => {
     try {
-      const templates = form.errorTemplatesJson ? JSON.parse(form.errorTemplatesJson) : {};
+      const templates = safeParseJSON<Record<string, string>>(form.errorTemplatesJson, {});
       return templates[String(statusCode)] || '';
     } catch {
       return '';
@@ -96,7 +106,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
 
   const setErrorTemplate = (statusCode: number, value: string) => {
     try {
-      const templates = form.errorTemplatesJson ? JSON.parse(form.errorTemplatesJson) : {};
+      const templates = safeParseJSON<Record<string, string>>(form.errorTemplatesJson, {});
       if (value) {
         templates[String(statusCode)] = value;
       } else {
@@ -145,7 +155,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
     const customTemplate = getErrorTemplate(statusCode);
     if (customTemplate) {
       try {
-        const parsed = JSON.parse(customTemplate);
+        const parsed = safeParseJSON<Record<string, string>>(customTemplate, {});
         return { isCustom: true, template: customTemplate, errorCode: parsed.errorCode || '' };
       } catch {
         return { isCustom: true, template: customTemplate, errorCode: '' };
@@ -153,7 +163,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
     }
 
     const autoTemplate = generateSmartErrorDefault(form.path || '', statusCode);
-    const parsed = JSON.parse(autoTemplate);
+    const parsed = safeParseJSON<Record<string, string>>(autoTemplate, {});
     return { isCustom: false, template: autoTemplate, errorCode: parsed.errorCode };
   };
 
@@ -640,15 +650,9 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                       {/* Column Chips */}
                       <div className="flex flex-wrap gap-2">
                         {(() => {
-                          const writableList: string[] = form.writableFields
-                            ? JSON.parse((form.writableFields as string) || '[]')
-                            : [];
-                          const protectedList: string[] = form.protectedFields
-                            ? JSON.parse((form.protectedFields as string) || '[]')
-                            : [];
-                          const autoPopObj: Record<string, string> = form.autoPopulateFields
-                            ? JSON.parse((form.autoPopulateFields as string) || '{}')
-                            : {};
+                          const writableList: string[] = safeParseJSON(form.writableFields, []);
+                          const protectedList: string[] = safeParseJSON(form.protectedFields, []);
+                          const autoPopObj: Record<string, string> = safeParseJSON(form.autoPopulateFields, {});
 
                           return columns.map((col) => {
                             const isWritable = writableList.includes(col.name);
@@ -728,7 +732,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                             <div className="flex flex-wrap gap-2">
                               {(() => {
                                 // Normalize: support legacy array format and new object format  
-                                const rawRels = form.writableRelations ? JSON.parse(form.writableRelations) : {};
+                                const rawRels = safeParseJSON<Record<string, any>>(form.writableRelations, {});
                                 const normalizeRel = (val: any) => {
                                   if (Array.isArray(val)) return { fields: val, validation: {}, autoPopulate: {} };
                                   if (val && typeof val === 'object' && val.fields) return val;
@@ -819,7 +823,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
 
                                const targetId = rel.targetId;
                                const targetCols = tableColumnsMap[targetId] || [];
-                                                              const rawRels = form.writableRelations ? JSON.parse(form.writableRelations) : {};
+                                                              const rawRels = safeParseJSON<Record<string, any>>(form.writableRelations, {});
                                
                                // Normalize: support legacy array format and new object format
                                const normalizeRelConfig = (val: any): { fields: string[]; validation: Record<string,string>; autoPopulate: Record<string,string> } => {
@@ -967,16 +971,14 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
     const example: Record<string, any> = {};
     
     // Core fields
-    const writableList: string[] = form.writableFields
-        ? JSON.parse((form.writableFields as string) || '[]')
-        : [];
+    const writableList: string[] = safeParseJSON(form.writableFields, []);
 
     writableList.forEach(field => {
         example[field] = "value";
     });
 
     // Virtual Relations (Nested Writes)
-    const rawRels = form.writableRelations ? JSON.parse(form.writableRelations) : {};
+    const rawRels = safeParseJSON<Record<string, any>>(form.writableRelations, {});
     const normalizeRel = (val: any) => {
       if (Array.isArray(val)) return { fields: val };
       if (val && typeof val === 'object' && val.fields) return val;
@@ -1021,7 +1023,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                             const autoPopObj: Record<string, string> = form.autoPopulateFields
                               ? (() => {
                                   try {
-                                    return JSON.parse((form.autoPopulateFields as string) || '{}');
+                                    return safeParseJSON<Record<string, string>>(form.autoPopulateFields, {});
                                   } catch {
                                     return {};
                                   }
@@ -1073,7 +1075,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                       {/* Validation Rules */}
                       {(() => {
                         const writableList: string[] = form.writableFields
-                          ? JSON.parse((form.writableFields as string) || '[]')
+                          ? safeParseJSON<string[]>(form.writableFields, [])
                           : [];
                         if (writableList.length === 0) return null;
 
@@ -1162,7 +1164,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                       <div className="flex flex-wrap gap-2">
                         {(() => {
                            const filterableList: string[] = form.filterableFields
-                             ? JSON.parse((form.filterableFields as string) || '[]')
+                             ? safeParseJSON<string[]>(form.filterableFields, [])
                              : [];
                            
                            return columns.map(col => {
@@ -1216,7 +1218,7 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                       <div className="flex flex-wrap gap-2">
                         {(() => {
                            const sortableList: string[] = form.sortableFields
-                             ? JSON.parse((form.sortableFields as string) || '[]')
+                             ? safeParseJSON<string[]>(form.sortableFields, [])
                              : [];
                            
                            return columns.map(col => {

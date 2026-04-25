@@ -3,7 +3,7 @@
  * ROUTE: GET /api/database-schema/page-relation-edit/targets/:id
  * ═══════════════════════════════════════════════════════════════
  */
-import { getAvailableTargets } from '../page-relation-create-targets-get/model';
+import { getAvailableTargets } from './model';
 
 export const handler = async (c: any) => {
   try {

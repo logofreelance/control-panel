@@ -49,9 +49,9 @@ export function useRouteBuilder(targetId: string) {
         const headers = getHeaders();
         try {
             const [catRes, endRes, statsRes] = await Promise.all([
-                fetch(DYNAMIC_ROUTES_API.categories.list, { headers }),
-                fetch(DYNAMIC_ROUTES_API.endpoints.list, { headers }),
-                fetch(DYNAMIC_ROUTES_API.endpoints.stats, { headers })
+                fetch(DYNAMIC_ROUTES_API.pageBuilder.categoriesList, { headers }),
+                fetch(DYNAMIC_ROUTES_API.pageBuilder.endpointsList, { headers }),
+                fetch(DYNAMIC_ROUTES_API.pageBuilder.endpointsStats, { headers })
             ]);
 
             const catData = await catRes.json();
@@ -80,7 +80,7 @@ export function useRouteBuilder(targetId: string) {
                 ? { ...categoryForm, id: editingCategory.id }
                 : categoryForm;
                 
-            const res = await fetch(DYNAMIC_ROUTES_API.categories.save, {
+            const res = await fetch(DYNAMIC_ROUTES_API.pageBuilder.categorySave, {
                 method: 'POST',
                 headers: getJsonHeaders(),
                 body: JSON.stringify(payload)
@@ -106,8 +106,8 @@ export function useRouteBuilder(targetId: string) {
         setDeleteLoading(true);
         try {
             const url = deleteConfirm.type === 'category'
-                ? DYNAMIC_ROUTES_API.categories.delete(deleteConfirm.id)
-                : DYNAMIC_ROUTES_API.endpoints.delete(deleteConfirm.id);
+                ? DYNAMIC_ROUTES_API.pageBuilder.categoryDelete(deleteConfirm.id)
+                : DYNAMIC_ROUTES_API.pageBuilder.endpointDelete(deleteConfirm.id);
             const res = await fetch(url, { method: 'DELETE', headers: getHeaders() });
             const data = await res.json();
             if (data.status === 'success') {
@@ -129,7 +129,7 @@ export function useRouteBuilder(targetId: string) {
         try {
             // Find current endpoint to toggle its state
             const ep = endpoints.find(e => e.id === id);
-            const res = await fetch(DYNAMIC_ROUTES_API.endpoints.toggle(id), {
+            const res = await fetch(DYNAMIC_ROUTES_API.pageBuilder.endpointToggle(id), {
                 method: 'PUT',
                 headers: getJsonHeaders(),
                 body: JSON.stringify({ is_active: ep ? !ep.isActive : true })

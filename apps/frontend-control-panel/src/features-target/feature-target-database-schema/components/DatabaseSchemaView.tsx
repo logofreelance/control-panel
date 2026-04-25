@@ -26,7 +26,7 @@ import { ConfirmDialog, PageLoadingSkeleton } from '@/modules/_core';
 import { RelationBuilder } from './RelationBuilder';
 import { CategoryManager } from './CategoryManager';
 import { Icons, MODULE_LABELS } from '@/lib/config/client';
-import { DYNAMIC_ROUTES_API } from '@/features-target/feature-dynamic-routes/api';
+import { env } from '@/lib/env';
 import type { DatabaseTable, Resource } from '../types';
 
 const L = MODULE_LABELS.databaseSchema;
@@ -157,13 +157,13 @@ export function DatabaseSchemaView() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-1">
           <StatCard
             label={L.labels.sources}
-            value={(stats.totalSources ?? 0).toLocaleString()}
+            value={(stats.activeSources ?? 0).toLocaleString()}
             subtitle={L.labels.activeConnections}
             icon={Icons.bookOpen}
           />
           <StatCard
             label={L.labels.tables}
-            value={(stats.totalTables ?? 0).toLocaleString()}
+            value={(stats.activeSources ?? 0).toLocaleString()}
             subtitle={L.labels.schemasDefined}
             icon={Icons.storage}
           />
@@ -793,7 +793,7 @@ function EndpointListSection({ sourceId, nodeId }: { sourceId: string | number; 
       try {
         setLoading(true);
         const targetId = Array.isArray(nodeId) ? nodeId[0] : (nodeId || '');
-        const res = await fetch(DYNAMIC_ROUTES_API.endpoints.list, {
+        const res = await fetch(`${env.API_URL}/route-builder/page-schema-view/endpoints`, {
           headers: { 'x-target-id': targetId },
         });
         const data = await res.json();

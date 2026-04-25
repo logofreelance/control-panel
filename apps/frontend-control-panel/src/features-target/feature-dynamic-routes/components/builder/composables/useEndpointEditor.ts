@@ -50,9 +50,9 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
     const [deleteConfirm, setDeleteConfirm] = useState(false);
 
     // Fetch Resources when DataSource changes
-    const fetchResources = useCallback(async (dsId: string) => {
+    const fetchResources = useCallback(async (sourceId: string) => {
         try {
-            const res = await fetch(api.databaseSchema.resources(dsId), { headers: { 'x-target-id': targetId } });
+            const res = await fetch(api.databaseSchema.pageSchemaList.resources(sourceId), { headers: { 'x-target-id': targetId } });
             const data = await res.json();
             if (data.status === 'success') {
                 setResources(data.data);
@@ -62,7 +62,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         } catch {
             setResources([]);
         }
-    }, [api.databaseSchema]);
+    }, [api.databaseSchema, targetId]);
 
     // Column type for Mutation tab
     interface ColumnInfo {
@@ -79,18 +79,18 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
     const [tableColumnsMap, setTableColumnsMap] = useState<Record<string, ColumnInfo[]>>({});
     const tableColumnsMapRef = useRef<Record<string, ColumnInfo[]>>({});
 
-    const fetchTableColumns = useCallback(async (tableId: string) => {
-        if (tableColumnsMapRef.current[tableId]) return tableColumnsMapRef.current[tableId]; // Cache hit via ref
+    const fetchTableColumns = useCallback(async (tableName: string) => {
+        if (tableColumnsMapRef.current[tableName]) return tableColumnsMapRef.current[tableName]; // Cache hit via ref
         try {
-            const res = await fetch(api.databaseSchema.columns(tableId), { headers: { 'x-target-id': targetId } });
+            const res = await fetch(api.databaseSchema.pageDataViewer.columns(tableName), { headers: { 'x-target-id': targetId } });
             const data = await res.json();
             if (data.status === 'success') {
-                tableColumnsMapRef.current = { ...tableColumnsMapRef.current, [tableId]: data.data };
-                setTableColumnsMap(prev => ({ ...prev, [tableId]: data.data }));
+                tableColumnsMapRef.current = { ...tableColumnsMapRef.current, [tableName]: data.data };
+                setTableColumnsMap(prev => ({ ...prev, [tableName]: data.data }));
                 return data.data;
             }
         } catch (e) {
-            console.error('Failed to fetch columns for table', tableId, e);
+            console.error('Failed to fetch columns for table', tableName, e);
         }
         return [];
     }, [api.databaseSchema, targetId]);
@@ -121,11 +121,11 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
             try {
                 // Fetch All Dependencies in Parallel
                 const [catRes, dsRes, roleRes, permRes, errTplRes] = await Promise.all([
-                    fetch(DYNAMIC_ROUTES_API.categories.list, { headers: { 'x-target-id': targetId } }),
-                    fetch(api.databaseSchema.list, { headers: { 'x-target-id': targetId } }),
+                    fetch(DYNAMIC_ROUTES_API.pageEditor.categoriesDropdown, { headers: { 'x-target-id': targetId } }),
+                    fetch(api.databaseSchema.pageSchemaList.schemas, { headers: { 'x-target-id': targetId } }),
                     fetch(`${env.API_URL}/roles`, { headers: { 'x-target-id': targetId } }),
                     fetch(`${env.API_URL}/permissions`, { headers: { 'x-target-id': targetId } }),
-                    fetch(DYNAMIC_ROUTES_API.errorTemplates.list, { headers: { 'x-target-id': targetId } })
+                    fetch(DYNAMIC_ROUTES_API.pageEditor.errorTemplatesDropdown, { headers: { 'x-target-id': targetId } })
                 ]);
 
                 const catData = await catRes.json();
@@ -149,7 +149,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
 
                 // Fetch endpoint details if Edit Mode (only ONE endpoint)
                 if (endpointId) {
-                    const detailRes = await fetch(DYNAMIC_ROUTES_API.endpoints.detail(endpointId), { headers: { 'x-target-id': targetId } });
+                    const detailRes = await fetch(DYNAMIC_ROUTES_API.pageEditor.endpointLoad(endpointId), { headers: { 'x-target-id': targetId } });
                     const detailData = await detailRes.json();
 
                     if (detailData.status === 'success') {
@@ -207,7 +207,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         if (!path || !method) return null;
         try {
             // Fetch all endpoints and check client-side
-            const res = await fetch(DYNAMIC_ROUTES_API.endpoints.list, { headers: { 'x-target-id': targetId } });
+            const res = await fetch(DYNAMIC_ROUTES_API.pageEditor.checkDuplicate, { headers: { 'x-target-id': targetId } });
             const data = await res.json();
             if (data.status === 'success' && Array.isArray(data.data)) {
                 const duplicate = data.data.find((ep: any) => 
@@ -260,7 +260,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
                 }
             }
 
-            const res = await fetch(DYNAMIC_ROUTES_API.endpoints.save, {
+            const res = await fetch(DYNAMIC_ROUTES_API.pageEditor.endpointSave, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-target-id': targetId },
                 body: JSON.stringify(payload)
@@ -286,7 +286,7 @@ export function useEndpointEditor(targetId: string, endpointId?: string, onBack?
         if (!endpointId) return;
 
         try {
-            const res = await fetch(DYNAMIC_ROUTES_API.endpoints.delete(endpointId), { method: 'DELETE', headers: { 'x-target-id': targetId } });
+            const res = await fetch(DYNAMIC_ROUTES_API.pageEditor.endpointDelete(endpointId), { method: 'DELETE', headers: { 'x-target-id': targetId } });
             if (res.ok) {
                 addToast(L.messages.endpointDeleted || 'Endpoint deleted', 'success');
                 onBack?.();

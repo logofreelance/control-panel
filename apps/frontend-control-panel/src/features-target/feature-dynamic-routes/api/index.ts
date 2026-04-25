@@ -1,8 +1,7 @@
 /**
  * Fitur: Dynamic Routes (Frontend Control Panel)
  * File: api/index.ts
- * Deskripsi: Kumpulan rute untuk menembak API Backend Control Panel.
- * Fitur ini sepenuhnya mandiri (isolated) dan tidak import endpoint dari luar.
+ * Setiap page punya endpoint sendiri, TIDAK ADA route yang di-share.
  */
 
 import { env } from '@/lib/env';
@@ -10,24 +9,38 @@ import { env } from '@/lib/env';
 const BASE_URL = `${env.API_URL}/route-builder`;
 
 export const DYNAMIC_ROUTES_API = {
-    categories: {
-        list: `${BASE_URL}/categories`,
-        save: `${BASE_URL}/categories`,
-        delete: (id: string) => `${BASE_URL}/categories/${id}`,
+    // ═══ Page: Route Builder (useRouteBuilder.ts) ═══
+    pageBuilder: {
+        categoriesList:  `${BASE_URL}/page-builder/categories`,
+        categorySave:    `${BASE_URL}/page-builder/category`,
+        categoryDelete:  (id: string) => `${BASE_URL}/page-builder/category/${id}`,
+        endpointsList:   `${BASE_URL}/page-builder/endpoints`,
+        endpointsStats:  `${BASE_URL}/page-builder/endpoints/stats`,
+        endpointDelete:  (id: string) => `${BASE_URL}/page-builder/endpoint/${id}`,
+        endpointToggle:  (id: string) => `${BASE_URL}/page-builder/endpoint/${id}/toggle`,
+        logsList:        `${BASE_URL}/page-builder/logs`,
+        apiRoutesList:   `${BASE_URL}/page-builder/api-routes`,
     },
-    endpoints: {
-        list: `${BASE_URL}/endpoints`,
-        save: `${BASE_URL}/endpoints`,
-        detail: (id: string) => `${BASE_URL}/endpoints/${id}`,
-        stats: `${BASE_URL}/endpoints/stats`,
-        delete: (id: string) => `${BASE_URL}/endpoints/${id}`,
-        toggle: (id: string) => `${BASE_URL}/endpoints/${id}/toggle`,
+
+    // ═══ Page: Endpoint Editor (useEndpointEditor.ts) ═══
+    pageEditor: {
+        categoriesDropdown:     `${BASE_URL}/page-editor/categories`,
+        errorTemplatesDropdown: `${BASE_URL}/page-editor/error-templates`,
+        endpointLoad:           (id: string) => `${BASE_URL}/page-editor/endpoint/${id}`,
+        checkDuplicate:         `${BASE_URL}/page-editor/endpoints/check-duplicate`,
+        endpointSave:           `${BASE_URL}/page-editor/endpoint`,
+        endpointDelete:         (id: string) => `${BASE_URL}/page-editor/endpoint/${id}`,
     },
-    apiRoutes: `${BASE_URL}/api-routes`,
-    logs: `${BASE_URL}/logs`,
-    errorTemplates: {
-        list: `${BASE_URL}/error-templates`,
-        save: `${BASE_URL}/error-templates`,
-        delete: (id: string) => `${BASE_URL}/error-templates/${id}`,
-    }
+
+    // ═══ Page: Endpoint Detail (useEndpointDetail.ts) ═══
+    pageDetail: {
+        endpointLoad: (id: string) => `${BASE_URL}/page-detail/endpoint/${id}`,
+    },
+
+    // ═══ Page: Error Templates (useErrorTemplates.ts) ═══
+    pageErrorTemplates: {
+        list:   `${BASE_URL}/page-error-templates/list`,
+        save:   `${BASE_URL}/page-error-templates/save`,
+        delete: (id: string) => `${BASE_URL}/page-error-templates/${id}`,
+    },
 };

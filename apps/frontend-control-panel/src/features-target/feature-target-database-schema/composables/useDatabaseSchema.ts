@@ -128,7 +128,7 @@ export function useSchemaActions() {
         setLoading(true);
         try {
             // ✅ Use Internal API
-            const response = await apiClient.post<DatabaseTable>(`${API.list}/${id}/clone`, undefined, { headers: getHeaders() });
+            const response = await apiClient.post<DatabaseTable>(`${API.pageSchemaList.schemas}/${id}/clone`, undefined, { headers: getHeaders() });
             if (response.status === 'success') {
                 addToast(FEATURE_MESSAGES.success.sourceCloned, TOAST_TYPE.SUCCESS);
                 return response.data || null;

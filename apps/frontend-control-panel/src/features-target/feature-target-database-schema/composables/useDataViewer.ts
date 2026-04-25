@@ -215,16 +215,16 @@ export function useDataViewer(DatabaseTableId: string | number, options: UseData
       // const response = await fetch(`${API.list}/${DatabaseTableId}/export?format=csv`, {
       //   headers: getHeaders(),
       // });
-      if (!response.ok) throw new Error('Export failed');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `export-${DatabaseTableId}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // if (!response.ok) throw new Error('Export failed');
+      // const blob = await response.blob();
+      // const url = URL.createObjectURL(blob);
+      // const a = document.createElement('a');
+      // a.href = url;
+      // a.download = `export-${DatabaseTableId}.csv`;
+      // document.body.appendChild(a);
+      // a.click();
+      // document.body.removeChild(a);
+      // URL.revokeObjectURL(url);
     } catch {
       addToast('Failed to export data', TOAST_TYPE.ERROR);
     }

@@ -1,4 +1,8 @@
-// Forward exports to the new centralized API definition to preserve feature structure
+// Forward exports to the centralized API definition — uses isolated pageErrorTemplates endpoints
 import { DYNAMIC_ROUTES_API } from '../../../api';
 
-export const API = { ...DYNAMIC_ROUTES_API.errorTemplates, global: DYNAMIC_ROUTES_API.errorTemplates.list };
+export const API = {
+    global: DYNAMIC_ROUTES_API.pageErrorTemplates.list,
+    save: DYNAMIC_ROUTES_API.pageErrorTemplates.save,
+    delete: DYNAMIC_ROUTES_API.pageErrorTemplates.delete,
+};

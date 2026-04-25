@@ -85,7 +85,11 @@ export function middleware(env: EnvironmentConfig) {
     }
 
     // Step 4: Ensure metadata tables exist
-    await ensureMetadataTables(c.get('targetDb'));
+    try {
+      await ensureMetadataTables(c.get('targetDb'));
+    } catch (err) {
+      console.error('[ENSURE-METADATA-TABLES-ERROR]', err);
+    }
 
     await next();
   };
@@ -110,6 +114,7 @@ async function ensureMetadataTables(db: any) {
       CREATE TABLE database_categories (
         id VARCHAR(36) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
+        description TEXT,
         color VARCHAR(50),
         icon VARCHAR(50),
         order_index INT DEFAULT 0,
@@ -117,6 +122,19 @@ async function ensureMetadataTables(db: any) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
+  } else {
+    // Migrations
+    const columns: any = await db.execute("DESCRIBE database_categories");
+    const columnRows = extractRows(columns);
+    
+    const hasColumn = (name: string) => columnRows.some((c: any) => 
+      (c.Field?.toLowerCase() === name.toLowerCase()) || 
+      (c.field?.toLowerCase() === name.toLowerCase())
+    );
+
+    if (!hasColumn('description')) {
+      await db.execute("ALTER TABLE database_categories ADD COLUMN description TEXT AFTER name");
+    }
   }
 
   // --- database_tables ---

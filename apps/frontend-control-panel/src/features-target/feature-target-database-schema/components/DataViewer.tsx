@@ -52,6 +52,8 @@ export const DataViewer = ({ DatabaseTable }: DataViewerProps) => {
     deleteRow,
     deleteSelected,
     exportData,
+    insertRow,
+    updateRow,
   } = useDataViewer(DatabaseTable?.id);
 
   const [isImportOpen, setIsImportOpen] = useState(false);

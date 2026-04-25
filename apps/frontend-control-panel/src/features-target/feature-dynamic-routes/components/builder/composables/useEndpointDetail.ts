@@ -33,7 +33,7 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
         
         try {
             setLoading(true);
-            const res = await fetch(DYNAMIC_ROUTES_API.endpoints.detail(endpointId), { headers: { 'x-target-id': targetId } });
+            const res = await fetch(DYNAMIC_ROUTES_API.pageDetail.endpointLoad(endpointId), { headers: { 'x-target-id': targetId } });
             const data = await res.json();
 
             if (data.status === 'success') {
@@ -42,7 +42,7 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
 
                 // Fetch DataSource details and its Columns
                 if (found.dataSourceId) {
-                    const dsRes = await fetch(api.databaseSchema.detail(found.dataSourceId), { headers: { 'x-target-id': targetId } });
+                    const dsRes = await fetch(api.databaseSchema.pageSchemaEditor.detail(found.dataSourceId), { headers: { 'x-target-id': targetId } });
                     const dsData = await dsRes.json();
                     if (dsData.status === 'success') {
                         setDataSource({ 
@@ -53,8 +53,8 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
                     }
 
                     // Fetch actual columns from the table
-                    const colRes = await fetch(api.databaseSchema.columns(found.dataSourceId), { headers: { 'x-target-id': targetId } });
-                    const colData = await colRes.json();
+                    const colsRes = await fetch(api.databaseSchema.pageDataViewer.columns(dsData.data.tableName), { headers: { 'x-target-id': targetId } });
+                    const colData = await colsRes.json();
                     if (colData.status === 'success') {
                         setColumns(colData.data || []);
                     }
@@ -62,7 +62,7 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
 
                 // Fetch Resource details if linked
                 if (found.resourceId && found.dataSourceId) {
-                    const resRes = await fetch(api.databaseSchema.resources(found.dataSourceId), { headers: { 'x-target-id': targetId } });
+                    const resRes = await fetch(api.databaseSchema.pageSchemaList.resources(found.dataSourceId), { headers: { 'x-target-id': targetId } });
                     const resData = await resRes.json();
                     if (resData.status === 'success') {
                         // USE LOOSE EQUALITY OR STRING CONVERSION TO PREVENT UUID/NUMBER MISMATCH
@@ -129,8 +129,12 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
             // 1. Add Writable Fields
             if (endpoint.writableFields) {
                 try {
-                    const fields = JSON.parse(endpoint.writableFields);
-                    fields.forEach((f: string) => { obj[f] = `your_${f}`; });
+                    const fields = typeof endpoint.writableFields === 'string' 
+                        ? JSON.parse(endpoint.writableFields) 
+                        : endpoint.writableFields;
+                    if (Array.isArray(fields)) {
+                        fields.forEach((f: string) => { obj[f] = `your_${f}`; });
+                    }
                 } catch { /* ignore */ }
             }
 

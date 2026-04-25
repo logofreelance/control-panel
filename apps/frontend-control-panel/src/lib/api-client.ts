@@ -43,8 +43,9 @@ class ApiClient {
         const response = await fetch(url.toString(), fetchOptions);
 
         if (response.status === 401) {
-            // Only redirect if we are NOT already on the login page
-            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+            // Only redirect if we are NOT already on the login page AND not performing logout
+            const isLogoutRequest = endpoint.includes('/logout');
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login' && !isLogoutRequest) {
                 window.location.href = '/login';
             }
             // If we ARE on login page, let the caller handle it (show error message)

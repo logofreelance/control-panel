@@ -18,11 +18,11 @@ export const useDataSourceColumns = (targetId: string, dataSourceId?: string) =>
         setLoading(true);
         try {
             // Fetch Columns
-            const colRes = await fetch(api.databaseSchema.columns(dsId), { headers: { 'x-target-id': targetId } });
+            const colRes = await fetch(api.databaseSchema.pageDataViewer.columns(dsId), { headers: { 'x-target-id': targetId } });
             const colData = await colRes.json();
             
             // Fetch Relations
-            const relRes = await fetch(`${env.API_URL}/target/database-schema/${dsId}/relations`, { headers: { 'x-target-id': targetId } });
+            const relRes = await fetch(api.databaseSchema.pageRelationEdit.relations(dsId), { headers: { 'x-target-id': targetId } });
             const relData = await relRes.json();
 
             if (colData.status === 'success') {

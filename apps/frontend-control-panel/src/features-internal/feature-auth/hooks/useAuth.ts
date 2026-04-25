@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth.api';
 import { AUTH_ROUTES } from '../config/routes';
 import { AUTH_UI_LABELS } from '../constants/ui-labels';
+import { GlobalLoading } from '@/modules/_core/providers/PageLoadingProvider';
 
 export function useAuth() {
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [status, setStatus] = useState<{ loading?: boolean; message?: string; status?: string } | null>(null);
-    const router = useRouter();
 
     const handleLogin = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,18 +18,10 @@ export function useAuth() {
             const data = await authApi.login(formData);
 
             if (data.success) {
-                // MANUALLY SET COOKIE ON FRONTEND DOMAIN
-                // Ini penting karena domain backend & frontend berbeda di workers.dev
-                const SESSION_ID = data.data?.token || (data as any).token;
-                if (SESSION_ID) {
-                    // REMOVED 'Secure' flag for local dev compatibility (often on http)
-                    document.cookie = `auth_session=${SESSION_ID}; path=/; Max-Age=${60 * 60 * 24 * 30}`;
-                    
-                    router.replace(AUTH_ROUTES.dashboard);
-                    setTimeout(() => window.location.reload(), 100);
-                } else {
-                    setStatus({ message: 'LOGIN SUCCESS BUT NO TOKEN RECEIVED', status: 'error', loading: false });
-                }
+                // Lock loading overlay BEFORE redirect to prevent flash
+                GlobalLoading.lock();
+                window.location.href = AUTH_ROUTES.dashboard;
+                return; // Don't execute anything after redirect
             } else {
                 const message = data.error?.message || data.message || AUTH_UI_LABELS.login.failedToConnect;
                 setStatus({ message: `LOGIN FAILED: ${message}`, status: 'error', loading: false });
@@ -40,7 +31,7 @@ export function useAuth() {
             const message = err.message || AUTH_UI_LABELS.login.failedToConnect;
             setStatus({ message: `NETWORK ERROR: ${message}`, status: 'error', loading: false });
         }
-    }, [formData, router]);
+    }, [formData]);
 
     const handleInputChange = useCallback((key: 'username' | 'password', value: string) => {
         setFormData(prev => ({ ...prev, [key]: value }));

@@ -24,6 +24,7 @@ import { Icons } from '@/lib/config/client';
 import { authApi } from '@/features-internal/feature-auth';
 import { cn } from '@/lib/utils';
 import { TextHeading } from '@/components/ui/text-heading';
+import { GlobalLoading } from '@/modules/_core/providers/PageLoadingProvider';
 
 interface InternalLayoutProps {
   children: ReactNode;
@@ -40,6 +41,8 @@ export function InternalLayout({
   const router = useRouter();
 
   const handleLogout = useCallback(async () => {
+    // Lock loading overlay immediately so dashboard never flashes
+    GlobalLoading.lock();
     try {
       // 1. Backend Invalidation
       await authApi.logout();
@@ -49,9 +52,6 @@ export function InternalLayout({
       // 2. Client-side thorough cleanup
       if (typeof window !== 'undefined') {
         sessionStorage.clear();
-        // Clear all except theme preferences if we want to keep them,
-        // but for security, clearing auth-specific tokens is more important.
-        //localStorage.removeItem('auth_token'); // If using Bearer tokens too
 
         // 3. Final Hard Redirect (replace ensures no back navigation to auth)
         window.location.replace('/login');

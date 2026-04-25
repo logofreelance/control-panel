@@ -14,6 +14,7 @@ export const handler = async (c: any) => {
   try {
     const db = c.get('targetDb');
     const body = await c.req.json();
+    console.log('[DEBUG-BODY] Received schema submission:', JSON.stringify(body, null, 2));
     const { name, tableName, description, category_id, schema } = body;
 
     if (!name || !tableName || !schema || !schema.columns) {
@@ -37,6 +38,7 @@ export const handler = async (c: any) => {
 
     return c.json({ status: 'success', data: { id, name, table_name: tableName } });
   } catch (e: any) {
-    return c.json({ status: 'error', message: e.message }, 500);
+    console.error('[SCHEMA-SUBMIT-ERROR]', e);
+    return c.json({ status: 'error', message: e.message, stack: e.stack }, 500);
   }
 };

@@ -17,7 +17,10 @@ export function useAuth() {
         try {
             const data = await authApi.login(formData);
 
-            if (data.success) {
+            if (data.success && data.data?.token) {
+                // Set cookie manually to bypass Next.js Proxy stripping Set-Cookie headers
+                document.cookie = `auth_session=${data.data.token}; path=/; max-age=2592000; SameSite=Lax`;
+                
                 // Lock loading overlay BEFORE redirect to prevent flash
                 GlobalLoading.lock();
                 window.location.href = AUTH_ROUTES.dashboard;

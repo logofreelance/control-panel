@@ -4,6 +4,9 @@ const BACKEND_URL = process.env.BACKEND_INTERNAL_URL
     || process.env.NEXT_PUBLIC_API_URL 
     || 'http://localhost:3001';
 
+export const dynamic = 'force-dynamic';
+
+
 export async function GET(
     request: NextRequest, 
     { params }: { params: Promise<{ path: string[] }> }
@@ -25,6 +28,7 @@ export async function GET(
             method: 'GET',
             headers,
             credentials: 'include',
+            cache: 'no-store'
         });
 
         const data = await response.json();

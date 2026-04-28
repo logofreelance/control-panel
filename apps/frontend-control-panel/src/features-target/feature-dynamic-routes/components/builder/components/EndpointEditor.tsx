@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-import { Button, Input, Select, Switch, Card, CardContent, Badge, Label } from '@/components/ui';
+import { Button, Input, Select, Switch, Card, CardContent, Badge, Label, Popover, PopoverTrigger, PopoverContent, Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui';
 import { TextHeading } from '@/components/ui/text-heading';
 import { cn } from '@/lib/utils';
 import { Icons } from '../../../config/icons';
@@ -61,6 +61,9 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
   } = useEndpointEditor(targetId, endpointId, onBack);
 
   const [activeRel, setActiveRel] = useState<string | null>(null);
+  const [openDataSource, setOpenDataSource] = useState(false);
+  const [openResource, setOpenResource] = useState(false);
+  const [openCategory, setOpenCategory] = useState(false);
 
   const safeParseJSON = <T,>(json: unknown, fallback: T): T => {
     if (json === null || json === undefined || json === '') return fallback;
@@ -444,18 +447,68 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
 
                 <div className="max-w-md">
                   <Label className="lowercase mb-2 block px-1">category group</Label>
-                  <Select
-                    value={String(form.categoryId || '')}
-                    onChange={(e) => setForm({ ...form, categoryId: e.target.value || undefined })}
-                    fullWidth
-                    options={[
-                      { label: 'uncategorized', value: '' },
-                      ...categories.map((c) => ({
-                        label: c.name.toLowerCase(),
-                        value: String(c.id),
-                      })),
-                    ]}
-                  />
+                  <Popover open={openCategory} onOpenChange={setOpenCategory}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openCategory}
+                        className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
+                      >
+                        <span className="truncate">
+                          {form.categoryId
+                            ? categories.find((c) => String(c.id) === String(form.categoryId))?.name?.toLowerCase() || 'unknown category'
+                            : 'uncategorized'}
+                        </span>
+                        <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="search category..." className="h-10 text-base" />
+                        <CommandList>
+                          <CommandEmpty className="lowercase py-4 text-center text-sm text-muted-foreground">no category found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="uncategorized"
+                              onSelect={() => {
+                                setForm({ ...form, categoryId: undefined });
+                                setOpenCategory(false);
+                              }}
+                              className="lowercase text-base py-3 px-3 my-0.5 rounded-lg !bg-transparent hover:!bg-muted data-[selected=true]:!bg-muted"
+                            >
+                              uncategorized
+                              <Icons.check
+                                className={cn(
+                                  "ml-auto size-4",
+                                  !form.categoryId ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                            </CommandItem>
+                            {categories.map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={c.name.toLowerCase()}
+                                onSelect={() => {
+                                  setForm({ ...form, categoryId: String(c.id) });
+                                  setOpenCategory(false);
+                                }}
+                                className="lowercase text-base py-3 px-3 my-0.5 rounded-lg !bg-transparent hover:!bg-muted data-[selected=true]:!bg-muted"
+                              >
+                                {c.name.toLowerCase()}
+                                <Icons.check
+                                  className={cn(
+                                    "ml-auto size-4",
+                                    String(form.categoryId) === String(c.id) ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             )}
@@ -470,37 +523,135 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label className="lowercase mb-2 block px-1">database source</Label>
-                    <Select
-                      value={String(form.dataSourceId || '')}
-                      onChange={handleDataSourceChange}
-                      fullWidth
-                      options={[
-                        { label: 'no binding (manual response)', value: '' },
-                        ...dataSources.map((ds) => ({
-                          label: ds.name.toLowerCase(),
-                          value: String(ds.id),
-                        })),
-                      ]}
-                    />
+                    <Popover open={openDataSource} onOpenChange={setOpenDataSource}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openDataSource}
+                          className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
+                        >
+                          <span className="truncate">
+                            {form.dataSourceId
+                              ? dataSources.find((ds) => String(ds.id) === String(form.dataSourceId))?.name?.toLowerCase() || 'unknown source'
+                              : 'no binding (manual response)'}
+                          </span>
+                          <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="search database source..." className="h-10 text-base" />
+                          <CommandList>
+                            <CommandEmpty className="lowercase py-4 text-center text-sm text-muted-foreground">no data source found.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem
+                                value="no binding (manual response)"
+                                onSelect={() => {
+                                  handleDataSourceChange({ target: { value: '' } } as any);
+                                  setOpenDataSource(false);
+                                }}
+                                className="lowercase text-base py-3 px-3 my-0.5 rounded-lg !bg-transparent hover:!bg-muted data-[selected=true]:!bg-muted"
+                              >
+                                no binding (manual response)
+                                <Icons.check
+                                  className={cn(
+                                    "ml-auto size-4",
+                                    !form.dataSourceId ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                              {dataSources.map((ds) => (
+                                <CommandItem
+                                  key={ds.id}
+                                  value={ds.name.toLowerCase()}
+                                  onSelect={() => {
+                                    handleDataSourceChange({ target: { value: String(ds.id) } } as any);
+                                    setOpenDataSource(false);
+                                  }}
+                                  className="lowercase text-base py-3 px-3 my-0.5 rounded-lg !bg-transparent hover:!bg-muted data-[selected=true]:!bg-muted"
+                                >
+                                  {ds.name.toLowerCase()}
+                                  <Icons.check
+                                    className={cn(
+                                      "ml-auto size-4",
+                                      String(form.dataSourceId) === String(ds.id) ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {form.dataSourceId && (
                     <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                       <Label className="lowercase mb-2 block px-1">resource logic</Label>
-                      <Select
-                        value={String(form.resourceId || '')}
-                        onChange={(e) =>
-                          setForm({ ...form, resourceId: e.target.value || undefined })
-                        }
-                        fullWidth
-                        options={[
-                          { label: 'raw table data', value: '' },
-                          ...resources.map((res) => ({
-                            label: `${res.name.toLowerCase()}`,
-                            value: String(res.id),
-                          })),
-                        ]}
-                      />
+                      <Popover open={openResource} onOpenChange={setOpenResource}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openResource}
+                            className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
+                          >
+                            <span className="truncate">
+                              {form.resourceId
+                                ? resources.find((res) => String(res.id) === String(form.resourceId))?.name?.toLowerCase() || 'unknown resource'
+                                : 'raw table data'}
+                            </span>
+                            <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="search resource..." className="h-10 text-base" />
+                            <CommandList>
+                              <CommandEmpty className="lowercase py-4 text-center text-sm text-muted-foreground">no resource found.</CommandEmpty>
+                              <CommandGroup>
+                                <CommandItem
+                                  value="raw table data"
+                                  onSelect={() => {
+                                    setForm({ ...form, resourceId: undefined });
+                                    setOpenResource(false);
+                                  }}
+                                  className="lowercase text-base py-3 px-3 my-0.5 rounded-lg !bg-transparent hover:!bg-muted data-[selected=true]:!bg-muted"
+                                >
+                                  raw table data
+                                  <Icons.check
+                                    className={cn(
+                                      "ml-auto size-4",
+                                      !form.resourceId ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                </CommandItem>
+                                {resources.map((res) => (
+                                  <CommandItem
+                                    key={res.id}
+                                    value={res.name.toLowerCase()}
+                                    onSelect={() => {
+                                      setForm({ ...form, resourceId: String(res.id) });
+                                      setOpenResource(false);
+                                    }}
+                                    className="lowercase text-base py-3 px-3 my-0.5 rounded-lg !bg-transparent hover:!bg-muted data-[selected=true]:!bg-muted"
+                                  >
+                                    {res.name.toLowerCase()}
+                                    <Icons.check
+                                      className={cn(
+                                        "ml-auto size-4",
+                                        String(form.resourceId) === String(res.id) ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   )}
                 </div>

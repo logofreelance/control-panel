@@ -54,6 +54,29 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
     handleToggleEndpoint,
   } = useRouteBuilder(targetId);
 
+  const [isManageCategoriesOpen, setIsManageCategoriesOpen] = React.useState(false);
+  const [visibleCount, setVisibleCount] = React.useState(10);
+
+  React.useEffect(() => {
+    setVisibleCount(10);
+  }, [searchQuery, selectedCategory, selectedMethod]);
+
+  const getMethodColor = (method: string) => {
+    switch (method.toUpperCase()) {
+      case 'GET':
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+      case 'POST':
+        return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      case 'PUT':
+      case 'PATCH':
+        return 'bg-orange-500/10 text-orange-600 dark:text-orange-400';
+      case 'DELETE':
+        return 'bg-red-500/10 text-red-600 dark:text-red-400';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
   const L = DYNAMIC_ROUTES_LABELS.routeBuilder;
 
   return (
@@ -71,14 +94,10 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
         <div className="flex flex-row items-center gap-3">
           <Button
             variant="outline"
-            onClick={() => {
-              setEditingCategory(null);
-              setCategoryForm({ name: '', description: '' });
-              setIsCategoryModalOpen(true);
-            }}
+            onClick={() => setIsManageCategoriesOpen(true)}
           >
-            <Icons.plus className="size-5 mr-3" />
-            {L.buttons.newCategory || 'add category'}
+            <Icons.folder className="size-5 mr-3" />
+            manage categories
           </Button>
           <Button variant="default" onClick={() => onNavigate('editor')}>
             <Icons.plus className="size-5 mr-3" />
@@ -154,22 +173,22 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
       </div>
 
       {/* Combined Search & Filter Bar - Flat Luxury All-in-One */}
-      <div className="relative w-full max-w-4xl mx-auto">
-        <div className="relative flex items-center w-full min-h-[56px] bg-muted border border-border rounded-2xl p-1 transition-all overflow-hidden shadow-none">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+      <div className="w-full max-w-4xl mx-auto">
+        <div className="flex flex-row items-center w-full min-h-[56px] bg-muted border border-border rounded-2xl p-1.5 transition-all shadow-none gap-2">
+          <div className="pl-3 flex items-center shrink-0 pointer-events-none">
             <Icons.search className="size-5 text-muted-foreground" />
           </div>
 
           <Input
             placeholder="search lineage endpoints..."
-            className="flex-1 bg-transparent border-none focus-visible:ring-0 h-12 pl-12 pr-40 sm:pr-80 lowercase"
+            className="flex-1 bg-transparent border-none focus-visible:ring-0 h-10 px-2 lowercase min-w-0"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
 
-          <div className="absolute right-1 flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <div className="hidden sm:flex items-center gap-2">
-              <div className="w-36">
+              <div className="w-[160px]">
                 <Select
                   placeholder="category"
                   value={selectedCategory || ''}
@@ -180,7 +199,7 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
                   ]}
                 />
               </div>
-              <div className="w-28">
+              <div className="w-[140px]">
                 <Select
                   placeholder="method"
                   value={selectedMethod || ''}
@@ -198,8 +217,8 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
             <div className="sm:hidden">
               <Popover>
                 <PopoverTrigger>
-                  <Button variant="outline">
-                    <Icons.plus className="size-5 rotate-45 mr-3" />
+                  <Button variant="outline" className="h-10">
+                    <Icons.plus className="size-4 rotate-45 mr-2" />
                     {'filter'}
                   </Button>
                 </PopoverTrigger>
@@ -249,8 +268,9 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
             </div>
             {(searchQuery || selectedCategory || selectedMethod) && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
+                className="size-10 rounded-xl mr-1"
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedCategory(null);
@@ -265,109 +285,9 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-        {/* Categories Sidebar */}
-        <div className="md:col-span-4 space-y-6">
-          <div className="flex items-center justify-between mb-2">
-            <TextHeading size="h4" className="lowercase text-foreground">
-              {L.labels.categories || 'categories'}
-            </TextHeading>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={cn(
-                'group relative w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 lowercase text-base md:text-lg font-normal text-left shadow-none',
-                !selectedCategory
-                  ? 'bg-muted text-foreground'
-                  : 'text-muted-foreground hover:bg-muted/20',
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={cn(
-                    'size-10 rounded-xl flex items-center justify-center transition-all',
-                    !selectedCategory
-                      ? 'bg-foreground text-background'
-                      : 'bg-muted text-muted-foreground group-hover:bg-muted/30',
-                  )}
-                >
-                  <span className="text-base font-normal">{endpoints.length}</span>
-                </div>
-                <span>{L.labels.allRoutes || 'all routes'}</span>
-              </div>
-              {!selectedCategory && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-foreground rounded-r-full" />
-              )}
-            </button>
-
-            {categories.map((category) => {
-              const count = endpoints.filter((e) => e.categoryId === category.id).length;
-              return (
-                <div key={category.id} className="group relative">
-                  <button
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={cn(
-                      'w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 lowercase text-base md:text-lg font-normal text-left pr-20 shadow-none',
-                      selectedCategory === category.id
-                        ? 'bg-muted text-foreground'
-                        : 'text-muted-foreground hover:bg-muted/5',
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          'size-10 rounded-xl flex items-center justify-center transition-all',
-                          selectedCategory === category.id
-                            ? 'bg-background text-foreground scale-105'
-                            : 'bg-muted/5 text-muted-foreground group-hover:bg-muted/10',
-                        )}
-                      >
-                        <span className="text-base font-normal">{count}</span>
-                      </div>
-                      <span className="truncate">{category.name}</span>
-                    </div>
-                    {selectedCategory === category.id && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-foreground rounded-r-full" />
-                    )}
-                  </button>
-
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingCategory(category);
-                        setCategoryForm({
-                          name: category.name,
-                          description: category.description || '',
-                        });
-                        setIsCategoryModalOpen(true);
-                      }}
-                    >
-                      <Icons.edit className="size-5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openDeleteConfirm('category', category.id, category.name);
-                      }}
-                    >
-                      <Icons.trash className="size-5" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Endpoints List */}
-        <div className="md:col-span-8 space-y-8">
+      <div className="w-full flex flex-col gap-8">
+        {/* Endpoints List - Full Width */}
+        <div className="w-full space-y-6">
           <div className="flex items-center justify-between border-b border-border/10 pb-4">
             <TextHeading size="h4" className="lowercase text-foreground">
               {selectedCategory
@@ -394,73 +314,84 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 gap-6">
-              {filteredEndpoints.map((endpoint) => (
-                <Card
+            <div className="flex flex-col gap-1.5">
+              {filteredEndpoints.slice(0, visibleCount).map((endpoint) => (
+                <div
                   key={endpoint.id}
-                  className="group cursor-pointer"
+                  className="group relative flex items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl border border-border bg-card hover:border-primary/20 cursor-pointer transition-all"
                   onClick={() => onNavigate('detail', endpoint.id)}
                 >
-                  <CardContent>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex flex-row items-center gap-4">
-                        <div
-                          className={cn(
-                            'w-14 h-7 rounded-lg flex items-center justify-center shrink-0 border-none transition-all',
-                            endpoint.method === 'GET'
-                              ? 'bg-accent text-accent-foreground'
-                              : 'bg-muted text-muted-foreground',
-                          )}
-                        >
-                          <span className="text-sm font-normal">{endpoint.method}</span>
-                        </div>
+                  <div className="flex flex-row items-center gap-2 sm:gap-4 min-w-0 pr-1 sm:pr-2">
+                    <div
+                      className={cn(
+                        'w-12 sm:w-14 h-6 rounded-md flex items-center justify-center shrink-0 transition-all',
+                        getMethodColor(endpoint.method)
+                      )}
+                    >
+                      <span className="text-[10px] sm:text-xs font-medium">{endpoint.method}</span>
+                    </div>
 
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-3">
-                            <TextHeading size="h5" className="lowercase text-foreground">
-                              {endpoint.path}
-                            </TextHeading>
-                            {!endpoint.isActive && (
-                              <div className="flex">
-                                <Badge variant="destructive">disabled</Badge>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                    <div className="flex flex-col justify-center min-w-0 py-0.5">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <span className="text-sm sm:text-base md:text-[17px] font-medium lowercase text-foreground truncate leading-none mt-0.5">
+                          {endpoint.path}
+                        </span>
+                        {!endpoint.isActive && (
+                          <Badge variant="destructive" className="h-4 sm:h-5 px-1.5 text-[9px] sm:text-[11px] rounded-sm hidden sm:inline-flex leading-none">disabled</Badge>
+                        )}
                       </div>
-
-                      <div className="flex items-center gap-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
-                          <Switch
-                            checked={endpoint.isActive}
-                            onCheckedChange={() => handleToggleEndpoint(endpoint.id)}
-                          />
-                        </div>
-                        <Button
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onNavigate('detail', endpoint.id);
-                          }}
-                        >
-                          <Icons.edit className="size-5 mr-3" />
-                          {L.buttons.edit || 'manage'}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDeleteConfirm('endpoint', endpoint.id, endpoint.path);
-                          }}
-                        >
-                          <Icons.trash className="size-5" />
-                        </Button>
+                      <div className="flex items-center mt-1">
+                        <span className="text-[10px] sm:text-[11px] text-muted-foreground lowercase truncate leading-none">
+                          {categories.find(c => c.id === endpoint.categoryId)?.name || 'uncategorized'}
+                        </span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  <div className="flex items-center gap-0.5 sm:gap-2 shrink-0">
+                    <div onClick={(e) => e.stopPropagation()} className="flex items-center mr-1 sm:mr-2 scale-[0.8] sm:scale-100 origin-right">
+                      <Switch
+                        checked={endpoint.isActive}
+                        onCheckedChange={() => handleToggleEndpoint(endpoint.id)}
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 sm:size-8 rounded-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigate('editor', endpoint.id);
+                      }}
+                    >
+                      <Icons.edit className="size-3.5 sm:size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 sm:size-8 rounded-md hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDeleteConfirm('endpoint', endpoint.id, endpoint.path);
+                      }}
+                    >
+                      <Icons.trash className="size-3.5 sm:size-4" />
+                    </Button>
+                  </div>
+                </div>
               ))}
+
+              {visibleCount < filteredEndpoints.length && (
+                <div className="flex justify-center mt-4 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setVisibleCount((prev) => prev + 10)}
+                    className="w-full sm:w-auto min-w-[200px]"
+                  >
+                    show more
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -468,7 +399,89 @@ export const RouteBuilderView: React.FC<RouteBuilderViewProps> = ({ targetId, on
 
       {/* MODALS SECTION */}
 
-      {/* Category Modal */}
+      {/* Manage Categories Modal */}
+      <Modal
+        isOpen={isManageCategoriesOpen}
+        onClose={() => setIsManageCategoriesOpen(false)}
+        className="sm:max-w-lg p-0 overflow-hidden"
+      >
+        <div className="flex flex-col">
+          <div className="px-6 py-6 flex items-center justify-between border-b border-border/10 bg-muted/20">
+            <div className="flex items-center gap-4">
+              <div className="size-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                <Icons.folder className="size-5 text-primary" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-medium text-foreground lowercase leading-none mb-1">
+                  manage categories
+                </span>
+                <span className="text-sm text-muted-foreground lowercase">
+                  {categories.length} logic groups
+                </span>
+              </div>
+            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                setEditingCategory(null);
+                setCategoryForm({ name: '', description: '' });
+                setIsCategoryModalOpen(true);
+              }}
+            >
+              <Icons.plus className="size-4 mr-2" />
+              add new
+            </Button>
+          </div>
+
+          <div className="p-6 space-y-2 max-h-[60vh] overflow-y-auto">
+            {categories.length === 0 ? (
+               <div className="text-center py-8 text-muted-foreground text-sm lowercase">no categories found. create one above.</div>
+            ) : (
+              categories.map(category => {
+                const count = endpoints.filter((e) => e.categoryId === category.id).length;
+                return (
+                  <div key={category.id} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-background hover:bg-muted/20 transition-all">
+                    <div className="flex flex-col gap-0.5 min-w-0 pr-4">
+                      <span className="text-base font-medium lowercase text-foreground truncate">{category.name}</span>
+                      <span className="text-xs text-muted-foreground lowercase">{count} routes</span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 rounded-md"
+                        onClick={() => {
+                          setEditingCategory(category);
+                          setCategoryForm({
+                            name: category.name,
+                            description: category.description || '',
+                          });
+                          setIsCategoryModalOpen(true);
+                        }}
+                      >
+                        <Icons.edit className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 rounded-md hover:text-destructive"
+                        onClick={() => {
+                          openDeleteConfirm('category', category.id, category.name);
+                        }}
+                      >
+                        <Icons.trash className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Category Modal (Create/Edit Form) */}
       <Modal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}

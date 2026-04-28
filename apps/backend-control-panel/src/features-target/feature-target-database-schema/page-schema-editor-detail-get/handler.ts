@@ -21,8 +21,11 @@ export const handler = async (c: any) => {
     const db = c.get('targetDb');
     const id = c.req.param('id');
     
-    const schema = await getSchemaDetail(db, id);
-    if (!schema) return c.json({ status: 'error', message: 'Not found' }, 404);
+    const result: any = { 
+      ...schema,
+      tableName: schema.table_name,
+      schemaJson: schema.schema_json
+    };
 
     // Enrich with physical columns
     let columns: any[] = [];
@@ -37,12 +40,37 @@ export const handler = async (c: any) => {
           isPrimary: (col.Key || col.column_key) === 'PRI',
           default: col.Default || col.column_default,
         }));
+
+        // ✅ Sort columns based on schema_json order if available
+        if (schema.schema_json) {
+          try {
+            const schemaData = typeof schema.schema_json === 'string' 
+              ? JSON.parse(schema.schema_json) 
+              : schema.schema_json;
+            
+            const definedColumns = schemaData.columns || [];
+            if (Array.isArray(definedColumns) && definedColumns.length > 0) {
+              const orderMap = new Map();
+              definedColumns.forEach((col: any, index: number) => {
+                orderMap.set(col.name, index);
+              });
+
+              columns.sort((a, b) => {
+                const orderA = orderMap.has(a.name) ? orderMap.get(a.name) : 999;
+                const orderB = orderMap.has(b.name) ? orderMap.get(b.name) : 999;
+                return orderA - orderB;
+              });
+            }
+          } catch (err) {
+            console.error('[SCHEMA-DETAIL] Failed to parse schema_json for sorting:', err);
+          }
+        }
       } catch {
         // ignore
       }
     }
     
-    const result = { ...schema, columns };
+    result.columns = columns;
 
     // Guard
     for (const field of REQUIRED_FIELDS) {
@@ -52,6 +80,7 @@ export const handler = async (c: any) => {
     }
 
     return c.json({ status: 'success', data: result });
+
   } catch (e: any) {
     return c.json({ status: 'error', message: e.message }, 500);
   }

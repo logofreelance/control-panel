@@ -113,6 +113,7 @@ export const EndpointDetailView = ({
       if (endpoint.allowDynamicFilters && filterableFields.length > 0) pieces.push(`FILTERABLE COLUMNS: ${filterableFields.join(', ')}.`);
       if (endpoint.allowDynamicSort && sortableFields.length > 0) pieces.push(`SORTABLE COLUMNS: ${sortableFields.join(', ')}.`);
       if (endpoint.allowDetailView) pieces.push(`DETAIL LOOKUP: ENABLED (VIA '${endpoint.lookupColumn || 'id'}').`);
+      if (endpoint.allowOwnerOnly) pieces.push(`OWNERSHIP FILTER: ENABLED (COLUMN: '${endpoint.ownershipColumn || 'user_id'}' = LOGGED-IN USER). RESULTS SCOPED TO AUTHENTICATED USER ONLY.`);
     } else {
       pieces.push(`OPERATION: ${endpoint.operationType || 'create'} ON SOURCE '${dataSource?.name || 'internal'}'`);
       if (endpoint.allowOwnerOnly) pieces.push(`SECURITY: OWNERSHIP RESTRICTED (REF COLUMN: '${endpoint.ownershipColumn || 'user_id'}').`);
@@ -418,6 +419,24 @@ export const EndpointDetailView = ({
                         <Badge variant={endpoint.allowDetailView ? 'default' : 'secondary'} className="lowercase">
                           {endpoint.allowDetailView ? `enabled (via ${endpoint.lookupColumn || 'id'})` : 'disabled'}
                         </Badge>
+                      </div>
+
+                      <div className="flex flex-col gap-2 p-3 rounded-xl bg-muted/20 border border-border/5">
+                         <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Icons.shield className="size-5 text-muted-foreground" />
+                              <span className="text-lg lowercase">ownership filter</span>
+                            </div>
+                            <Badge variant={endpoint.allowOwnerOnly ? 'default' : 'secondary'} className="lowercase">
+                              {endpoint.allowOwnerOnly ? 'enabled' : 'disabled'}
+                            </Badge>
+                         </div>
+                         {endpoint.allowOwnerOnly && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-background/50 p-2 rounded-lg">
+                              <span className="opacity-50">scoped by column:</span>
+                              <span className="text-foreground">{endpoint.ownershipColumn || 'user_id'}</span>
+                            </div>
+                         )}
                       </div>
                     </div>
                   </div>

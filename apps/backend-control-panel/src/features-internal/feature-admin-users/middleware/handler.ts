@@ -51,7 +51,9 @@ export function middleware(env: EnvironmentConfig) {
     const isProd = env.NODE_ENV === 'production';
     const db = buildDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
     const adapter = new AuthAdapter(db) as any;
+    const { TimeSpan } = require('oslo');
     const lucia = new Lucia(adapter, {
+        sessionExpiresIn: new TimeSpan(30, "d"),
         sessionCookie: { attributes: { secure: isProd, sameSite: isProd ? 'none' : 'lax' } },
         getUserAttributes: (attributes: any) => ({ username: attributes?.username ?? '', role: attributes?.role ?? '' })
     });
@@ -70,8 +72,9 @@ export function middleware(env: EnvironmentConfig) {
             c.set('session', session);
             c.set('user', user);
             c.set('internalDb', db);
-        } catch (err) {
-            return c.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } }, 401);
+        } catch (err: any) {
+            console.error('[AUTH MIDDLEWARE DB ERROR]', err);
+            return c.json({ success: false, error: { code: 'INTERNAL_SERVER_ERROR', message: 'Internal Server Error during session validation' } }, 500);
         }
         await next();
     };

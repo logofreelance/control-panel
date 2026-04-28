@@ -67,7 +67,9 @@ export function middleware(env: EnvironmentConfig) {
     const db = buildDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
     const adapter = new AuthAdapter(db) as any;
     
+    const { TimeSpan } = require('oslo');
     const lucia = new Lucia(adapter, {
+        sessionExpiresIn: new TimeSpan(30, "d"),
         sessionCookie: {
             attributes: { secure: isProd, sameSite: isProd ? 'none' : 'lax' }
         },
@@ -95,11 +97,12 @@ export function middleware(env: EnvironmentConfig) {
                 }
                 c.set('session', session);
                 c.set('user', user);
-            } catch (err) {
-                console.error('[AUTH MIDDLEWARE] Session validation failed:', err);
-                c.set('session', null);
-                c.set('user', null);
-                c.header('Set-Cookie', lucia.createBlankSessionCookie().serialize(), { append: true });
+            } catch (err: any) {
+                console.error('[AUTH MIDDLEWARE] Session validation failed (likely DB error):', err);
+                // DO NOT delete the session cookie here. If it's a transient DB error (e.g. fetch failed), 
+                // deleting the cookie logs the user out permanently.
+                // Instead, return a 500 error so the frontend knows it's a server issue, not an auth issue.
+                return c.json({ success: false, message: 'Internal server error during session validation' }, 500);
             }
         }
 

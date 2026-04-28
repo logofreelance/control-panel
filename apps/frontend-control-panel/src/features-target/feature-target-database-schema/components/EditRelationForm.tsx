@@ -189,14 +189,19 @@ export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFo
                         <CardContent className="pt-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {RELATION_TYPES.map(type => {
+                                    const isSystemTarget = String(relation?.targetId) === '0';
+                                    const isDisabled = isSystemTarget && ['has_one', 'has_many'].includes(type.value);
                                     const isSelected = form.type === type.value;
+
                                     return (
                                         <button
                                             key={type.value}
                                             type="button"
-                                            onClick={() => setForm(prev => ({ ...prev, type: type.value as any }))}
+                                            disabled={isDisabled}
+                                            onClick={() => !isDisabled && setForm(prev => ({ ...prev, type: type.value as any }))}
                                             className={cn(
                                                 "p-4 rounded-2xl transition-all duration-300 border text-left flex items-start gap-4 relative group",
+                                                isDisabled ? 'opacity-30 cursor-not-allowed bg-muted/5 border-border' :
                                                 isSelected 
                                                     ? 'bg-primary/5 border-primary/40 shadow-sm' 
                                                     : 'bg-muted/10 border-transparent hover:border-primary/10 hover:bg-muted/20'
@@ -204,6 +209,7 @@ export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFo
                                         >
                                             <div className={cn(
                                                 "size-12 rounded-xl flex items-center justify-center text-2xl transition-all duration-300 shrink-0",
+                                                isDisabled ? 'bg-muted text-muted-foreground' :
                                                 isSelected ? 'bg-primary text-white shadow-lg shadow-primary/10' : 'bg-background text-muted-foreground group-hover:bg-primary/5'
                                             )}>
                                                 {type.icon}
@@ -214,13 +220,21 @@ export const EditRelationForm = ({ DatabaseTableId, relationId }: EditRelationFo
                                                     isSelected ? "text-primary" : "text-foreground"
                                                 )}>{type.label}</TextHeading>
                                                 <p className="text-base text-muted-foreground font-normal lowercase leading-snug">{type.desc.toLowerCase()}</p>
+                                                
+                                                {isDisabled && (
+                                                    <div className="mt-2 flex items-center gap-2 text-sm font-normal text-destructive lowercase">
+                                                        <Icons.alertTriangle className="size-4" />
+                                                        restricted for system tables
+                                                    </div>
+                                                )}
                                             </div>
-                                            {isSelected && (
+                                            {isSelected && !isDisabled && (
                                                 <div className="size-5 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
                                                     <Icons.check className="size-3" />
                                                 </div>
                                             )}
                                         </button>
+
                                     );
                                 })}
                             </div>

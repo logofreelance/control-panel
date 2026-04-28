@@ -44,19 +44,19 @@ export function useEndpointDetail(targetId: string, endpointId: string) {
                 if (found.dataSourceId) {
                     const dsRes = await fetch(api.databaseSchema.pageSchemaEditor.detail(found.dataSourceId), { headers: { 'x-target-id': targetId } });
                     const dsData = await dsRes.json();
-                    if (dsData.status === 'success') {
+                    if (dsData.status === 'success' && dsData.data) {
                         setDataSource({ 
                           name: dsData.data.name, 
                           tableName: dsData.data.tableName,
                           id: dsData.data.id
                         });
-                    }
 
-                    // Fetch actual columns from the table
-                    const colsRes = await fetch(api.databaseSchema.pageDataViewer.columns(dsData.data.tableName), { headers: { 'x-target-id': targetId } });
-                    const colData = await colsRes.json();
-                    if (colData.status === 'success') {
-                        setColumns(colData.data || []);
+                        // Fetch actual columns from the table
+                        const colsRes = await fetch(api.databaseSchema.pageDataViewer.columns(dsData.data.tableName), { headers: { 'x-target-id': targetId } });
+                        const colData = await colsRes.json();
+                        if (colData.status === 'success') {
+                            setColumns(colData.data || []);
+                        }
                     }
                 }
 

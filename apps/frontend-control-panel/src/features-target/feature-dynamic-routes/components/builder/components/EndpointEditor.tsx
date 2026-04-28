@@ -596,11 +596,20 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                   {form.allowOwnerOnly !== false && (
                     <div className="max-w-md animate-in slide-in-from-top-2 duration-300">
                       <Label className="lowercase mb-2 block px-1">owner reference column</Label>
-                      <Input
-                        placeholder="e.g. user_id"
-                        value={form.ownershipColumn || ''}
+                      <Select
+                        value={form.ownershipColumn || 'user_id'}
                         onChange={(e) => setForm({ ...form, ownershipColumn: e.target.value })}
+                        fullWidth
+                        options={[
+                          { label: 'user_id (default)', value: 'user_id' },
+                          ...columns
+                            .filter(c => c.name !== 'user_id' && c.name !== 'id' && c.name !== 'created_at' && c.name !== 'updated_at')
+                            .map(c => ({ label: `${c.name} (${c.type})`, value: c.name }))
+                        ]}
                       />
+                      <p className="text-[13px] text-muted-foreground mt-2 lowercase px-1">
+                        the column that stores the user ID to match against the authenticated user.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1284,6 +1293,44 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                         />
                         <p className="text-[13px] text-muted-foreground mt-2 lowercase px-1">
                            {L.querySettings.detailView.lookupColumnHint}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Ownership Security (for GET) */}
+                <div className="space-y-4">
+                  <div className="flex flex-row items-center justify-between gap-4 p-4 rounded-xl bg-muted/10 border border-border/5">
+                    <div className="space-y-1">
+                      <Label className="text-base lowercase">ownership filter</Label>
+                      <p className="text-sm text-muted-foreground lowercase">
+                        scope results to the logged-in user only. useful for personal data like profiles, orders, etc.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={form.allowOwnerOnly || false}
+                      onCheckedChange={(checked) => setForm({ ...form, allowOwnerOnly: checked })}
+                    />
+                  </div>
+
+                  {form.allowOwnerOnly && (
+                    <div className="pl-4 border-l-2 border-primary/20 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                      <div className="max-w-md">
+                        <Label className="lowercase mb-2 block px-1">owner reference column</Label>
+                        <Select
+                          value={form.ownershipColumn || 'user_id'}
+                          onChange={(e) => setForm({ ...form, ownershipColumn: e.target.value })}
+                          fullWidth
+                          options={[
+                            { label: 'user_id (default)', value: 'user_id' },
+                            ...columns
+                              .filter(c => c.name !== 'user_id' && c.name !== 'id' && c.name !== 'created_at' && c.name !== 'updated_at')
+                              .map(c => ({ label: `${c.name} (${c.type})`, value: c.name }))
+                          ]}
+                        />
+                        <p className="text-[13px] text-muted-foreground mt-2 lowercase px-1">
+                          the column that stores the user ID to match against the authenticated user.
                         </p>
                       </div>
                     </div>

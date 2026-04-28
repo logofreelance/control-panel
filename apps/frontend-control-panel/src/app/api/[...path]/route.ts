@@ -28,7 +28,17 @@ export async function GET(
         });
 
         const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        const nextResponse = NextResponse.json(data, { status: response.status });
+        
+        // Forward Set-Cookie header
+        const setCookieHeaders = response.headers.getSetCookie();
+        if (setCookieHeaders && setCookieHeaders.length > 0) {
+            for (const cookie of setCookieHeaders) {
+                nextResponse.headers.append('Set-Cookie', cookie);
+            }
+        }
+        
+        return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] GET Error:', error.message);
         return NextResponse.json({ 
@@ -64,7 +74,17 @@ export async function POST(
         });
 
         const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        const nextResponse = NextResponse.json(data, { status: response.status });
+        
+        // Forward Set-Cookie header
+        const setCookieHeaders = response.headers.getSetCookie();
+        if (setCookieHeaders && setCookieHeaders.length > 0) {
+            for (const cookie of setCookieHeaders) {
+                nextResponse.headers.append('Set-Cookie', cookie);
+            }
+        }
+        
+        return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] POST Error:', error.message);
         return NextResponse.json({ 
@@ -100,7 +120,17 @@ export async function PUT(
         });
 
         const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        const nextResponse = NextResponse.json(data, { status: response.status });
+        
+        // Forward Set-Cookie header
+        const setCookieHeaders = response.headers.getSetCookie();
+        if (setCookieHeaders && setCookieHeaders.length > 0) {
+            for (const cookie of setCookieHeaders) {
+                nextResponse.headers.append('Set-Cookie', cookie);
+            }
+        }
+        
+        return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] PUT Error:', error.message);
         return NextResponse.json({ 
@@ -134,7 +164,17 @@ export async function DELETE(
         });
 
         const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        const nextResponse = NextResponse.json(data, { status: response.status });
+        
+        // Forward Set-Cookie header
+        const setCookieHeaders = response.headers.getSetCookie();
+        if (setCookieHeaders && setCookieHeaders.length > 0) {
+            for (const cookie of setCookieHeaders) {
+                nextResponse.headers.append('Set-Cookie', cookie);
+            }
+        }
+        
+        return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] DELETE Error:', error.message);
         return NextResponse.json({ 
@@ -170,7 +210,17 @@ export async function PATCH(
         });
 
         const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        const nextResponse = NextResponse.json(data, { status: response.status });
+        
+        // Forward Set-Cookie header
+        const setCookieHeaders = response.headers.getSetCookie();
+        if (setCookieHeaders && setCookieHeaders.length > 0) {
+            for (const cookie of setCookieHeaders) {
+                nextResponse.headers.append('Set-Cookie', cookie);
+            }
+        }
+        
+        return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] PATCH Error:', error.message);
         return NextResponse.json({ 

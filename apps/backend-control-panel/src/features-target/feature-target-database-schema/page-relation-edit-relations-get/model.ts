@@ -21,8 +21,8 @@ export async function getRelations(db: any, tableId: string) {
     pivotTable: null,
     alias: '',
     target: {
-      name: r.target_table_display_name,
-      tableName: r.target_table_name
+      name: r.target_id == '0' ? 'System Users' : r.target_table_display_name,
+      tableName: r.target_id == '0' ? 'users' : r.target_table_name
     }
   }));
 }

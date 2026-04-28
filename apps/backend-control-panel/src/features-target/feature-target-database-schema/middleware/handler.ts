@@ -43,7 +43,9 @@ export function middleware(env: EnvironmentConfig) {
           },
           async deleteExpiredSessions(): Promise<void> {}
       };
+      const { TimeSpan } = require('oslo');
       const lucia = new Lucia(authAdapter as any, {
+          sessionExpiresIn: new TimeSpan(30, "d"),
           sessionCookie: { attributes: { secure: env.NODE_ENV === 'production', sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax' } },
           getUserAttributes: (attributes: any) => ({ username: attributes?.username ?? '', role: attributes?.role ?? '' })
       });

@@ -3,19 +3,17 @@
  */
 import * as model from './model';
 
-export async function processUpdateTarget(db: any, id: string, input: any) {
-    const existing = await model.findTargetSystemByIdFullSafe(db, id);
-    if (!existing) throw new Error('Target system not found');
+import { targetStore } from '../target.store';
 
-    const fields: Record<string, string> = {};
+export function processUpdateTarget(db: any, id: string, input: any) {
+    const fields: Record<string, any> = {};
     if (input.name !== undefined) fields['name'] = input.name.trim();
     if (input.description !== undefined) fields['description'] = input.description.trim();
     if (input.apiEndpoint !== undefined) fields['api_endpoint'] = input.apiEndpoint.trim();
     if (input.databaseUrl !== undefined) fields['database_url'] = input.databaseUrl.trim();
 
-    await model.updateTargetSystem(db, id, fields);
+    const success = targetStore.update(db, id, fields);
+    if (!success) throw new Error('Target system not found');
     
-    const updated = await model.findTargetSystemByIdFullSafe(db, id);
-    if (!updated) throw new Error('Failed to update target system');
-    return updated;
+    return targetStore.getById(id);
 }

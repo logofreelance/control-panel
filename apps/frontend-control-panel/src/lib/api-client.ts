@@ -46,15 +46,25 @@ class ApiClient {
             // Only redirect if we are NOT already on the login page AND not performing logout
             const isLogoutRequest = endpoint.includes('/logout');
             if (typeof window !== 'undefined' && window.location.pathname !== '/login' && !isLogoutRequest) {
+                // Clean up stale auth cookie before redirect
+                document.cookie = "auth_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
                 window.location.href = '/login';
             }
             // If we ARE on login page, let the caller handle it (show error message)
-            if (response.headers.get('Content-Type')?.includes('application/json')) {
+            const contentType = response.headers.get('Content-Type') || '';
+            if (contentType.includes('application/json')) {
                 const data = await response.json();
                 return data;
             }
             throw new Error('Unauthorized');
         }
+
+            // Safe JSON parsing — handle non-JSON responses gracefully
+            const responseContentType = response.headers.get('Content-Type') || '';
+            if (!responseContentType.includes('application/json')) {
+                const text = await response.text();
+                return { success: false, error: { code: 'INVALID_RESPONSE', message: text || 'Non-JSON response' } } as T;
+            }
 
             const data = await response.json();
             return data as T;

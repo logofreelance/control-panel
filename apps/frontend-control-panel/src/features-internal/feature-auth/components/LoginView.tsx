@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Icons, LABELS as L } from '@/lib/config/client';
 import { LoginForm } from './LoginForm';
 import { apiClient } from '@/lib/api-client';
@@ -107,7 +106,6 @@ export function LoginView({ initialSystem, initialBranding }: LoginViewProps) {
     primaryColor: initialBranding?.primaryColor || BRAND.PRIMARY_COLOR,
   });
 
-  const router = useRouter();
 
   // Apply branding + handle install redirect on mount (client-side only)
   useEffect(() => {
@@ -127,7 +125,7 @@ export function LoginView({ initialSystem, initialBranding }: LoginViewProps) {
       document.title = `${initialBranding.siteName} - ${L.common.auth.login}`;
     }
     if (initialSystem?.needInstall) {
-      setTimeout(() => router.replace('/install'), 1500);
+      setTimeout(() => window.location.replace('/install'), 1500);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -448,21 +448,23 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                 <div className="max-w-md">
                   <Label className="lowercase mb-2 block px-1">category group</Label>
                   <Popover open={openCategory} onOpenChange={setOpenCategory}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openCategory}
-                        className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
-                      >
-                        <span className="truncate">
-                          {form.categoryId
-                            ? categories.find((c) => String(c.id) === String(form.categoryId))?.name?.toLowerCase() || 'unknown category'
-                            : 'uncategorized'}
-                        </span>
-                        <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openCategory}
+                          className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
+                        >
+                          <span className="truncate">
+                            {form.categoryId
+                              ? categories.find((c) => String(c.id) === String(form.categoryId))?.name?.toLowerCase() || 'unknown category'
+                              : 'uncategorized'}
+                          </span>
+                          <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+                        </Button>
+                      }
+                    />
                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                       <Command>
                         <CommandInput placeholder="search category..." className="h-10 text-base" />
@@ -524,21 +526,23 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                   <div>
                     <Label className="lowercase mb-2 block px-1">database source</Label>
                     <Popover open={openDataSource} onOpenChange={setOpenDataSource}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openDataSource}
-                          className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
-                        >
-                          <span className="truncate">
-                            {form.dataSourceId
-                              ? dataSources.find((ds) => String(ds.id) === String(form.dataSourceId))?.name?.toLowerCase() || 'unknown source'
-                              : 'no binding (manual response)'}
-                          </span>
-                          <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openDataSource}
+                            className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
+                          >
+                            <span className="truncate">
+                              {form.dataSourceId
+                                ? dataSources.find((ds) => String(ds.id) === String(form.dataSourceId))?.name?.toLowerCase() || 'unknown source'
+                                : 'no binding (manual response)'}
+                            </span>
+                            <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+                          </Button>
+                        }
+                      />
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                         <Command>
                           <CommandInput placeholder="search database source..." className="h-10 text-base" />
@@ -591,21 +595,23 @@ export const EndpointEditor = ({ targetId, endpointId, onBack, onTest }: Endpoin
                     <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                       <Label className="lowercase mb-2 block px-1">resource logic</Label>
                       <Popover open={openResource} onOpenChange={setOpenResource}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openResource}
-                            className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
-                          >
-                            <span className="truncate">
-                              {form.resourceId
-                                ? resources.find((res) => String(res.id) === String(form.resourceId))?.name?.toLowerCase() || 'unknown resource'
-                                : 'raw table data'}
-                            </span>
-                            <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
+                        <PopoverTrigger
+                          render={
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openResource}
+                              className="w-full justify-between h-11 px-4 text-base font-normal bg-background"
+                            >
+                              <span className="truncate">
+                                {form.resourceId
+                                  ? resources.find((res) => String(res.id) === String(form.resourceId))?.name?.toLowerCase() || 'unknown resource'
+                                  : 'raw table data'}
+                              </span>
+                              <Icons.chevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+                            </Button>
+                          }
+                        />
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                           <Command>
                             <CommandInput placeholder="search resource..." className="h-10 text-base" />

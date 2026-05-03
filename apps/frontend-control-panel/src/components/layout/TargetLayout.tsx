@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { Button, Sheet, SheetContent, SheetTrigger } from '@/components/ui';
 import { Icons } from '@/lib/config/client';
@@ -76,10 +75,9 @@ export function TargetLayout({ children }: TargetLayoutProps) {
             {group.items.map((item) => {
               const isActive = pathname === item.href;
               return (
-                <Link
+                <a
                   key={item.href}
                   href={item.href}
-                  onClick={() => setOpen(false)}
                   className={cn(
                     'flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-normal text-base',
                     isActive
@@ -89,7 +87,7 @@ export function TargetLayout({ children }: TargetLayoutProps) {
                 >
                   <item.icon className={cn('size-5', isActive ? 'text-primary' : '')} />
                   {item.label}
-                </Link>
+                </a>
               );
             })}
           </nav>
@@ -130,14 +128,14 @@ export function TargetLayout({ children }: TargetLayoutProps) {
             </div>
 
             {/* SITE LOGO AND NAME */}
-            <Link href="/" className="flex items-center gap-3 px-1">
+            <a href="/" className="flex items-center gap-3 px-1">
               <div className="size-10 shrink-0 rounded-xl bg-muted flex items-center justify-center text-primary hidden lg:flex">
                 <Icons.rocket className="size-5" />
               </div>
-              <span className="text-xl font-semibold text-foreground tracking-tight lowercase">
+              <span className="text-xl font-semibold text-foreground lowercase">
                 backend engine
               </span>
-            </Link>
+            </a>
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">

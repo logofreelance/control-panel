@@ -10,6 +10,7 @@ import type { Context, Next } from 'hono';
 import { Lucia } from 'lucia';
 import { connect } from '@tidbcloud/serverless';
 import type { EnvironmentConfig } from '../../../env';
+import { executeSafe } from '../../internal.db';
 
 // ─── DB Connection ───────────────────────────────────────
 function buildDatabaseConnection(databaseUrl: string): any {
@@ -28,32 +29,35 @@ class AuthAdapter {
         await this.db.execute('DELETE FROM admin_sessions WHERE user_id = ?', [userId]);
     }
     async getSessionAndUser(sessionId: string): Promise<[any | null, any | null]> {
-        const resSession: any = await this.db.execute('SELECT * FROM admin_sessions WHERE id = ?', [sessionId]);
-        const sessionRows = Array.isArray(resSession) ? resSession : resSession.rows;
-        if (!sessionRows || sessionRows.length === 0) return [null, null];
+        const sessionRows = await executeSafe(this.db, 'SELECT * FROM admin_sessions WHERE id = ?', [sessionId]);
+        if (sessionRows.length === 0) return [null, null];
         const session = sessionRows[0];
 
-        const resUser: any = await this.db.execute('SELECT id, username, role FROM admin_users WHERE id = ?', [session.user_id]);
-        const userRows = Array.isArray(resUser) ? resUser : resUser.rows;
-        if (!userRows || userRows.length === 0) return [null, null];
+        const userRows = await executeSafe(this.db, 'SELECT id, username, role FROM admin_users WHERE id = ?', [session.user_id]);
+        if (userRows.length === 0) return [null, null];
         const user = userRows[0];
 
+        // Ensure expires_at is parsed as UTC — TiDB may return without timezone suffix
+        const expiresAtRaw = session.expires_at;
+        const expiresAt = typeof expiresAtRaw === 'string' && !expiresAtRaw.endsWith('Z') && !expiresAtRaw.includes('+') 
+            ? new Date(expiresAtRaw + 'Z') 
+            : new Date(expiresAtRaw);
+
         return [
-            { id: session.id, userId: session.user_id, expiresAt: new Date(session.expires_at) },
-            { id: user.id, username: user.username, role: user.role }
+            { id: session.id, userId: session.user_id, expiresAt, attributes: {} },
+            { id: user.id, attributes: { username: user.username, role: user.role } }
         ];
     }
-    async getTargetSessions(userId: string): Promise<any[]> {
-        const res: any = await this.db.execute('SELECT * FROM admin_sessions WHERE user_id = ?', [userId]);
-        const rows = Array.isArray(res) ? res : res.rows;
-        return rows.map((s: any) => ({ id: s.id, userId: s.user_id, expiresAt: new Date(s.expires_at) }));
+    async getUserSessions(userId: string): Promise<any[]> {
+        const rows = await executeSafe(this.db, 'SELECT * FROM admin_sessions WHERE user_id = ?', [userId]);
+        return rows.map((s: any) => ({ id: s.id, userId: s.user_id, expiresAt: new Date(s.expires_at + 'Z'), attributes: {} }));
     }
     async setSession(session: any): Promise<void> {
-        const expiresAt = session.expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+        const expiresAt = session.expiresAt.toISOString();
         await this.db.execute('INSERT INTO admin_sessions (id, user_id, expires_at) VALUES (?, ?, ?)', [session.id, session.userId, expiresAt]);
     }
     async updateSessionExpiration(sessionId: string, expiresAt: Date): Promise<void> {
-        const expiresAtStr = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+        const expiresAtStr = expiresAt.toISOString();
         await this.db.execute('UPDATE admin_sessions SET expires_at = ? WHERE id = ?', [expiresAtStr, sessionId]);
     }
     async deleteExpiredSessions(): Promise<void> {
@@ -67,7 +71,7 @@ export function middleware(env: EnvironmentConfig) {
     const db = buildDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
     const adapter = new AuthAdapter(db) as any;
     
-    const { TimeSpan } = require('oslo');
+    const { TimeSpan } = require('lucia');
     const lucia = new Lucia(adapter, {
         sessionExpiresIn: new TimeSpan(30, "d"),
         sessionCookie: {

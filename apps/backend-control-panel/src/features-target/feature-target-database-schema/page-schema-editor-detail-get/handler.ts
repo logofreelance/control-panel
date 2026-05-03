@@ -20,6 +20,8 @@ export const handler = async (c: any) => {
   try {
     const db = c.get('targetDb');
     const id = c.req.param('id');
+    const schema = await getSchemaDetail(db, id);
+    if (!schema) return c.json({ status: 'error', message: 'Schema not found' }, 404);
     
     const result: any = { 
       ...schema,

@@ -12,7 +12,6 @@
  */
 
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
 import { TargetFormModal } from '@/features-internal/feature-target-registry/components/TargetFormModal';
 import { Icons } from '../config/icons';
 import { UI_LABELS } from '../constants/ui-labels';
@@ -96,7 +95,7 @@ export function MainDashboardView() {
                     {filteredTargets.length > 0 ? (
                       <div className="flex flex-col gap-1.5">
                         {filteredTargets.map((target) => (
-                          <Link
+                          <a
                             key={target.id}
                             href={DASHBOARD_ROUTES.target(target.id)}
                             className="flex items-center justify-between p-4 rounded-xl hover:bg-muted group/res transition-colors"
@@ -122,7 +121,7 @@ export function MainDashboardView() {
                                   : 'bg-muted',
                               )}
                             />
-                          </Link>
+                          </a>
                         ))}
                       </div>
                     ) : (
@@ -230,7 +229,7 @@ export function MainDashboardView() {
                     <Icons.plus className="size-5 mr-2" />
                     deploy system
                   </Button>
-                  <Link href={DASHBOARD_ROUTES.targetSystems} className="block shrink-0">
+                  <a href={DASHBOARD_ROUTES.targetSystems} className="block shrink-0">
                     <Button
                       variant="secondary"
                       size="icon"
@@ -238,7 +237,7 @@ export function MainDashboardView() {
                     >
                       <Icons.settings className="size-5" />
                     </Button>
-                  </Link>
+                  </a>
                 </div>
               </div>
             </CardContent>
@@ -276,7 +275,7 @@ export function MainDashboardView() {
                 ) : (searchQuery ? filteredTargets : topTargets).length > 0 ? (
                   <div className="flex flex-col gap-3">
                     {(searchQuery ? filteredTargets : topTargets).map((target) => (
-                      <Link
+                      <a
                         key={target.id}
                         href={DASHBOARD_ROUTES.target(target.id)}
                         className="group flex items-center justify-between p-2 hover:bg-accent transition-all rounded-3xl"
@@ -305,7 +304,7 @@ export function MainDashboardView() {
                           </div>
                         </div>
                         <Icons.chevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
-                      </Link>
+                      </a>
                     ))}
                   </div>
                 ) : (

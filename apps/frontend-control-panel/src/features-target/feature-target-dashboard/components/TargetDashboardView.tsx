@@ -26,7 +26,7 @@ export function TargetDashboardView() {
   const params = useParams();
   const nodeId = (params?.id as string) || '';
 
-  const { target, loading, handleCheckHealth, checkingHealth, metrics, isOnline, realStats } =
+  const { target, loading, loadingStats, handleCheckHealth, checkingHealth, metrics, isOnline, realStats } =
     useTargetDashboard(nodeId);
 
   // CLEAN MONOCHROME METRICS WITH CURATED GLOBAL COLORS
@@ -66,29 +66,63 @@ export function TargetDashboardView() {
     });
   }, [metrics]);
 
+  // 🤖 AI: Improved Loading & Error States
+  // Avoid flashing error when data is still being synchronized
+  if (loading && !target) {
+    return (
+      <TargetLayout>
+        <div className="w-full flex flex-col gap-8">
+          <div className="flex justify-end">
+            <Skeleton className="h-12 w-32 rounded-xl" />
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+            ))}
+          </div>
+          <div className="flex gap-12 mt-10">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="size-9 rounded-xl" />
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </TargetLayout>
+    );
+  }
+
   if (!target)
     return (
       <TargetLayout>
-        <div className="max-w-2xl mx-auto text-center">
-          <Alert variant="destructive">
-            <div className="flex items-start gap-4">
-              <Icons.alertTriangle className="size-6 text-destructive mt-1" />
+        <div className="max-w-2xl mx-auto text-center mt-20">
+          <Alert variant="destructive" className="border-destructive/20 bg-destructive/5 py-10 px-8 rounded-[2.5rem]">
+            <div className="flex flex-col items-center gap-6 text-center">
+              <div className="size-16 rounded-3xl bg-destructive/10 flex items-center justify-center">
+                <Icons.alertTriangle className="size-8 text-destructive" />
+              </div>
               <div className="flex flex-col gap-2">
-                <AlertTitle className="text-xl font-semibold text-destructive leading-none lowercase">
+                <AlertTitle className="text-2xl font-semibold text-destructive leading-none lowercase">
                   connection failure detected
                 </AlertTitle>
-                <AlertDescription className="text-base text-destructive font-instrument lowercase">
+                <AlertDescription className="text-lg text-destructive font-instrument lowercase max-w-md mx-auto">
                   the requested instance node could not be synchronized. this might be due to
                   network latency or an invalid reference key.
                 </AlertDescription>
-                <Button
-                  variant="destructive"
-                  className="mt-4 w-fit rounded-xl lowercase"
-                  onClick={() => window.location.reload()}
-                >
-                  <Icons.refresh className="size-4 mr-2" />
-                  attempt reconnect
-                </Button>
+                <div className="flex justify-center mt-4">
+                  <Button
+                    variant="destructive"
+                    className="w-fit h-12 px-8 rounded-xl lowercase text-base"
+                    onClick={() => window.location.reload()}
+                  >
+                    <Icons.refresh className="size-5 mr-3" />
+                    attempt reconnect
+                  </Button>
+                </div>
               </div>
             </div>
           </Alert>
@@ -141,9 +175,13 @@ export function TargetDashboardView() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5 mt-auto">
-                    <TextHeading size="h1" className="lowercase leading-none">
-                      {metric.value || '0'}
-                    </TextHeading>
+                    {loadingStats ? (
+                      <Skeleton className="h-9 w-20 rounded-lg" />
+                    ) : (
+                      <TextHeading size="h1" className="lowercase leading-none">
+                        {metric.value || '0'}
+                      </TextHeading>
+                    )}
                     <span className="text-base font-normal text-muted-foreground lowercase">
                       {metric.sub}
                     </span>
@@ -163,9 +201,13 @@ export function TargetDashboardView() {
                 <span className="text-base text-muted-foreground font-normal lowercase">
                   system uptime
                 </span>
-                <span className="text-base text-foreground font-normal lowercase">
-                  {realStats.uptime} availability
-                </span>
+                {loadingStats ? (
+                  <Skeleton className="h-5 w-24 rounded mt-1" />
+                ) : (
+                  <span className="text-base text-foreground font-normal lowercase">
+                    {realStats.uptime} availability
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -176,9 +218,13 @@ export function TargetDashboardView() {
                 <span className="text-base text-muted-foreground font-normal lowercase">
                   latency
                 </span>
-                <span className="text-base text-foreground font-normal lowercase">
-                  {realStats.latency} average
-                </span>
+                {loadingStats ? (
+                  <Skeleton className="h-5 w-20 rounded mt-1" />
+                ) : (
+                  <span className="text-base text-foreground font-normal lowercase">
+                    {realStats.latency} average
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">

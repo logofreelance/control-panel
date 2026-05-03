@@ -11,6 +11,7 @@ const fontBrand = Instrument_Sans({
 });
 
 import { ThemeInitializer } from './ThemeInitializer';
+import { SettingsProvider } from '@/features-internal/feature-settings/contexts/SettingsContext';
 
 export const metadata = {
   title: `${BRAND.NAME} | Control Panel`,
@@ -97,15 +98,26 @@ export default async function RootLayout({
       <body className={`${fontBrand.variable} ${fontBrand.className} min-h-screen bg-background`} suppressHydrationWarning>
         <ThemeInitializer />
 
-        <ConfigProvider>
-          <PageLoadingProvider>
-            <ToastProvider>
-              {children}
-              <ToastContainer />
-            </ToastProvider>
-          </PageLoadingProvider>
-        </ConfigProvider>
+        {/* Global Settings Provider - Sychronous feel like PHP */}
+        <PageLoadingProvider>
+          <SettingsProvider initialData={{
+              siteName: BRAND.NAME,
+              siteTitle: 'Control Panel',
+              metaDescription: 'Management Engine',
+              primaryColor: primaryColor,
+              themePreset: themePreset as any,
+              faviconUrl: ''
+          }}>
+            <ConfigProvider>
+              <ToastProvider>
+                {children}
+                <ToastContainer />
+              </ToastProvider>
+            </ConfigProvider>
+          </SettingsProvider>
+        </PageLoadingProvider>
       </body>
     </html>
   );
 }
+

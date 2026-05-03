@@ -15,11 +15,18 @@ export function useAuth() {
         setStatus({ loading: true });
 
         try {
+            // Clear any stale session cookie before login attempt
+            document.cookie = "auth_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
             const data = await authApi.login(formData);
 
             if (data.success && data.data?.token) {
-                // Set cookie manually to bypass Next.js Proxy stripping Set-Cookie headers
-                document.cookie = `auth_session=${data.data.token}; path=/; max-age=2592000; SameSite=Lax`;
+                // Set cookie manually — needed because Next.js API proxy may not always
+                // forward Set-Cookie headers reliably in development mode.
+                // Align max-age with Lucia's sessionExpiresIn (30 days = 2592000 seconds).
+                const isSecure = window.location.protocol === 'https:';
+                const cookieFlags = `path=/; max-age=2592000; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+                document.cookie = `auth_session=${data.data.token}; ${cookieFlags}`;
                 
                 // Lock loading overlay BEFORE redirect to prevent flash
                 GlobalLoading.lock();
@@ -48,3 +55,4 @@ export function useAuth() {
         handleInputChange
     };
 }
+

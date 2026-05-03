@@ -9,7 +9,7 @@ export const handler = async (c: Context) => {
         const id = c.req.param('id')!;
         const body = await c.req.json();
         const db = c.get('internalDb' as any);
-        const updated = await processUpdateTarget(db, id, body);
+        const updated = processUpdateTarget(db, id, body);
         return c.json({ success: true, data: updated, message: 'Target system updated' });
     } catch (err: any) {
         let status = 400;

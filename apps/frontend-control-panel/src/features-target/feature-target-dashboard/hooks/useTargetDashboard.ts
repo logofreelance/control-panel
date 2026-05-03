@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api-client';
 export function useTargetDashboard(targetId: string) {
     const { targets, loading, checkHealth } = useTargetRegistry();
     const [checkingHealth, setCheckingHealth] = useState(false);
+    const [loadingStats, setLoadingStats] = useState(true);
     
     // REAL DATA STATES
     const [stats, setStats] = useState({
@@ -26,7 +27,7 @@ export function useTargetDashboard(targetId: string) {
     // FETCH REAL DATA FROM FEATURES (Distributed Sourcing)
     const fetchRealData = useCallback(async () => {
         if (!targetId) return;
-
+        setLoadingStats(true);
         try {
             const options = { headers: { 'x-target-id': targetId } };
             
@@ -63,6 +64,8 @@ export function useTargetDashboard(targetId: string) {
 
         } catch (error) {
             console.error('[TargetDashboard] Failed to fetch distributed stats:', error);
+        } finally {
+            setLoadingStats(false);
         }
     }, [targetId]);
 
@@ -98,6 +101,7 @@ export function useTargetDashboard(targetId: string) {
     return {
         target,
         loading,
+        loadingStats,
         checkingHealth,
         isOnline,
         metrics,

@@ -1,11 +1,12 @@
 // Apps/backend-control-panel/src/index.ts
 import { Hono } from 'hono';
+console.log('>>> BACKEND CONTROL PANEL RELOADED AT ' + new Date().toISOString());
 import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { timeout } from 'hono/timeout';
 import { bodyLimit } from 'hono/body-limit';
 import { loadEnvironmentConfig, type EnvironmentConfig } from './env';
-import { buildInternalDatabaseConnection } from './features-internal/internal.db';
+import { buildInternalDatabaseConnection, executeSafe } from './features-internal/internal.db';
 import { buildTargetDatabaseConnection } from './features-target/target.db';
 // Fitur-fitur
 import { createFeaturePanelAuth } from './features-internal/feature-auth/router';
@@ -85,8 +86,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
           ctx.set('targetDb', cachedTargetDbs.get(targetId));
           ctx.set('targetId', targetId);
         } else {
-          const res: any = await internalDb.execute('SELECT database_url FROM target_systems WHERE id = ? LIMIT 1', [targetId]);
-          const rows = Array.isArray(res) ? res : (res.rows || []);
+          const rows = await executeSafe(internalDb, 'SELECT database_url FROM target_systems WHERE id = ? LIMIT 1', [targetId]);
           const target = rows.length > 0 ? rows[0] : null;
           if (!target) return ctx.json({ status: 'error', message: 'Target system not found' }, 404);
 
@@ -136,8 +136,7 @@ async function buildAppInstance(env: EnvironmentConfig) {
           await db.execute('SELECT 1'); // Test connection
           isDbConnected = true;
 
-          const res: any = await db.execute('SELECT id FROM admin_users LIMIT 1');
-          const rows = Array.isArray(res) ? res : res.rows || [];
+          const rows = await executeSafe(db, 'SELECT id FROM admin_users LIMIT 1');
           isAdminCreated = rows.length > 0;
         } catch (err) {
           console.error('[SYSTEM-STATUS] DB Check Failed:', err);
@@ -173,6 +172,21 @@ rootApp.all('*', async (c) => {
     // 2. Inisialisasi app hanya sekali
     if (!cachedApp) {
       cachedApp = await buildAppInstance(env);
+      
+      // PRE-LOAD CACHES
+      try {
+        const { buildInternalDatabaseConnection } = await import('./features-internal/internal.db');
+        const { settingsStore } = await import('./features-internal/feature-settings/settings.store');
+        const { targetStore } = await import('./features-internal/feature-target-registry/target.store');
+        
+        const db = buildInternalDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
+        await Promise.all([
+            settingsStore.initialize(db),
+            targetStore.initialize(db)
+        ]);
+      } catch (err) {
+        console.error('[BOOTSTRAP] Failed to pre-load stores:', err);
+      }
     }
 
     // 3. SMART SWITCH: Delegasi request sesuai platform
@@ -186,7 +200,7 @@ rootApp.all('*', async (c) => {
     }
   } catch (err: any) {
     console.error('[ROOT-ERROR]', err);
-    return c.text(`Initialization Error: ${err.message}`, 500);
+    return c.json({ success: false, error: { code: 'INITIALIZATION_ERROR', message: err.message } }, 500);
   }
 });
 

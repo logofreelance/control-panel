@@ -30,20 +30,30 @@ export function middleware(env: EnvironmentConfig) {
               const userRows = Array.isArray(resUser) ? (Array.isArray(resUser[0]) ? resUser[0] : resUser) : resUser.rows;
               if (!userRows || userRows.length === 0) return [null, null];
               const user = userRows[0];
-              return [{ id: session.id, userId: session.user_id, expiresAt: new Date(session.expires_at) }, { id: user.id, username: user.username, role: user.role }];
+
+              const expiresAtRaw = session.expires_at;
+              const expiresAt = typeof expiresAtRaw === 'string' && !expiresAtRaw.endsWith('Z') && !expiresAtRaw.includes('+') 
+                  ? new Date(expiresAtRaw + 'Z') 
+                  : new Date(expiresAtRaw);
+
+              return [{ id: session.id, userId: session.user_id, expiresAt, attributes: {} }, { id: user.id, attributes: { username: user.username, role: user.role } }];
           },
-          async getTargetSessions(userId: string): Promise<any[]> { return []; },
+          async getUserSessions(userId: string): Promise<any[]> {
+              const res: any = await internalDb.execute('SELECT * FROM admin_sessions WHERE user_id = ?', [userId]);
+              const rows = Array.isArray(res) ? (Array.isArray(res[0]) ? res[0] : res) : res.rows;
+              return (rows || []).map((s: any) => ({ id: s.id, userId: s.user_id, expiresAt: new Date(s.expires_at + 'Z'), attributes: {} }));
+          },
           async setSession(session: any): Promise<void> {
-              const expiresAt = session.expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+              const expiresAt = session.expiresAt.toISOString();
               await internalDb.execute('INSERT INTO admin_sessions (id, user_id, expires_at) VALUES (?, ?, ?)', [session.id, session.userId, expiresAt]);
           },
           async updateSessionExpiration(sessionId: string, expiresAt: Date): Promise<void> {
-              const expiresAtStr = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+              const expiresAtStr = expiresAt.toISOString();
               await internalDb.execute('UPDATE admin_sessions SET expires_at = ? WHERE id = ?', [expiresAtStr, sessionId]);
           },
           async deleteExpiredSessions(): Promise<void> {}
       };
-      const { TimeSpan } = require('oslo');
+      const { TimeSpan } = require('lucia');
       const lucia = new Lucia(authAdapter as any, {
           sessionExpiresIn: new TimeSpan(30, "d"),
           sessionCookie: { attributes: { secure: env.NODE_ENV === 'production', sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax' } },
@@ -55,8 +65,10 @@ export function middleware(env: EnvironmentConfig) {
 
       if (sessionId) {
         const { session, user } = await lucia.validateSession(sessionId);
-        c.set('session', session);
-        c.set('user', user);
+        if (session) {
+            c.set('session', session);
+            c.set('user', user);
+        }
       }
     } catch (err) {
       console.error('[DB-SCHEMA-AUTH-ERROR]', err);

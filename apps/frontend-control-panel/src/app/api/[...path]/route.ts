@@ -6,6 +6,54 @@ const BACKEND_URL = process.env.BACKEND_INTERNAL_URL
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Safely parse response — if backend returns non-JSON (e.g. plain text errors),
+ * wrap it into a JSON error object instead of crashing with SyntaxError.
+ */
+async function safeParseResponse(response: Response): Promise<{ data: any; nextResponse: NextResponse }> {
+    const contentType = response.headers.get('Content-Type') || '';
+    
+    if (!contentType.includes('application/json')) {
+        const text = await response.text();
+        const data = { 
+            success: false, 
+            error: { code: 'INVALID_RESPONSE', message: text || 'Backend returned non-JSON response' } 
+        };
+        const nextResponse = NextResponse.json(data, { 
+            status: response.status >= 400 ? response.status : 502 
+        });
+        return { data, nextResponse };
+    }
+
+    const data = await response.json();
+    const nextResponse = NextResponse.json(data, { status: response.status });
+    return { data, nextResponse };
+}
+
+/**
+ * Forward Set-Cookie headers from backend response to the client.
+ */
+function forwardCookies(backendResponse: Response, nextResponse: NextResponse): void {
+    const setCookieHeaders = backendResponse.headers.getSetCookie();
+    if (setCookieHeaders && setCookieHeaders.length > 0) {
+        for (const cookie of setCookieHeaders) {
+            nextResponse.headers.append('Set-Cookie', cookie);
+        }
+    }
+}
+
+/**
+ * Build forwarded headers (strip 'host' to avoid conflicts).
+ */
+function buildForwardedHeaders(request: NextRequest): Headers {
+    const headers = new Headers();
+    request.headers.forEach((value, key) => {
+        if (key.toLowerCase() !== 'host') {
+            headers.set(key, value);
+        }
+    });
+    return headers;
+}
 
 export async function GET(
     request: NextRequest, 
@@ -15,13 +63,7 @@ export async function GET(
     const pathString = path.join('/');
     const url = new URL(request.url);
     const backendUrl = `${BACKEND_URL}/api/${pathString}${url.search}`;
-    
-    const headers = new Headers();
-    request.headers.forEach((value, key) => {
-        if (key.toLowerCase() !== 'host') {
-            headers.set(key, value);
-        }
-    });
+    const headers = buildForwardedHeaders(request);
 
     try {
         const response = await fetch(backendUrl, {
@@ -31,23 +73,14 @@ export async function GET(
             cache: 'no-store'
         });
 
-        const data = await response.json();
-        const nextResponse = NextResponse.json(data, { status: response.status });
-        
-        // Forward Set-Cookie header
-        const setCookieHeaders = response.headers.getSetCookie();
-        if (setCookieHeaders && setCookieHeaders.length > 0) {
-            for (const cookie of setCookieHeaders) {
-                nextResponse.headers.append('Set-Cookie', cookie);
-            }
-        }
-        
+        const { nextResponse } = await safeParseResponse(response);
+        forwardCookies(response, nextResponse);
         return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] GET Error:', error.message);
         return NextResponse.json({ 
-            status: 'error', 
-            message: 'Backend unreachable' 
+            success: false, 
+            error: { code: 'BACKEND_UNREACHABLE', message: 'Backend unreachable' }
         }, { status: 502 });
     }
 }
@@ -59,14 +92,7 @@ export async function POST(
     const { path } = await params;
     const pathString = path.join('/');
     const backendUrl = `${BACKEND_URL}/api/${pathString}`;
-    
-    const headers = new Headers();
-    request.headers.forEach((value, key) => {
-        if (key.toLowerCase() !== 'host') {
-            headers.set(key, value);
-        }
-    });
-
+    const headers = buildForwardedHeaders(request);
     const body = await request.text();
 
     try {
@@ -77,23 +103,14 @@ export async function POST(
             credentials: 'include',
         });
 
-        const data = await response.json();
-        const nextResponse = NextResponse.json(data, { status: response.status });
-        
-        // Forward Set-Cookie header
-        const setCookieHeaders = response.headers.getSetCookie();
-        if (setCookieHeaders && setCookieHeaders.length > 0) {
-            for (const cookie of setCookieHeaders) {
-                nextResponse.headers.append('Set-Cookie', cookie);
-            }
-        }
-        
+        const { nextResponse } = await safeParseResponse(response);
+        forwardCookies(response, nextResponse);
         return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] POST Error:', error.message);
         return NextResponse.json({ 
-            status: 'error', 
-            message: 'Backend unreachable' 
+            success: false, 
+            error: { code: 'BACKEND_UNREACHABLE', message: 'Backend unreachable' }
         }, { status: 502 });
     }
 }
@@ -105,14 +122,7 @@ export async function PUT(
     const { path } = await params;
     const pathString = path.join('/');
     const backendUrl = `${BACKEND_URL}/api/${pathString}`;
-    
-    const headers = new Headers();
-    request.headers.forEach((value, key) => {
-        if (key.toLowerCase() !== 'host') {
-            headers.set(key, value);
-        }
-    });
-
+    const headers = buildForwardedHeaders(request);
     const body = await request.text();
 
     try {
@@ -123,23 +133,14 @@ export async function PUT(
             credentials: 'include',
         });
 
-        const data = await response.json();
-        const nextResponse = NextResponse.json(data, { status: response.status });
-        
-        // Forward Set-Cookie header
-        const setCookieHeaders = response.headers.getSetCookie();
-        if (setCookieHeaders && setCookieHeaders.length > 0) {
-            for (const cookie of setCookieHeaders) {
-                nextResponse.headers.append('Set-Cookie', cookie);
-            }
-        }
-        
+        const { nextResponse } = await safeParseResponse(response);
+        forwardCookies(response, nextResponse);
         return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] PUT Error:', error.message);
         return NextResponse.json({ 
-            status: 'error', 
-            message: 'Backend unreachable' 
+            success: false, 
+            error: { code: 'BACKEND_UNREACHABLE', message: 'Backend unreachable' }
         }, { status: 502 });
     }
 }
@@ -152,13 +153,7 @@ export async function DELETE(
     const pathString = path.join('/');
     const url = new URL(request.url);
     const backendUrl = `${BACKEND_URL}/api/${pathString}${url.search}`;
-    
-    const headers = new Headers();
-    request.headers.forEach((value, key) => {
-        if (key.toLowerCase() !== 'host') {
-            headers.set(key, value);
-        }
-    });
+    const headers = buildForwardedHeaders(request);
 
     try {
         const response = await fetch(backendUrl, {
@@ -167,23 +162,14 @@ export async function DELETE(
             credentials: 'include',
         });
 
-        const data = await response.json();
-        const nextResponse = NextResponse.json(data, { status: response.status });
-        
-        // Forward Set-Cookie header
-        const setCookieHeaders = response.headers.getSetCookie();
-        if (setCookieHeaders && setCookieHeaders.length > 0) {
-            for (const cookie of setCookieHeaders) {
-                nextResponse.headers.append('Set-Cookie', cookie);
-            }
-        }
-        
+        const { nextResponse } = await safeParseResponse(response);
+        forwardCookies(response, nextResponse);
         return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] DELETE Error:', error.message);
         return NextResponse.json({ 
-            status: 'error', 
-            message: 'Backend unreachable' 
+            success: false, 
+            error: { code: 'BACKEND_UNREACHABLE', message: 'Backend unreachable' }
         }, { status: 502 });
     }
 }
@@ -195,14 +181,7 @@ export async function PATCH(
     const { path } = await params;
     const pathString = path.join('/');
     const backendUrl = `${BACKEND_URL}/api/${pathString}`;
-    
-    const headers = new Headers();
-    request.headers.forEach((value, key) => {
-        if (key.toLowerCase() !== 'host') {
-            headers.set(key, value);
-        }
-    });
-
+    const headers = buildForwardedHeaders(request);
     const body = await request.text();
 
     try {
@@ -213,23 +192,14 @@ export async function PATCH(
             credentials: 'include',
         });
 
-        const data = await response.json();
-        const nextResponse = NextResponse.json(data, { status: response.status });
-        
-        // Forward Set-Cookie header
-        const setCookieHeaders = response.headers.getSetCookie();
-        if (setCookieHeaders && setCookieHeaders.length > 0) {
-            for (const cookie of setCookieHeaders) {
-                nextResponse.headers.append('Set-Cookie', cookie);
-            }
-        }
-        
+        const { nextResponse } = await safeParseResponse(response);
+        forwardCookies(response, nextResponse);
         return nextResponse;
     } catch (error: any) {
         console.error('[API_PROXY] PATCH Error:', error.message);
         return NextResponse.json({ 
-            status: 'error', 
-            message: 'Backend unreachable' 
+            success: false, 
+            error: { code: 'BACKEND_UNREACHABLE', message: 'Backend unreachable' }
         }, { status: 502 });
     }
 }

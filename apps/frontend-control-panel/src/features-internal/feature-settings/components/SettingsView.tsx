@@ -82,7 +82,7 @@ export function SettingsView() {
   };
 
   const updateField = <K extends keyof typeof settings>(key: K, value: (typeof settings)[K]) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    setSettings({ ...settings, [key]: value });
     if (key === 'primaryColor' && typeof value === 'string') {
       applyThemeColor(value);
     }

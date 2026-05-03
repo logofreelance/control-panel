@@ -73,11 +73,23 @@ interface PageLoadingProviderProps {
 }
 
 export const PageLoadingProvider = ({ children }: PageLoadingProviderProps) => {
-    const [loaders, setLoaders] = useState<Record<string, boolean>>({});
+    // 🤖 AI: Start with an 'initial' loader to ensure SSR renders the overlay immediately
+    const [loaders, setLoaders] = useState<Record<string, boolean>>({ initial: true });
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [transitionNonce, setTransitionNonce] = useState(0);
     const [isGlobalBusy, setIsGlobalBusy] = useState(false);
     const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Remove initial loader after hydration
+    useEffect(() => {
+        // We keep 'initial' true until the first mount is done
+        // This ensures SSR content is covered immediately
+        setLoaders(prev => {
+            const next = { ...prev };
+            delete next.initial;
+            return next;
+        });
+    }, []);
 
     // Calculate if any loader is still loading
     const isPageLoading = isTransitioning || isGlobalBusy || Object.values(loaders).some(loading => loading);

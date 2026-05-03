@@ -1,15 +1,7 @@
-/**
- * middleware/handler.ts
- *
- * Auth Middleware for feature-settings.
- * Initializes DB connection, Lucia, validates session,
- * and restricts access to authenticated admins.
- */
-
-import type { Context, Next } from 'hono';
 import { Lucia } from 'lucia';
 import { connect } from '@tidbcloud/serverless';
-import type { EnvironmentConfig } from '../../../env';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 function buildDatabaseConnection(databaseUrl: string): any {
     if (!databaseUrl) throw new Error('INTERNAL DB URL MISSING');
@@ -54,36 +46,25 @@ class AuthAdapter {
     async deleteExpiredSessions(): Promise<void> {}
 }
 
-export function middleware(env: EnvironmentConfig) {
-    const isProd = env.NODE_ENV === 'production';
-    const db = buildDatabaseConnection(env.DATABASE_URL_INTERNAL_CONTROL_PANEL);
-    const adapter = new AuthAdapter(db) as any;
-    const { TimeSpan } = require('lucia');
-    const lucia = new Lucia(adapter, {
-        sessionExpiresIn: new TimeSpan(30, "d"),
-        sessionCookie: { attributes: { secure: isProd, sameSite: isProd ? 'none' : 'lax' } },
-        getUserAttributes: (attributes: any) => ({ username: attributes?.username ?? '', role: attributes?.role ?? '' })
-    });
+const db = buildDatabaseConnection(process.env.DATABASE_URL_INTERNAL_CONTROL_PANEL!);
+const adapter = new AuthAdapter(db);
+const { TimeSpan } = require('lucia');
+const lucia = new Lucia(adapter as any, {
+    sessionExpiresIn: new TimeSpan(30, "d"),
+    sessionCookie: { attributes: { secure: false, sameSite: 'lax' } },
+    getUserAttributes: (attributes: any) => ({ username: attributes?.username ?? '', role: attributes?.role ?? '' })
+});
 
-    return async (c: Context, next: Next) => {
-        const sessionId = lucia.readSessionCookie(c.req.header('Cookie') ?? '') 
-                       ?? lucia.readBearerToken(c.req.header('Authorization') ?? '');
-                       
-        if (!sessionId) return c.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } }, 401);
-
-        try {
-            const { session, user } = await lucia.validateSession(sessionId);
-            if (!session) return c.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } }, 401);
-            if (session.fresh) c.header('Set-Cookie', lucia.createSessionCookie(session.id).serialize(), { append: true });
-            
-            c.set('session', session);
-            c.set('user', user);
-            c.set('internalDb', db);
-        } catch (err: any) {
-            console.error('[AUTH MIDDLEWARE DB ERROR]', err);
-            return c.json({ success: false, error: { code: 'INTERNAL_SERVER_ERROR', message: 'Internal Server Error during session validation' } }, 500);
-        }
-        await next();
-    };
+async function test() {
+    const cookieHeader = 'auth_session=iopwe7tt7i6eenmgcetfwyfez62styjtqctgp6h5';
+    const sessionId = lucia.readSessionCookie(cookieHeader);
+    console.log('READ SESSION ID:', sessionId);
+    if (!sessionId) {
+        console.log('FAILED TO READ SESSION ID');
+        return;
+    }
+    const result = await lucia.validateSession(sessionId);
+    console.log('VALIDATION RESULT:', JSON.stringify(result));
 }
 
+test().catch(console.error);

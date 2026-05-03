@@ -12,7 +12,6 @@
  */
 
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
 import {
   Button,
   Badge,
@@ -42,7 +41,6 @@ const DecorativeHeroBackground = () => (
 );
 
 export function TargetRegistryView() {
-  const router = useRouter();
   const {
     loading,
     saving,
@@ -120,8 +118,7 @@ export function TargetRegistryView() {
                             <button
                               key={target.id}
                               onClick={() => {
-                                router.push(TARGET_ROUTES.target(target.id));
-                                setIsSearchFocused(false);
+                                window.location.href = TARGET_ROUTES.target(target.id);
                               }}
                               className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-muted group/res transition-colors text-left"
                             >
@@ -201,8 +198,8 @@ export function TargetRegistryView() {
               return (
                 <Card
                   key={target.id}
-                  onClick={() => router.push(TARGET_ROUTES.target(target.id))}
-                  className="cursor-pointer"
+                  onClick={() => { window.location.href = TARGET_ROUTES.target(target.id); }}
+                  className="cursor-pointer group/card hover:border-primary transition-colors"
                 >
                   <CardHeader>
                     <div className="flex gap-4 items-center min-w-0">

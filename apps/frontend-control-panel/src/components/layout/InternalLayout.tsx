@@ -11,8 +11,6 @@
  */
 
 import { useState, useCallback, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   Button,
   DropdownMenu,
@@ -38,7 +36,6 @@ export function InternalLayout({
   hideRightActions = false,
 }: InternalLayoutProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const router = useRouter();
 
   const handleLogout = useCallback(async () => {
     // Lock loading overlay immediately so dashboard never flashes
@@ -66,7 +63,7 @@ export function InternalLayout({
         <div className="mx-auto w-full max-w-7xl bg-background border-2 border-border h-14 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-between px-3 md:px-6 pointer-events-auto transition-all">
           <div className="flex items-center gap-3 md:gap-6">
             {/* SITE LOGO AND NAME */}
-            <Link href="/" className="flex items-center gap-2 md:gap-4 group px-1">
+            <a href="/" className="flex items-center gap-2 md:gap-4 group px-1">
               <div className="size-9 md:size-10 aspect-square shrink-0 rounded-xl bg-primary flex items-center justify-center text-primary-foreground group-hover:scale-105 transition-transform duration-300">
                 <Icons.rocket className="size-4 md:size-5" />
               </div>
@@ -80,7 +77,7 @@ export function InternalLayout({
                   backend engine
                 </TextHeading>
               </div>
-            </Link>
+            </a>
 
             <div className="h-4 md:h-6 w-px bg-border mx-1 hidden sm:block" />
 
@@ -131,7 +128,7 @@ export function InternalLayout({
 
                     <DropdownMenuItem
                       className="rounded-lg py-3 px-3 cursor-pointer text-muted-foreground hover:text-foreground font-normal text-base lowercase gap-3 transition-colors"
-                      onClick={() => router.push('/settings/profile')}
+                      onClick={() => window.location.href = '/settings/profile'}
                     >
                       <Icons.user className="size-4" />
                       <span>edit profile</span>
@@ -139,7 +136,7 @@ export function InternalLayout({
 
                     <DropdownMenuItem
                       className="rounded-lg py-3 px-3 cursor-pointer text-muted-foreground hover:text-foreground font-normal text-base lowercase gap-3 transition-colors"
-                      onClick={() => router.push('/settings')}
+                      onClick={() => window.location.href = '/settings'}
                     >
                       <Icons.settings className="size-4" />
                       <span>preferences</span>

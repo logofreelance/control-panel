@@ -17,3 +17,23 @@ export function buildTargetDatabaseConnection(databaseUrl: string): TargetDataba
     const httpUrl = databaseUrl.replace('mysql://', 'https://').replace(':4000', '');
     return connect({ url: httpUrl });
 }
+
+/**
+ * executeSafe
+ * 
+ * Helper untuk mengeksekusi query ke database TARGET secara linear.
+ * Menjamin data yang kembali selalu berformat array yang bersih.
+ */
+export async function executeSafe(db: any, sql: string, params: any[] = []): Promise<any[]> {
+    try {
+        const res = await db.execute(sql, params);
+        if (!res) return [];
+        if (Array.isArray(res)) {
+            return Array.isArray(res[0]) ? res[0] : res;
+        }
+        return res.rows || [];
+    } catch (error) {
+        console.error(`[TARGET_DB_ERROR] SQL: ${sql}`, error);
+        throw error;
+    }
+}

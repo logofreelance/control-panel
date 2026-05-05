@@ -73,7 +73,10 @@ export function middleware(env: EnvironmentConfig) {
 
         try {
             const { session, user } = await lucia.validateSession(sessionId);
-            if (!session) return c.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } }, 401);
+            if (!session) {
+                c.header('Set-Cookie', lucia.createBlankSessionCookie().serialize(), { append: true });
+                return c.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } }, 401);
+            }
             if (session.fresh) c.header('Set-Cookie', lucia.createSessionCookie(session.id).serialize(), { append: true });
             
             c.set('session', session);

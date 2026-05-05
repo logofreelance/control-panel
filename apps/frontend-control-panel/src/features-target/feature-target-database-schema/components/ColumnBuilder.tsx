@@ -12,6 +12,13 @@ import {
   Card,
   CardContent,
   Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectGroup,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
   Checkbox,
   Label,
   Badge,
@@ -40,14 +47,32 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
   };
 
   const SMART_DEFAULTS: Record<string, string> = {
+    tinyint: '0',
+    smallint: '0',
+    mediumint: '0',
     integer: '0',
     bigint: '0',
     decimal: '0.00',
     float: '0.0',
+    double: '0.0',
+    bit: 'b\'0\'',
     boolean: '0',
+    char: '',
+    string: '',
+    tinytext: '',
+    text: '',
+    mediumtext: '',
+    longtext: '',
+    binary: '0x00',
+    varbinary: '0x00',
+    date: 'CURRENT_DATE',
+    time: '00:00:00',
+    year: '2024',
     timestamp: 'CURRENT_TIMESTAMP',
     datetime: 'CURRENT_TIMESTAMP',
+    json: '{}',
     status: 'active',
+    uuid: 'UUID()',
   };
 
   const updateColumn = (
@@ -61,11 +86,19 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
     // Apply the change
     updated[index] = { ...currentCol, [field]: value };
 
-    // SMART DEFAULTS: If type changes and default is empty, suggest a value
+    // SMART DEFAULTS: If type changes, suggest values and apply native defaults
     if (field === 'type') {
       const type = value as string;
-      if (!currentCol.default && SMART_DEFAULTS[type]) {
+      const typeInfo = getTypeInfo(type);
+
+      // Suggest default value if current is empty
+      if ((currentCol.default === undefined || currentCol.default === '') && type in SMART_DEFAULTS) {
         updated[index].default = SMART_DEFAULTS[type];
+      }
+
+      // Apply default length if available in registry
+      if (typeInfo?.defaultLength) {
+        updated[index].length = typeInfo.defaultLength;
       }
 
       // Cleanup target if not a relation anymore
@@ -177,13 +210,49 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                           <FieldLabel>data type</FieldLabel>
                           <Select
                             value={col.type}
-                            onChange={(e) => updateColumn(index, 'type', e.target.value)}
-                            fullWidth
-                            options={COLUMN_TYPES.map((t) => ({
-                              label: t.label.toLowerCase(),
-                              value: t.value,
-                            }))}
-                          />
+                            onValueChange={(val) => updateColumn(index, 'type', val)}
+                          >
+                            <SelectTrigger fullWidth size="default">
+                                <SelectValue placeholder="Select data type...">
+                                    {typeInfo ? (
+                                        <div className="flex items-center gap-2">
+                                            <typeInfo.Icon className="size-4 opacity-50" />
+                                            <span>{typeInfo.label}</span>
+                                        </div>
+                                    ) : 'Select type...'}
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['Primary', 'Numeric', 'String', 'Date/Time', 'Binary', 'Advanced'].map((cat) => {
+                                const typesInCat = COLUMN_TYPES.filter(t => t.category === cat);
+                                if (typesInCat.length === 0) return null;
+                                
+                                return (
+                                  <SelectGroup key={cat}>
+                                    <SelectLabel className="bg-muted/30 px-3 py-1.5 font-bold text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                                      {cat}
+                                    </SelectLabel>
+                                    {typesInCat.map((t) => (
+                                      <SelectItem key={t.value} value={t.value} className="pl-6">
+                                        <div className="flex items-center gap-3">
+                                          <t.Icon className="size-4 opacity-50" />
+                                          <div className="flex flex-col">
+                                            <span className="font-normal">{t.label}</span>
+                                            {t.nativeForm && (
+                                              <span className="text-[10px] font-mono opacity-40 leading-none">
+                                                {t.nativeForm}
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                    <SelectSeparator className="opacity-30" />
+                                  </SelectGroup>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
                         </Field>
 
                         <div className="md:col-span-3">
@@ -191,7 +260,7 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                             label="default value"
                             value={col.default === undefined ? '' : String(col.default)}
                             onChange={(e) => updateColumn(index, 'default', e.target.value)}
-                            placeholder="e.g. active"
+                            placeholder={SMART_DEFAULTS[col.type] !== undefined ? `e.g. ${SMART_DEFAULTS[col.type]}` : "e.g. active"}
                           />
                         </div>
 
@@ -266,14 +335,14 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                               </div>
                             )}
 
-                            {col.type === 'string' && (
+                            {(typeInfo?.defaultLength || col.type === 'string') && (
                               <div className="md:col-span-2">
                                 <Input
                                   label="length"
                                   type="number"
-                                  value={col.length || 255}
+                                  value={col.length || typeInfo?.defaultLength || 255}
                                   onChange={(e) =>
-                                    updateColumn(index, 'length', parseInt(e.target.value) || 255)
+                                    updateColumn(index, 'length', parseInt(e.target.value) || 0)
                                   }
                                 />
                               </div>
@@ -285,11 +354,16 @@ export const ColumnBuilder = ({ columns, onChange, availableSources = [] }: Colu
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between gap-4">
-                    <p className="text-sm text-muted-foreground italic">
-                      {col.type === 'slug' && L.forms.slugHint}
-                      {col.type === 'string' && L.forms.stringHint}
-                      {col.type === 'relation' && L.forms.relationHint}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-[10px] uppercase opacity-70">
+                        {typeInfo?.nativeForm || col.type}
+                      </Badge>
+                      <p className="text-sm text-muted-foreground italic">
+                        {col.type === 'slug' && L.forms.slugHint}
+                        {col.type === 'string' && L.forms.stringHint}
+                        {col.type === 'relation' && L.forms.relationHint}
+                      </p>
+                    </div>
 
                     <Button
                       variant="ghost"

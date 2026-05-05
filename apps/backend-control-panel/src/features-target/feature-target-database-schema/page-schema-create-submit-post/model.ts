@@ -1,31 +1,23 @@
 /**
  * page-schema-create-submit-post/model.ts
  */
-import { mapTypeToSql } from '../shared-sql';
+import { buildColumnSql } from '../shared-sql';
 
 export async function executePhysicalCreate(db: any, tableName: string, schema: any) {
-  let columnsSql = ['`id` INT AUTO_INCREMENT PRIMARY KEY'];
+  let columnsSql: string[] = [];
+  
+  // Track if id is provided in the schema
+  const hasCustomId = schema.columns && Array.isArray(schema.columns) && 
+                      schema.columns.some((c: any) => c.name === 'id');
+
+  // If no 'id' column provided by user, we add a default auto-increment one
+  if (!hasCustomId) {
+    columnsSql.push('`id` INT AUTO_INCREMENT PRIMARY KEY');
+  }
   
   if (schema.columns && Array.isArray(schema.columns)) {
     for (const col of schema.columns) {
-      if (col.name === 'id') continue;
-      
-      const sqlType = mapTypeToSql(col.type, col);
-      const nullable = col.required ? 'NOT NULL' : 'NULL';
-      const unique = col.unique ? 'UNIQUE' : '';
-      let defaultVal = '';
-      
-      if (col.default !== undefined && col.default !== null && col.default !== '') {
-        if (typeof col.default === 'boolean') {
-          defaultVal = `DEFAULT ${col.default ? 1 : 0}`;
-        } else if (typeof col.default === 'number') {
-          defaultVal = `DEFAULT ${col.default}`;
-        } else if (col.type === 'string' || col.type === 'text') {
-          defaultVal = `DEFAULT '${String(col.default).replace(/'/g, "''")}'`;
-        }
-      }
-      
-      columnsSql.push(`\`${col.name}\` ${sqlType} ${nullable} ${defaultVal} ${unique}`.trim());
+      columnsSql.push(buildColumnSql(col));
     }
   }
 
